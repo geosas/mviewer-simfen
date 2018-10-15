@@ -1,0 +1,137 @@
+<style type="text/css">
+    .tips {
+        border: 1px solid black;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 18px;
+    }
+
+    .tips-number-cell {
+        width: 51px;
+    }
+
+    .tips-number {
+        font-size: 35px;
+    }
+
+    .circle {
+        width: 175px;
+        height: 175px;
+        border-radius: 50%;
+        transform: rotate(-45deg);
+        text-align: center;
+        display: inline-block;
+        margin-left: 20px;
+        margin-top: 30px;
+        border-top-right-radius: 0%;
+        /*border: 5px solid #2E5367;*/
+        position: relative;
+    }
+
+    .water-drop-text {
+        width: 175px;
+        height: 175px;
+        font-size: 16px !important;
+        color: white !important;
+        transform: rotate(45deg);
+        text-align: center !important;
+        vertical-align: middle !important;
+        position: relative;
+        display: inline-block;
+    }
+
+    .number-step {
+        font-size: 40px !important;
+    }
+
+</style>
+
+<ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#h_simfen" aria-controls="profile" role="tab" data-toggle="tab">Accueil</a></li>
+    <li role="presentation"><a href="#h_aide" aria-controls="messages" role="tab" data-toggle="tab">Aides</a></li>
+    <li role="presentation"><a href="#h_reference" aria-controls="profile" role="tab" data-toggle="tab">Références</a></li>
+    <li role="presentation"><a href="#h_credits" aria-controls="settings" role="tab" data-toggle="tab">Crédits</a></li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="h_simfen">
+        <h4>Bienvenue sur le portail cartographique du projet SIMFEN</h4>
+
+        <p>Cette interface a pour objectif de mettre à disposition un Service Interopérable de Modélisation des Flux d'Eau et de Nitrate dans les bassins versants de Bretagne (SIMFEN). Plus précisément, ce service permet de simuler des débits en tout point d'intérêt du réseau hydrographique à partir des débits mesurés sur le territoire, dont voici les étapes de fonctionnement :</p>
+
+        <p align="center" style="font-size: 18px">SIMULATION DU DEBIT : </p>
+
+        <div align="center">
+            <div class="circle" style="background: linear-gradient(+45deg, #007acc, #007acc 33%, #808080 33%, #808080);">
+                <p class="water-drop-text">
+                    <font class="number-step">&#10112;</font>
+                    <br>Indiquez la période de simulation</p>
+            </div>
+            <div class="circle" style="background: linear-gradient(+45deg, #007acc, #007acc 64%, #808080 64%, #808080);">
+                <p class="water-drop-text">
+                    <font class="number-step">&#10113;</font>
+                    <br>Utilisez le bouton <span class="glyphicon glyphicon-flag"></span> pour localiser sur la carte le point d'intérêt (marqueur rouge)</p>
+            </div>
+            <div class="circle" style="background: #007acc;">
+                <p class="water-drop-text">
+                    <font class="number-step">&#10114;</font>
+                    <br>Lancez la simulation <br> du débit avec <span class="glyphicon glyphicon-play-circle"></span></p>
+            </div>
+            
+            <!--<div class="progress" style="margin-bottom: 0px !important;text-align: center; width: 700px; background-color: #808080;">
+                <div class="progress-bar progress-bar-striped active" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" role="progressbar" style="background-color: #007ACC; width:40%;">
+                <p style="text-align: center;width: 700px;color: white;">VOICI LE TEXTE QUIL FAIT LIRE POUSE SAVOIR OU EN EST LE TRAITEMENT</p></div>
+            </div>-->
+            
+            <!--<div class="water-drop" style="border-top-right-radius: 0%;">
+                <p class="water-drop-text" style="padding-top: 40px; padding-right: 10px;">Visualisez et téléchargez dans le panneau "Résultat" le flux d'eau simulé</p>
+            </div>-->
+        </div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane" id="h_aide">
+        <h4>Simulation du débit :</h4>
+        <p>Ce service permet de simuler le débit en tout point du réseau hydrographique breton à partir des données de débit disponibles sur le web service de <a href="https://geobretagne.fr/m/?layers=dreal_b%3Ahydrometrie_qmj&title=Bretagne%20-%20hydrom%C3%A9trie">GéoBretagne</a>. Le modèle hydrologique employé provient des travaux de thèse <a href="http://www.theses.fr/2013NSARD072">d'Alban de Lavenne</a>. Ce service dispose de paramètres optionnels pour les utilisateurs qui souhaitent influer sur la configuration optimale du modèle.</p>
+
+        <p>Ce service utilise 3 paramètres à renseigner impérativement : </p>
+        <ul>
+        	<li>Date de début de la simulation</li>
+            <li>Date de fin de la simulation</li>
+            <li>Localisation de la station à simuler (cliquer sur <span class="glyphicon glyphicon-flag"></span> puis sur la carte)</li>
+        </ul>
+        <p>Pour les utilisateurs ayant une connaissance avancée du milieu où va être simulé le débit, il est possible d'influer sur le fonctionnement du modèle par rapport aux paramètres déterminés par défaut (d'après les travaux de thèse d'Alban). Pour le moment, voici les paramètres pouvant être modifiés <span class="glyphicon glyphicon-wrench"></span> : </p>
+        <ul>
+            <li>n'utiliser que les débits mesurés sur les stations en aval de la station simulée au lieu d'employer les stations à proximité et dont leurs bassins présentent une similitude avec le bassin cible.</li>
+            <li>choisir manuellement les stations à employer en indiquant leur code de station (celui référencé sur GéoBretagne). Il est possible d'utiliser le service "Affichage des stations disponibles" pour connaitre ces codes. <b>Il est impératif de séparer chaque code de station par une virgule (,) sans mettre d'espaces.</b></li>
+            <li>modifier le pas de temps des données simulées. Le projet Simfen a pour vocation de fournir des données au pas de temps horaire, mais le pas de temps journalier peut être choisi.</li>
+        </ul>
+        <p> Le process est exécuté avec le bouton <span class="glyphicon glyphicon-play-circle"></span> ouvrant alors le panneau de résultat pouvant être ouvert et fermé avec le bouton <span class="glyphicon glyphicon-stats"></span>. Ce panneau permet de suivre la progression du traitement et télécharger le résultat au format CSV et visualiser celui-ci. Il est également possible de visualiser les débits mesurés qui ont été employés pour cette simulation.<b>Remarque : il est important de omparer le débit par rapport à la surface du bassin. Il est préférable de comparer la présence des évenements entre les débits mesurés et débit simulé.</b></p>
+
+        <h4>Affichage des stations disponibles :</h4>
+        Ce service permet d'afficher sur la carte les stations disponibles sur le web service de <a href="https://geobretagne.fr/m/?layers=dreal_b%3Ahydrometrie_qmj&title=Bretagne%20-%20hydrom%C3%A9trie">GéoBretagne</a> selon la période indiquée.
+
+        <p>Ce service utilise 3 paramètres à renseigner impérativement : </p>
+        <ul>
+        	<li>Date de début de la simulation</li>
+            <li>Date de fin de la simulation</li>
+            <li>Localisation de la station à simuler (cliquer sur <span class="glyphicon glyphicon-flag"></span> puis sur la carte)</li>
+        </ul>
+        <p>D'après les travaux de thèse d'Alban, la recherche des stations à employer s'effectue dans un rayon de 50 kilomètres par rapport à l'exutoire simulé. Il est permis de modifier cette distance en cliquant sur <span class="glyphicon glyphicon-wrench"></span>.</p>
+        <p> Le service est à exécuter avec le bouton <span class="glyphicon glyphicon-play-circle"></span>.</p>
+
+        <p><b>REMARQUE : un seul service peut être exécuté à la fois.</b></p>
+    </div>
+
+    <div role="tabpanel" class="tab-pane" id="h_reference">
+        <h4>Publications </h4>
+        <p>A. de Lavenne. <i>Modélisation hydrologique à base géomorphologique de bassins versants non jaugés par régionalisation et transposition d'hydrogramme</i>. PhD thesis, 2013. <a href="http://www.theses.fr/2013NSARD072">URL</a>. Sciences de l'environnement. Rennes, Agrocampus-Ouest.</p>
+        <h4>Autres</h4>
+        <p><a href="http://www.opengeospatial.org/standards/wps">Web Processing Service</a></p>
+    </div>
+    <div role="tabpanel" class="tab-pane" id="h_credits">
+        <h4>Crédits </h4>
+        <p>Ce projet a été financé par le Conseil Régional de Bretagne, l'Agence de l'eau Loire-Bretagne et l'Agrocampus-Ouest.</p>
+        <a href="http://mviewerdoc.readthedocs.io/fr/latest/" target="_blank">Lien vers la documentation du Mviewer</a>
+    </div>
+</div>
