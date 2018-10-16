@@ -201,17 +201,18 @@ mviewer.customControls.plotStations = (function () {
                     clearInterval(_updating);
                     if (response.Status.ProcessSucceeded) {
                         // le comptage n'est pas le meme s'il y a plusieurs outputs
-                        if (Object.values(response.ProcessOutputs)[0].length > 1) {
-                            var iteration = Object.values(response.ProcessOutputs)[0].length;
+                        var outputsTags = Object.keys(response.ProcessOutputs).map(function(itm){return response.ProcessOutputs[itm];});
+                        if (outputsTags[0].length > 1) {
+                            var iteration = outputsTags[0].length;
                         } else {
-                            var iteration = Object.values(response.ProcessOutputs).length;
+                            var iteration = outputsTags.length;
                         }
 
                         for (var i = 0; i < iteration; i++) {
                             if (iteration === 1) {
-                                var outputTag = Object.values(response.ProcessOutputs)[0];
+                                var outputTag = outputsTags[0];
                             } else {
-                                var outputTag = (Object.values(response.ProcessOutputs)[0])[i];
+                                var outputTag = outputsTags[0][i];
                             }
 
                             if (outputTag.Identifier === "XY") {
