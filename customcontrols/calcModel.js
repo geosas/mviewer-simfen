@@ -179,21 +179,26 @@ mviewer.customControls.calcModel = (function () {
                     // arrete l'ecoute du status puisque le process est termine
                     clearInterval(_updating);
                     if (response.Status.ProcessSucceeded) {
-                        //console.log(Object.keys(response.ProcessOutputs.Output));
-                        for (var i = 0; i < Object.keys(response.ProcessOutputs).length; i++) {
-                            var outputTag = response.ProcessOutputs[(Object.keys(response.ProcessOutputs)[i])];
-                            console.log(outputTag);
+                        // le comptage n'est pas le meme s'il y a plusieurs outputs
+                        if (Object.values(response.ProcessOutputs)[0].length > 1) {
+                            var iteration = Object.values(response.ProcessOutputs)[0].length;
+                        } else {
+                            var iteration = Object.values(response.ProcessOutputs).length;
+                        }
+                        
+                        for (var i = 0; i < iteration; i++) {
+                            if (iteration === 1) {
+                                var outputTag = Object.values(response.ProcessOutputs)[0];
+                            } else {
+                                var outputTag = (Object.values(response.ProcessOutputs)[0])[i];
+                            }
+                            
                             if (outputTag.Identifier === "XY") {
                                 _xy = outputTag.Data.LiteralData.split(" ");
                                 mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
 
                             } else if (outputTag.Identifier === "WaterML") {
-                                // cree un graphique d'apres le resultat et mets en place un lien de telechargement
-                                //var stringWaterML = 
-                                console.log(outputTag.Data.ComplexData.Collection.observationMember.Result.MeasurementTimeseries);
-                                var docWaterML = StringToXMLDom(stringWaterML);
-                                var points = docWaterML.getElementsByTagName("wml2:point");
-                                plotDatas(points);
+                                plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
                                 // ajoute le bouton pour afficher les debits mesures employes
                                 $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append("\
                                 <div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>\
@@ -202,12 +207,10 @@ mviewer.customControls.calcModel = (function () {
                                 Cliquez pour visualiser les débits mesurés employés</button></div>");
 
                             } else if (outputTag.Identifier === "Stations") {
-                                var gmlStations = processOutputs[0].childNodes[i].children[2].outerHTML;
-                                plotStation(gmlStations);
+                                plotStation(outputTag.Data.ComplexData.FeatureCollection.featureMember);
 
                             } else if (outputTag.Identifier === "MeasuredFlow") {
-                                var datas = processOutputs[0].childNodes[i].children[2].childNodes[1].textContent
-                                plotMeasuredFlow(datas);
+                                plotMeasuredFlow(outputTag.Data.ComplexData);
                                 document.getElementById("btnMeasuredFlow").remove();
                             }
                         }
@@ -225,9 +228,9 @@ mviewer.customControls.calcModel = (function () {
         xhr.addEventListener('readystatechange', function () {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                 // Recupere le xml de la reponse
-                var xmlResponse = xhr.responseXML;
+                var response = $.xml2json(xhr.responseXML);
                 // Recupere l'url de la variable statusLocation
-                var statusLocationURL = xmlResponse.getElementsByTagName('wps:ExecuteResponse')[0].getAttribute("statusLocation");
+                var statusLocationURL = response.statusLocation;
                 _updating = setInterval(function () {
                     updateProcess(_updating, statusLocationURL, false);
                 }, _refreshTimeXY);
@@ -243,9 +246,9 @@ mviewer.customControls.calcModel = (function () {
         xhr.addEventListener('readystatechange', function () {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                 // Recupere le xml de la reponse
-                var xmlResponse = xhr.responseXML;
+                var response = $.xml2json(xhr.responseXML);
                 // Recupere l'url de la variable statusLocation
-                var statusLocationURL = xmlResponse.getElementsByTagName('wps:ExecuteResponse')[0].getAttribute("statusLocation");
+                var statusLocationURL = response.statusLocation;
                 // Maj de la barre de progression
                 processingBarUpdate(5, "Vérification de la file d'attente...");
                 // Debut d'ecoute du resultat
@@ -265,9 +268,9 @@ mviewer.customControls.calcModel = (function () {
         _xhrPost.addEventListener('readystatechange', function () {
             if (_xhrPost.readyState === XMLHttpRequest.DONE && _xhrPost.status === 200) {
                 // Recupere le xml de la reponse
-                var xmlResponse = _xhrPost.responseXML;
+                var response = $.xml2json(_xhrPost.responseXML);
                 // Recupere l'url de la variable statusLocation
-                var statusLocationURL = xmlResponse.getElementsByTagName('wps:ExecuteResponse')[0].getAttribute("statusLocation");
+                var statusLocationURL = response.statusLocation;
                 if (document.getElementById("linkDownloadFlow")) {
                     document.getElementById("linkDownloadFlow").remove();
                 }
@@ -329,8 +332,8 @@ mviewer.customControls.calcModel = (function () {
         var xDatas = [];
         var yDatas = [];
         for (var i = 0; i < points.length; i++) {
-            xDatas = xDatas.concat(points[i].childNodes[1].children[0].textContent);
-            yDatas = yDatas.concat(points[i].childNodes[1].children[1].textContent);
+            xDatas = xDatas.concat(points[i].MeasurementTVP.time);
+            yDatas = yDatas.concat(points[i].MeasurementTVP.value);
         }
 
         // cree un fichier contenant les donnees au format csv
@@ -373,9 +376,9 @@ mviewer.customControls.calcModel = (function () {
             var xDatas = [];
             var yDatas = [];
             for (var j = 0; j < datasJson.length; j++) {
-                if (names[i] === datasJson[j]["code_hydro"]) {
-                    xDatas = xDatas.concat(datasJson[j]["date"]);
-                    yDatas = yDatas.concat(datasJson[j]["debit_donnee_validee_m3"]);
+                if (names[i] === datasJson[j].code_hydro) {
+                    xDatas = xDatas.concat(datasJson[j].date);
+                    yDatas = yDatas.concat(datasJson[j].debit_donnee_validee_m3);
                 }
             }
             for (var j = 0; j < _nameColor.length; j++) {
@@ -398,7 +401,7 @@ mviewer.customControls.calcModel = (function () {
         }
     }
 
-    function plotStation(gmlStations) {
+    function plotStation(features) {
         /*recupere dans le document xml les informations spatiales des stations
         pour ensuite les afficher sur la carte. Si une couche de station a deja ete
         produite, la supprime avant*/
@@ -456,10 +459,6 @@ mviewer.customControls.calcModel = (function () {
             _map.removeLayer(layersToRemove[i]);
         }
 
-        // converti la chaine de texte en objet xml
-        var gmlStationsXML = StringToXMLDom(gmlStations);
-        // pour chaque entite (station)
-        var features = gmlStationsXML.getElementsByTagName("gml:featureMember");
         // initialise la source de donnees qui va contenir les entites
         var stationSource = new ol.source.Vector({});
 
@@ -474,8 +473,8 @@ mviewer.customControls.calcModel = (function () {
         // pour chaque entite
         for (var j = 0; j < features.length; j++) {
             // recupere sa coordonnees et son nom
-            coord = gmlStationsXML.getElementsByTagName("gml:coordinates")[j].textContent.split(",");
-            nameStation = gmlStationsXML.getElementsByTagName("ogr:code_hydro")[j].textContent;
+            coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
+            nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
             arrStations.push(nameStation);
             _nameColor.push({
                 key: nameStation,

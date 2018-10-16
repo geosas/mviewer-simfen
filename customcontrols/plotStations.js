@@ -23,8 +23,8 @@ mviewer.customControls.plotStations = (function () {
     var _waitingQueue = false;
     var _updating;
     var _timeoutCount = 0;
-    
-    if (window.navigator.userAgent.indexOf("Edge") > -1) {
+
+    /*if (window.navigator.userAgent.indexOf("Edge") > -1) {
         // Enleve de wps: a chacun des tags
         var _processAccepted = "ProcessAccepted";
         var _processStatus = "Status";
@@ -47,7 +47,7 @@ mviewer.customControls.plotStations = (function () {
         var _processFeatureMember = "gml:featureMember";
         var _processCoordinates = "gml:coordinates";
         var _processFeatureName = "ogr:code_hydro";
-    }
+    }*/
 
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
@@ -119,10 +119,10 @@ mviewer.customControls.plotStations = (function () {
 
         return _xmlRequest;
     }
-    
-    function processingBarUpdate(percent, message){
+
+    function processingBarUpdate(percent, message) {
         // si le traitement est termine
-        if (percent === 100){
+        if (percent === 100) {
             // supprime l'animation (via la valeur 0), et met le fond en bleu
             percent = 0;
             document.getElementById("processingBar").style.backgroundColor = "#007ACC";
@@ -133,25 +133,23 @@ mviewer.customControls.plotStations = (function () {
         document.getElementById("progression").setAttribute("aria-valuenow", String.format("{0}", percent));
         document.getElementById("processing-text").innerHTML = message;
     }
-    
-    function getAndSetStatus(xmlResponse) {
-        // Recupere le status de la requete wps
-        var status = xmlResponse.getElementsByTagName(_processStatus)[0].childNodes[1];
+
+    function getAndSetStatus(response) {
         // Met a jour le tableau de resultat selon ce status
-        if (status.nodeName === _processAccepted) {
+        if (response.Status.ProcessAccepted) {
             processingBarUpdate(5, "File d'attente, veuillez patienter");
-            return status.nodeName;
+            //return response.Status.ProcessAccepted;
 
-        } else if (status.nodeName === _processStarted) {
-            var percent = status.getAttribute("percentCompleted");
-            processingBarUpdate(percent, status.textContent);
-            return status.nodeName;
+        } else if (response.Status.ProcessStarted) {
+            var percent = response.Status.ProcessStarted.percentCompleted;
+            processingBarUpdate(percent, response.Status.ProcessStarted);
+            //return response.Status.ProcessAccepted;
 
-        } else if (status.nodeName === _processSucceeded) {
+        } else if (response.Status.ProcessSucceeded) {
             processingBarUpdate(100, "Processus terminé");
-            return status.nodeName;
+            //return response.Status.ProcessSucceeded;
 
-        } else if (status.nodeName === _processFailed) {
+        } else if (response.Status.ProcessFailed) {
             // relance la requete etant donne que le process n'a pas de raison de failed,
             // a part si la requete est passee dans la base sqlite et donc, 
             // elle n'a pas pu etre recuperee lorsqu'il a ete possible de l'executer
@@ -164,9 +162,9 @@ mviewer.customControls.plotStations = (function () {
             alert("Relancez le traitement");
 
         } else {
-            processingBarUpdate(0,"Le processus a échoué, actualisez la page")
+            processingBarUpdate(0, "Le processus a échoué, actualisez la page")
             clearInterval(_updating);
-            return 'Error';
+            //return 'Error';
         }
     }
 
@@ -179,7 +177,7 @@ mviewer.customControls.plotStations = (function () {
         // passe des requetes en cache.
         _xhrGet.timeout = 2000;
         // si trop de timeout, arrete l'actualisation
-        _xhrGet.ontimeout = function (){
+        _xhrGet.ontimeout = function () {
             _timeoutCount += 1;
             if (_timeoutCount === 4) {
                 clearInterval(_updating);
@@ -190,38 +188,39 @@ mviewer.customControls.plotStations = (function () {
         _xhrGet.addEventListener('readystatechange', function () {
             if (_xhrGet.readyState === XMLHttpRequest.DONE && _xhrGet.status === 200) {
                 // recupere la reponse de l'url
-                var xmlResponse = _xhrGet.responseXML;
+                var response = $.xml2json(_xhrGet.responseXML);
                 // recupere et met a jour le status du traitement
-                console.log(_xhrGet);
                 if (popup) {
-                    var status = getAndSetStatus(xmlResponse);
-                } else {
-                    var status = xmlResponse.getElementsByTagName(_processStatus)[0].childNodes[1].nodeName;
+                    getAndSetStatus(response);
                 }
                 var request_time = new Date().getTime() - start_time;
                 console.log("La requete a pris : " + request_time);
-                console.log("Le status est : " + status);
                 // les textes sont ecrits directement etant donne que la fonction retourne le nodeName
-                if (status !== "wps:ProcessAccepted" && status !== "wps:ProcessStarted") {
+                if (!(response.Status.ProcessAccepted) && !(response.Status.ProcessStarted)) {
                     // arrete l'ecoute du status puisque le process est termine
                     clearInterval(_updating);
-                    if (status === "wps:ProcessSucceeded") {
-                        // identifie la balise de sortie
-                        var processOutputs = xmlResponse.getElementsByTagName(_processOutputs);
-                        for (var i = 0; i < processOutputs[0].childNodes.length; i++) {
-                            try {
-                                var outputName = processOutputs[0].childNodes[i].children[0].textContent;
-                                if (outputName === 'XY') {
-                                    _xy = processOutputs[0].childNodes[i].children[2].children[0].textContent.split(" ");
-                                    mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
+                    if (response.Status.ProcessSucceeded) {
+                        // le comptage n'est pas le meme s'il y a plusieurs outputs
+                        if (Object.values(response.ProcessOutputs)[0].length > 1) {
+                            var iteration = Object.values(response.ProcessOutputs)[0].length;
+                        } else {
+                            var iteration = Object.values(response.ProcessOutputs).length;
+                        }
 
-                                } else if (outputName === 'Stations') {
-                                    var gmlStations = processOutputs[0].childNodes[i].children[2].outerHTML;
-                                    plotStation(gmlStations);
-                                }
+                        for (var i = 0; i < iteration; i++) {
+                            if (iteration === 1) {
+                                var outputTag = Object.values(response.ProcessOutputs)[0];
+                            } else {
+                                var outputTag = (Object.values(response.ProcessOutputs)[0])[i];
+                            }
 
-                            } catch (error) {
-                                continue;
+                            if (outputTag.Identifier === "XY") {
+                                _xy = outputTag.Data.LiteralData.split(" ");
+                                mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
+
+                            } else if (outputTag.Identifier === "Stations") {
+                                plotStation(outputTag.Data.ComplexData.FeatureCollection.featureMember);
+
                             }
                         }
                     }
@@ -238,9 +237,9 @@ mviewer.customControls.plotStations = (function () {
         xhr.addEventListener('readystatechange', function () {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                 // Recupere le xml de la reponse
-                var xmlResponse = xhr.responseXML;
+                var response = $.xml2json(xhr.responseXML);
                 // Recupere l'url de la variable statusLocation
-                var statusLocationURL = xmlResponse.getElementsByTagName(_processExecuteResponse)[0].getAttribute("statusLocation");
+                var statusLocationURL = response.statusLocation;
                 _updating = setInterval(function () {
                     updateProcess(_updating, statusLocationURL, false);
                 }, _refreshTimeXY);
@@ -248,7 +247,7 @@ mviewer.customControls.plotStations = (function () {
         });
         xhr.send(rqtWPS);
     }
-    
+
     // Execute la requete Post
     function processPlotStations(rqtWPS) {
         _xhrPost = getXDomainRequest();
@@ -257,9 +256,9 @@ mviewer.customControls.plotStations = (function () {
         _xhrPost.addEventListener('readystatechange', function () {
             if (_xhrPost.readyState === XMLHttpRequest.DONE && _xhrPost.status === 200) {
                 // Recupere le xml de la reponse
-                var xmlResponse = _xhrPost.responseXML;
+                var response = $.xml2json(_xhrPost.responseXML);
                 // Recupere l'url de la variable statusLocation
-                var statusLocationURL = xmlResponse.getElementsByTagName(_processExecuteResponse)[0].getAttribute("statusLocation");
+                var statusLocationURL = response.statusLocation;
                 // Maj de la barre de progression
                 processingBarUpdate(5, "Vérification de la file d'attente...");
                 // Debut d'ecoute du resultat
@@ -285,11 +284,11 @@ mviewer.customControls.plotStations = (function () {
         return xmlDoc;
     }
 
-    function plotStation(gmlStations) {
+    function plotStation(features) {
         /*recupere dans le document xml les informations spatiales des stations
         pour ensuite les afficher sur la carte. Si une couche de station a deja ete
         produite, la supprime avant*/
-        
+
         function pointStyleFunctionSelected(feature) {
             return new ol.style.Style({
                 image: new ol.style.Circle({
@@ -333,10 +332,6 @@ mviewer.customControls.plotStations = (function () {
             _map.removeLayer(layersToRemove[i]);
         }
 
-        // converti la chaine de texte en objet xml
-        var gmlStationsXML = StringToXMLDom(gmlStations);
-        // pour chaque entite (station)
-        var features = gmlStationsXML.getElementsByTagName(_processFeatureMember);
         // initialise la source de donnees qui va contenir les entites
         var stationSource = new ol.source.Vector({});
 
@@ -347,12 +342,12 @@ mviewer.customControls.plotStations = (function () {
             source: stationSource,
             style: pointStyleFunctionSelected
         });
-    
+
         // pour chaque entite
         for (var j = 0; j < features.length; j++) {
             // recupere sa coordonnees et son nom
-            coord = gmlStationsXML.getElementsByTagName(_processCoordinates)[j].textContent.split(",");
-            nameStation = gmlStationsXML.getElementsByTagName(_processFeatureName)[j].textContent;
+            coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
+            nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
             arrStations.push(nameStation);
 
             // cree le point en veillant a changer la projection
@@ -380,8 +375,8 @@ mviewer.customControls.plotStations = (function () {
             $(".mv-layer-options[data-layerid='plotStations'] .form-group-opacity").hide();
             document.getElementsByClassName("mv-header")[0].children[0].textContent = "Résultats";
             // Configure la fenetre de popup
-            if (!$("#toolsBoxPopup")){
-            $("#bottom-panel .popup-content").append("\
+            if (!$("#toolsBoxPopup")) {
+                $("#bottom-panel .popup-content").append("\
             <div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;\
                 height: 320px; position: absolute;'>\
                 <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
