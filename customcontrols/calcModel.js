@@ -223,7 +223,7 @@ mviewer.customControls.calcModel = (function () {
                             } else if (outputTag.Identifier === "WaterML") {
                                 plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
                                 // ajoute le bouton pour afficher les debits mesures employes
-                                $("#divPopup2").append("\
+                                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append("\
                                 <div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>\
                                 <button class='btn btn-default' type='button'\
                                 onclick='mviewer.customControls.calcModel.getMeasuredFlow();'>\
@@ -528,6 +528,26 @@ mviewer.customControls.calcModel = (function () {
             $("div").remove(".layerdisplay-legend");
             $(".mv-layer-options[data-layerid='calcModel'] .form-group-opacity").hide();
             document.getElementsByClassName("mv-header")[0].children[0].textContent = "Résultats";
+            // Configure la fenetre de resultat
+            if ($("#toolsBoxPopup").length == 0) {
+                $(".popup-content").append("\
+                <div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;\
+                    height: 320px; position: absolute;'>\
+                    <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
+                        background-color: #808080'>\
+                        <div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar'\ style='background-color: #007ACC; width:0%;'>\
+                            <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;'>\
+                            Aucun processus en cours\
+                            </p>\
+                        </div>\
+                    </div>\
+                    <div id='divPopup1'></div>\
+                    <div id='divPopup2'></div>\
+                    <div id='divPopup3'></div>\
+                </div>\
+                <div id='graphFlowSimulated' class='profile-addon panel-graph' style='height: 320px; width:50%; margin: 0 auto;'></div>\
+                </div>");
+            }
             info.disable();
         },
 
@@ -601,9 +621,8 @@ mviewer.customControls.calcModel = (function () {
                 // construit la requete xml POST
                 _rqtWPS = buildPostRequest(dictInputs, _identifier);
                 console.log("Voici la requête WPS envoyée : " + _rqtWPS);
-                // s'il y a deja eu une execution du process, supprime tous les resultats
-                // pour la nouvelle requete
-                if (document.getElementById("graphFlowSimulated")) {
+                // supprime les resultats du precedent process
+                if (document.getElementById("graphFlowSimulated").firstChild) {
                     document.getElementById("graphFlowSimulated").firstChild.remove();
                     document.getElementById("divPopup1").firstChild.remove();
                     var divBtn = document.getElementById("divPopup2");
@@ -612,25 +631,6 @@ mviewer.customControls.calcModel = (function () {
                         divBtn.removeChild(fcBtn);
                         fcBtn = divBtn.firstChild;
                     }
-                } else {
-                    // Configure la fenetre de popup
-                    $(".popup-content").append("\
-                    <div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;\
-                        height: 320px; position: absolute;'>\
-                        <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
-                            background-color: #808080'>\
-                            <div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar'\ style='background-color: #007ACC; width:0%;'>\
-                                <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;'>\
-                                Aucun processus en cours\
-                                </p>\
-                            </div>\
-                        </div>\
-                        <div id='divPopup1'></div>\
-                        <div id='divPopup2'></div>\
-                        <div id='divPopup3'></div>\
-                    </div>\
-                    <div id='graphFlowSimulated' class='profile-addon panel-graph' style='height: 320px; width:50%; margin: 0 auto;'></div>\
-                    </div>");
                 }
                 // execute le process
                 processCalcModel(_rqtWPS);
