@@ -234,7 +234,13 @@ mviewer.customControls.calcModel = (function () {
 
                             } else if (outputTag.Identifier === "MeasuredFlow") {
                                 plotMeasuredFlow(outputTag.Data.ComplexData);
-                                document.getElementById("btnMeasuredFlow").remove();
+                                // supprime le bouton
+                                var divBtn = document.getElementById("divPopup2");
+                                var fcBtn = divBtn.firstChild;
+                                while(fcBtn) {
+                                    divBtn.removeChild(fcBtn);
+                                    fcBtn = divBtn.firstChild;
+                                }
                             }
                         }
                     }
@@ -455,6 +461,18 @@ mviewer.customControls.calcModel = (function () {
             });
         }
 
+        function addStation(coord, nameStation, stationSource) {
+            // cree le point en veillant a changer la projection
+            var featureGeom = new ol.geom.Point(ol.proj.transform([coord[0], coord[1]], 'EPSG:2154', 'EPSG:3857'));
+            // cree la feature
+            var featureThing = new ol.Feature({
+                name: nameStation,
+                geometry: featureGeom
+            });
+            // ajoute la feature a la source
+            stationSource.addFeature(featureThing);
+        }
+
         var createTextStyle = function (feature) {
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
@@ -493,26 +511,30 @@ mviewer.customControls.calcModel = (function () {
             style: pointStyleFunctionSelected
         });
 
-        // pour chaque entite
-        for (var j = 0; j < features.length; j++) {
-            // recupere sa coordonnees et son nom
-            coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
-            nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
+        // s'il n'y a qu'une feature/station
+        if (features.length == null) {
+            coord = features.hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
+            nameStation = features.hydrometrie_qmj_historique.code_hydro;
             arrStations.push(nameStation);
             _nameColor.push({
                 key: nameStation,
-                value: _colors[j]
+                value: _colors[0]
             });
+            addStation(coord, nameStation, stationSource);
 
-            // cree le point en veillant a changer la projection
-            var featureGeom = new ol.geom.Point(ol.proj.transform([coord[0], coord[1]], 'EPSG:2154', 'EPSG:3857'));
-            // cree la feature
-            var featureThing = new ol.Feature({
-                name: nameStation,
-                geometry: featureGeom
-            });
-            // ajoute la feature a la source
-            stationSource.addFeature(featureThing);
+        } else {
+            // s'il y en a plusieurs
+            for (var j = 0; j < features.length; j++) {
+                // recupere sa coordonnees et son nom
+                coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
+                nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
+                arrStations.push(nameStation);
+                _nameColor.push({
+                    key: nameStation,
+                    value: _colors[j]
+                });
+                addStation(coord, nameStation, stationSource);
+            }
         }
         // ajoute la couche de point des stations a la carte
         _map.addLayer(stationLayer);
