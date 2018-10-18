@@ -8,6 +8,25 @@ mviewer.customControls.calcModel = (function () {
     var _xhrGet;
     var _xmlRequest;
     var _rqtWPS;
+    // $.getScript("module.js", function(){
+    //     alert("Script loaded but not necessarily executed.");
+    // });
+
+    // var rawFile = new XMLHttpRequest();
+    // rawFile.open("GET", "config.json", false);
+    // rawFile.onreadystatechange = function ()
+    // {
+    //     if(rawFile.readyState === 4)
+    //     {
+    //         if(rawFile.status === 200 || rawFile.status == 0)
+    //         {
+    //             var allText = $.xml2json(rawFile.responseXML);
+    //             alert(allText.url);
+    //         }
+    //     }
+    // }
+    // rawFile.send(null);
+
     var _urlWPS = "http://wps.geosas.fr/simfen-dev?";
     var _service = "WPS";
     var _version = "1.0.0";
@@ -15,7 +34,6 @@ mviewer.customControls.calcModel = (function () {
     var _identifier = "calcModel";
     var _identifierXY = "xyOnNetwork";
     var _identifierGetMeasuredFlow = "getMeasuredFlow";
-    var _datainputs = "X/Y/Start/End/DeltaT/InBasin/ListStations"
     var _storeExecuteResponse = true;
     var _lineage = true;
     var _status = true;
@@ -76,14 +94,17 @@ mviewer.customControls.calcModel = (function () {
             <wps:DataInputs>\
             ', _request, _version, _service, identifier);
 
-        for (key in dictInputs) {
+        var dataIdentifiers = Object.keys(dictInputs);
+        var dataInputs = Object.keys(dictInputs).map(function(itm){return dictInputs[itm];});
+
+        for (var i = 0; i < dataIdentifiers.length; i++) {
             inputXml = String.format('\
             <wps:Input>\
             <ows:Identifier>{0}</ows:Identifier>\
             <wps:Data>\
             <wps:LiteralData>{1}</wps:LiteralData>\
             </wps:Data>\
-            </wps:Input>', key, dictInputs[key]);
+            </wps:Input>', dataIdentifiers[i], dataInputs[i]);
             _xmlRequest += inputXml;
         }
 
@@ -202,7 +223,7 @@ mviewer.customControls.calcModel = (function () {
                             } else if (outputTag.Identifier === "WaterML") {
                                 plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
                                 // ajoute le bouton pour afficher les debits mesures employes
-                                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append("\
+                                $("#divPopup2").append("\
                                 <div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>\
                                 <button class='btn btn-default' type='button'\
                                 onclick='mviewer.customControls.calcModel.getMeasuredFlow();'>\
@@ -507,24 +528,6 @@ mviewer.customControls.calcModel = (function () {
             $("div").remove(".layerdisplay-legend");
             $(".mv-layer-options[data-layerid='calcModel'] .form-group-opacity").hide();
             document.getElementsByClassName("mv-header")[0].children[0].textContent = "Résultats";
-            // Configure la fenetre de popup
-            $("#bottom-panel .popup-content").append("\
-            <div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;\
-                height: 320px; position: absolute;'>\
-                <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
-                    background-color: #808080'>\
-                    <div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar'\ style='background-color: #007ACC; width:0%;'>\
-                        <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;'>\
-                        Aucun processus en cours\
-                        </p>\
-                    </div>\
-                </div>\
-                <div id='divPopup1'></div>\
-                <div id='divPopup2'></div>\
-                <div id='divPopup3'></div>\
-            </div>\
-            <div id='graphFlowSimulated' class='profile-addon panel-graph' style='height: 320px; width:50%; margin: 0 auto;'></div>\
-            </div>");
             info.disable();
         },
 
@@ -539,8 +542,8 @@ mviewer.customControls.calcModel = (function () {
                 coord = ol.coordinate.format(_xy, template);
                 // defini les parametres x,y du service
                 var dictInputs = {
-                    [_datainputs.split("/")[0]]: [coord.split(',')[0]],
-                    [_datainputs.split("/")[1]]: [coord.split(',')[1]]
+                    X: String(_xy).split(',')[0],
+                    Y: String(_xy).split(',')[1]
                 };
                 // construit la requete wps
                 var rqtWPS = buildPostRequest(dictInputs, _identifierXY);
@@ -563,12 +566,12 @@ mviewer.customControls.calcModel = (function () {
                 listStations = listStations.substring(0, listStations.length - 1);
                 // construit la requete wps
                 var dictInputs = {
-                    [_datainputs.split("/")[0]]: [String(_xy).split(',')[0]],
-                    [_datainputs.split("/")[1]]: [String(_xy).split(',')[1]],
-                    [_datainputs.split("/")[2]]: [$("#dateStart").val()],
-                    [_datainputs.split("/")[3]]: [$("#dateEnd").val()],
-                    [_datainputs.split("/")[5]]: [$("#inBasin").is(":checked")],
-                    [_datainputs.split("/")[6]]: [listStations],
+                                X: String(_xy).split(',')[0],
+                                Y: String(_xy).split(',')[1],
+                                Start: $("#dateStart").val(),
+                                End: $("#dateEnd").val(),
+                                InBasin: $("#inBasin").is(":checked"),
+                                ListStations: listStations
                 };
                 var rqtWPS = buildPostRequest(dictInputs, _identifierGetMeasuredFlow);
                 processGetMeasuredStations(rqtWPS);
@@ -587,17 +590,48 @@ mviewer.customControls.calcModel = (function () {
 
                 // permet de supprimer les decimales, mais cree une chaine de texte a split
                 var dictInputs = {
-                                [_datainputs.split("/")[0]]: [String(_xy).split(',')[0]],
-                                [_datainputs.split("/")[1]]: [String(_xy).split(',')[1]],
-                                [_datainputs.split("/")[2]]: [$("#dateStart").val()],
-                                [_datainputs.split("/")[3]]: [$("#dateEnd").val()],
-                                [_datainputs.split("/")[4]]: [$("input[name='deltaT']:checked").val()],
-                                [_datainputs.split("/")[5]]: [$("#inBasin").is(":checked")],
-                                [_datainputs.split("/")[6]]: [listStations],
+                                X: String(_xy).split(',')[0],
+                                Y: String(_xy).split(',')[1],
+                                Start: $("#dateStart").val(),
+                                End: $("#dateEnd").val(),
+                                DeltaT: $("input[name='deltaT']:checked").val(),
+                                InBasin: $("#inBasin").is(":checked"),
+                                ListStations: listStations
                 };
                 // construit la requete xml POST
                 _rqtWPS = buildPostRequest(dictInputs, _identifier);
                 console.log("Voici la requête WPS envoyée : " + _rqtWPS);
+                // s'il y a deja eu une execution du process, supprime tous les resultats
+                // pour la nouvelle requete
+                if (document.getElementById("graphFlowSimulated")) {
+                    document.getElementById("graphFlowSimulated").firstChild.remove();
+                    document.getElementById("divPopup1").firstChild.remove();
+                    var divBtn = document.getElementById("divPopup2");
+                    var fcBtn = divBtn.firstChild;
+                    while(fcBtn) {
+                        divBtn.removeChild(fcBtn);
+                        fcBtn = divBtn.firstChild;
+                    }
+                } else {
+                    // Configure la fenetre de popup
+                    $(".popup-content").append("\
+                    <div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;\
+                        height: 320px; position: absolute;'>\
+                        <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
+                            background-color: #808080'>\
+                            <div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar'\ style='background-color: #007ACC; width:0%;'>\
+                                <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;'>\
+                                Aucun processus en cours\
+                                </p>\
+                            </div>\
+                        </div>\
+                        <div id='divPopup1'></div>\
+                        <div id='divPopup2'></div>\
+                        <div id='divPopup3'></div>\
+                    </div>\
+                    <div id='graphFlowSimulated' class='profile-addon panel-graph' style='height: 320px; width:50%; margin: 0 auto;'></div>\
+                    </div>");
+                }
                 // execute le process
                 processCalcModel(_rqtWPS);
                 // affiche le panneau de resultat

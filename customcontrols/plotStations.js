@@ -14,7 +14,6 @@ mviewer.customControls.plotStations = (function () {
     var _request = "Execute";
     var _identifier = "getStationsGeobretagne";
     var _identifierXY = "xyOnNetwork";
-    var _datainputs = "X/Y/Start/End/Distance"
     var _storeExecuteResponse = true;
     var _lineage = true;
     var _status = true;
@@ -23,31 +22,6 @@ mviewer.customControls.plotStations = (function () {
     var _waitingQueue = false;
     var _updating;
     var _timeoutCount = 0;
-
-    /*if (window.navigator.userAgent.indexOf("Edge") > -1) {
-        // Enleve de wps: a chacun des tags
-        var _processAccepted = "ProcessAccepted";
-        var _processStatus = "Status";
-        var _processStarted = "ProcessStarted";
-        var _processFailed = "ProcessFailed";
-        var _processSucceeded = "ProcessSucceeded";
-        var _processOutputs = "ProcessOutputs";
-        var _processExecuteResponse = "ExecuteResponse";
-        var _processFeatureMember = "featureMember";
-        var _processCoordinates = "coordinates";
-        var _processFeatureName = "code_hydro";
-    } else {
-        var _processAccepted = "wps:ProcessAccepted";
-        var _processStatus = "wps:Status";
-        var _processStarted = "wps:ProcessStarted";
-        var _processFailed = "wps:ProcessFailed";
-        var _processSucceeded = "wps:ProcessSucceeded";
-        var _processOutputs = "wps:ProcessOutputs";
-        var _processExecuteResponse = "wps:ExecuteResponse";
-        var _processFeatureMember = "gml:featureMember";
-        var _processCoordinates = "gml:coordinates";
-        var _processFeatureName = "ogr:code_hydro";
-    }*/
 
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
@@ -98,14 +72,17 @@ mviewer.customControls.plotStations = (function () {
             <wps:DataInputs>\
             ', _request, _version, _service, identifier);
 
-        for (key in dictInputs) {
+        var dataIdentifiers = Object.keys(dictInputs);
+        var dataInputs = Object.keys(dictInputs).map(function(itm){return dictInputs[itm];});
+
+        for (var i = 0; i < dataIdentifiers.length; i++) {
             inputXml = String.format('\
             <wps:Input>\
             <ows:Identifier>{0}</ows:Identifier>\
             <wps:Data>\
             <wps:LiteralData>{1}</wps:LiteralData>\
             </wps:Data>\
-            </wps:Input>', key, dictInputs[key]);
+            </wps:Input>', dataIdentifiers[i], dataInputs[i]);
             _xmlRequest += inputXml;
         }
 
@@ -138,16 +115,13 @@ mviewer.customControls.plotStations = (function () {
         // Met a jour le tableau de resultat selon ce status
         if (response.Status.ProcessAccepted) {
             processingBarUpdate(5, "File d'attente, veuillez patienter");
-            //return response.Status.ProcessAccepted;
 
         } else if (response.Status.ProcessStarted) {
             var percent = response.Status.ProcessStarted.percentCompleted;
             processingBarUpdate(percent, response.Status.ProcessStarted);
-            //return response.Status.ProcessAccepted;
 
         } else if (response.Status.ProcessSucceeded) {
             processingBarUpdate(100, "Processus terminé");
-            //return response.Status.ProcessSucceeded;
 
         } else if (response.Status.ProcessFailed) {
             // relance la requete etant donne que le process n'a pas de raison de failed,
@@ -164,7 +138,6 @@ mviewer.customControls.plotStations = (function () {
         } else {
             processingBarUpdate(0, "Le processus a échoué, actualisez la page")
             clearInterval(_updating);
-            //return 'Error';
         }
     }
 
@@ -376,24 +349,25 @@ mviewer.customControls.plotStations = (function () {
             $(".mv-layer-options[data-layerid='plotStations'] .form-group-opacity").hide();
             document.getElementsByClassName("mv-header")[0].children[0].textContent = "Résultats";
             // Configure la fenetre de popup
-            if (!$("#toolsBoxPopup")) {
-                $("#bottom-panel .popup-content").append("\
-            <div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;\
-                height: 320px; position: absolute;'>\
-                <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
-                    background-color: #808080'>\
-                    <div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar'\ style='background-color: #007ACC; width:0%;'>\
-                        <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;'>\
-                        Aucun processus en cours\
-                        </p>\
-                    </div>\
-                </div>\
-                <div id='divPopup1'></div>\
-                <div id='divPopup2'></div>\
-                <div id='divPopup3'></div>\
-            </div>\
-            </div>");
-            }
+            // if (!$("#toolsBoxPopup")) {
+            //     $("#bottom-panel .popup-content").append("\
+            // <div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;\
+            //     height: 320px; position: absolute;'>\
+            //     <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
+            //         background-color: #808080'>\
+            //         <div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar'\ style='background-color: #007ACC; width:0%;'>\
+            //             <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;'>\
+            //             Aucun processus en cours\
+            //             </p>\
+            //         </div>\
+            //     </div>\
+            //     <div id='divPopup1'></div>\
+            //     <div id='divPopup2'></div>\
+            //     <div id='divPopup3'></div>\
+            // </div>\
+            // <div id='graphFlowSimulated' class='profile-addon panel-graph' style='height: 320px; width:50%; margin: 0 auto;'></div>\
+            // </div>");
+            // }
             info.disable();
         },
 
@@ -408,8 +382,8 @@ mviewer.customControls.plotStations = (function () {
                 coord = ol.coordinate.format(_xy, template);
                 // defini les parametres x,y du service
                 var dictInputs = {
-                    [_datainputs.split("/")[0]]: [coord.split(',')[0]],
-                    [_datainputs.split("/")[1]]: [coord.split(',')[1]]
+                    X: String(_xy).split(',')[0],
+                    Y: String(_xy).split(',')[1]
                 };
                 // construit la requete wps
                 var rqtWPS = buildPostRequest(dictInputs, _identifierXY);
@@ -423,11 +397,11 @@ mviewer.customControls.plotStations = (function () {
             if (_xy) {
                 // permet de supprimer les decimales, mais cree une chaine de texte a split
                 var dictInputs = {
-                                [_datainputs.split("/")[0]]: [String(_xy).split(',')[0]],
-                                [_datainputs.split("/")[1]]: [String(_xy).split(',')[1]],
-                                [_datainputs.split("/")[2]]: [$("#dateStart").val()],
-                                [_datainputs.split("/")[3]]: [$("#dateEnd").val()],
-                                [_datainputs.split("/")[4]]: [$("#distanceStations").val()]
+                                X: String(_xy).split(',')[0],
+                                Y: String(_xy).split(',')[1],
+                                Start: $("#dateStart").val(),
+                                End: $("#dateEnd").val(),
+                                Distance: [$("#distanceStations").val()]
                 };
                 // construit la requete xml POST
                 _rqtWPS = buildPostRequest(dictInputs, _identifier);

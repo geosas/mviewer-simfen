@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE simfen [
+  <!ENTITY path "/apps/simfen-dev">
+]>
 <config>
     <application
         title="Portail cartographique du projet SIMFEN"
         logo=""
-        help="/apps/simfen-dev/simfen_help.html"
-        style="/apps/simfen-dev/css/simfen.css"
+        help="&path;/simfen_help.html"
+        style="&path;/css/simfen.css"
         exportpng="false"
         showhelp="true"
         coordinates="false"
@@ -23,14 +26,14 @@
             <group name="Services" id="services">
                 <layer id="calcModel" name="Simulation du débit" visible="true" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
-                    url="/apps/simfen-dev/customlayers/calcModel.js"
-                    customcontrol="true" customcontrolpath="/apps/simfen-dev/customcontrols/"
+                    url="&path;/customlayers/calcModel.js"
+                    customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">           
                 </layer>
                 <layer id="plotStations" name="Affichage des stations disponibles" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
-                    url="/apps/simfen-dev/customlayers/plotStations.js"
-                    customcontrol="true" customcontrolpath="/apps/simfen-dev/customcontrols/"
+                    url="&path;/customlayers/plotStations.js"
+                    customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="false">
                 </layer>
                 <!--<layer id="calcGhosh" name="calcGhosh" visible="false" queryable="false"
@@ -43,8 +46,8 @@
             <group name="Fonds de carte" id="fondsDeCarte">
                 <layer id="reseauHydro" name="Réseau hydrographique" visible="true" queryable="false"
                     type="customlayer" opacity="0.5" legendurl="img/blank.gif"
-                    url="/apps/simfen-dev/customlayers/reseauHydro.js"
-                    customcontrol="false" customcontrolpath="/apps/simfen-dev/customcontrols/"
+                    url="&path;/customlayers/reseauHydro.js"
+                    customcontrol="false" customcontrolpath="&path;/customcontrols/"
                     expanded="false">           
                 </layer>
             </group>
