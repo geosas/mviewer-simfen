@@ -37,8 +37,9 @@ mviewer.customControls.calcModel = (function () {
     var _storeExecuteResponse = true;
     var _lineage = true;
     var _status = true;
-    var _refreshTime = 25000;
-    var _refreshTimeXY = 1000;
+    var _refreshTime;
+    var _refreshTimeXY;
+    var _timeOut;
     var _waitingQueue = false;
     var _updating;
     var _nameColor = [];
@@ -152,13 +153,12 @@ mviewer.customControls.calcModel = (function () {
             // relance la requete etant donne que le process n'a pas de raison de failed,
             // a part si la requete est passee dans la base sqlite et donc, 
             // elle n'a pas pu etre recuperee lorsqu'il a ete possible de l'executer
-
             // supprime l'ancien updating
             clearInterval(_updating);
             // execute la requete a nouveau
-            //processCalcModel(_rqtWPS);
-            processingBarUpdate(0, "Le processus a rencontré une erreur");
-            alert("Relancez le traitement");
+            processExecution();
+            processingBarUpdate(5, "File d'attente, veuillez patienter");
+            //alert("Relancez le traitement");
 
         } else {
             processingBarUpdate(0, "Le processus a échoué, actualisez la page")
@@ -167,133 +167,98 @@ mviewer.customControls.calcModel = (function () {
         }
     }
 
-    function updateProcess(url, popup) {
-        var start_time = new Date().getTime();
-        _xhrGet = getXDomainRequest();
-        _xhrGet.open("GET", ajaxURL(url), true);
-        // indique un timeout de 4s pour empecher les requetes
-        // de s'executer indefiniment dans le cas ou le navigateur
-        // passe des requetes en cache.
-        _xhrGet.timeout = 22000;
-        // si trop de timeout, arrete l'actualisation
-        _xhrGet.ontimeout = function () {
-            _timeoutCount += 1;
-            if (_timeoutCount === 4) {
-                clearInterval(_updating);
-                processingBarUpdate(0, "Le serveur ne répond pas, actualisez le navigateur");
-                _timeoutCount = 0;
-            }
-        }
-        _xhrGet.addEventListener('readystatechange', function () {
-            if (_xhrGet.readyState === XMLHttpRequest.DONE && _xhrGet.status === 200) {
-                // Converti le xml en JSON pour pouvoir interagir avec les tags
-                // depuis n'importe quel navigateur (EDGE ne comprend pas les tags wps: et autres)
-                // tres important de le faire et ça evite de faire des getElements...)
-                var response = $.xml2json(_xhrGet.responseXML);
-                // recupere et met a jour le status du traitement
-                if (popup) {
-                    getAndSetStatus(response);
-                }
-                var request_time = new Date().getTime() - start_time;
-                console.log("La requete a pris : " + request_time);
-                if (!(response.Status.ProcessAccepted) && !(response.Status.ProcessStarted)) {
-                    // arrete l'ecoute du status puisque le process est termine
+    function updateProcess(url) {
+        try{
+            var start_time = new Date().getTime();
+            _xhrGet = getXDomainRequest();
+            _xhrGet.open("GET", ajaxURL(url), true);
+            // indique un timeout pour empecher les requetes
+            // de s'executer indefiniment dans le cas ou le navigateur
+            // passe des requetes en cache.
+            _xhrGet.timeout = _timeOut;
+            // si trop de timeout, arrete l'actualisation
+            _xhrGet.ontimeout = function () {
+                _timeoutCount += 1;
+                if (_timeoutCount === 4) {
                     clearInterval(_updating);
-                    if (response.Status.ProcessSucceeded) {
-                        // le comptage n'est pas le meme s'il y a plusieurs outputs
-                        var outputsTags = Object.keys(response.ProcessOutputs).map(function(itm){return response.ProcessOutputs[itm];});
-                        //if (Object.values(response.ProcessOutputs)[0].length > 1) {
-                        if (outputsTags[0].length > 1) {
-                            var iteration = outputsTags[0].length;
-                        } else {
-                            var iteration = outputsTags.length;
-                        }
-                        
-                        for (var i = 0; i < iteration; i++) {
-                            if (iteration === 1) {
-                                var outputTag = outputsTags[0];
+                    processingBarUpdate(0, "Le serveur ne répond pas, actualisez le navigateur");
+                    _timeoutCount = 0;
+                }
+            }
+            _xhrGet.addEventListener('readystatechange', function () {
+                if (_xhrGet.readyState === XMLHttpRequest.DONE && _xhrGet.status === 200) {
+                    // Converti le xml en JSON pour pouvoir interagir avec les tags
+                    // depuis n'importe quel navigateur (EDGE ne comprend pas les tags wps: et autres)
+                    // tres important de le faire et ça evite de faire des getElements...)
+                    var response = $.xml2json(_xhrGet.responseXML);
+                    // recupere et met a jour le status du traitement
+                    getAndSetStatus(response);
+                    var request_time = new Date().getTime() - start_time;
+                    console.log("La requete a pris : " + request_time);
+                    if (!(response.Status.ProcessAccepted) && !(response.Status.ProcessStarted)) {
+                        // arrete l'ecoute du status puisque le process est termine
+                        clearInterval(_updating);
+                        if (response.Status.ProcessSucceeded) {
+                            // le comptage n'est pas le meme s'il y a plusieurs outputs
+                            var outputsTags = Object.keys(response.ProcessOutputs).map(function(itm){return response.ProcessOutputs[itm];});
+                            //if (Object.values(response.ProcessOutputs)[0].length > 1) {
+                            if (outputsTags[0].length > 1) {
+                                var iteration = outputsTags[0].length;
                             } else {
-                                var outputTag = outputsTags[0][i];
+                                var iteration = outputsTags.length;
                             }
                             
-                            if (outputTag.Identifier === "XY") {
-                                _xy = outputTag.Data.LiteralData.split(" ");
-                                mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
+                            for (var i = 0; i < iteration; i++) {
+                                if (iteration === 1) {
+                                    var outputTag = outputsTags[0];
+                                } else {
+                                    var outputTag = outputsTags[0][i];
+                                }
+                                
+                                if (outputTag.Identifier === "XY") {
+                                    _xy = outputTag.Data.LiteralData.split(" ");
+                                    mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
 
-                            } else if (outputTag.Identifier === "WaterML") {
-                                plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
-                                // ajoute le bouton pour afficher les debits mesures employes
-                                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append("\
-                                <div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>\
-                                <button class='btn btn-default' type='button'\
-                                onclick='mviewer.customControls.calcModel.getMeasuredFlow();'>\
-                                Cliquez pour visualiser les débits mesurés employés</button></div>");
+                                } else if (outputTag.Identifier === "WaterML") {
+                                    plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
+                                    // ajoute le bouton pour afficher les debits mesures employes
+                                    $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append("\
+                                    <div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>\
+                                    <button class='btn btn-default' type='button'\
+                                    onclick='mviewer.customControls.calcModel.getMeasuredFlow();'>\
+                                    Cliquez pour visualiser les débits mesurés employés</button></div>");
 
-                            } else if (outputTag.Identifier === "Stations") {
-                                plotStation(outputTag.Data.ComplexData.FeatureCollection.featureMember);
+                                } else if (outputTag.Identifier === "Stations") {
+                                    plotStation(outputTag.Data.ComplexData.FeatureCollection.featureMember);
 
-                            } else if (outputTag.Identifier === "MeasuredFlow") {
-                                plotMeasuredFlow(outputTag.Data.ComplexData);
-                                // supprime le bouton
-                                var divBtn = document.getElementById("divPopup2");
-                                var fcBtn = divBtn.firstChild;
-                                while(fcBtn) {
-                                    divBtn.removeChild(fcBtn);
-                                    fcBtn = divBtn.firstChild;
+                                } else if (outputTag.Identifier === "MeasuredFlow") {
+                                    plotMeasuredFlow(outputTag.Data.ComplexData);
+                                    // supprime le bouton
+                                    var divBtn = document.getElementById("divPopup2");
+                                    var fcBtn = divBtn.firstChild;
+                                    while(fcBtn) {
+                                        divBtn.removeChild(fcBtn);
+                                        fcBtn = divBtn.firstChild;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
         _xhrGet.send();
+
+        } catch(error) {
+            clearInterval(_updating);
+            processExecution();
+            console.log("La requete a ete reexecutee car il y a eu une erreur avec la reponse du service.");
+        }
     }
 
-    function processXYOnNetwork(rqtWPS) {
-        var xhr = getXDomainRequest();
-        xhr.open("POST", ajaxURL(_urlWPS), true);
-        xhr.timeout = 5000;
-        xhr.addEventListener('readystatechange', function () {
-            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                // Recupere le xml de la reponse
-                var response = $.xml2json(xhr.responseXML);
-                // Recupere l'url de la variable statusLocation
-                var statusLocationURL = response.statusLocation;
-                _updating = setInterval(function () {
-                    updateProcess(statusLocationURL, false);
-                }, _refreshTimeXY);
-            }
-        });
-        xhr.send(rqtWPS);
-    }
-
-    function processGetMeasuredStations(rqtWPS) {
-        var xhr = getXDomainRequest();
-        xhr.open("POST", ajaxURL(_urlWPS), true);
-        xhr.timeout = 5000;
-        xhr.addEventListener('readystatechange', function () {
-            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                // Recupere le xml de la reponse
-                var response = $.xml2json(xhr.responseXML);
-                // Recupere l'url de la variable statusLocation
-                var statusLocationURL = response.statusLocation;
-                // Maj de la barre de progression
-                processingBarUpdate(5, "Vérification de la file d'attente...");
-                // Debut d'ecoute du resultat
-                _updating = setInterval(function () {
-                    updateProcess(statusLocationURL, true);
-                }, _refreshTime);
-            }
-        });
-        xhr.send(rqtWPS);
-    }
-
-    // Execute la requete Post
-    function processCalcModel(rqtWPS) {
+    function processExecution() {
         _xhrPost = getXDomainRequest();
         _xhrPost.open("POST", ajaxURL(_urlWPS), true);
-        _xhrPost.timeout = 5000;
+        _xhrPost.timeout = _timeOut;
         _xhrPost.addEventListener('readystatechange', function () {
             if (_xhrPost.readyState === XMLHttpRequest.DONE && _xhrPost.status === 200) {
                 // Recupere le xml de la reponse
@@ -307,11 +272,11 @@ mviewer.customControls.calcModel = (function () {
                 processingBarUpdate(5, "Vérification de la file d'attente...");
                 // Debut d'ecoute du resultat
                 _updating = setInterval(function () {
-                    updateProcess(statusLocationURL, true);
+                    updateProcess(statusLocationURL);
                 }, _refreshTime);
             }
         });
-        _xhrPost.send(rqtWPS);
+        _xhrPost.send(_rqtWPS);
     }
 
     function StringToXMLDom(string) {
@@ -589,8 +554,12 @@ mviewer.customControls.calcModel = (function () {
                     Y: String(_xy).split(',')[1]
                 };
                 // construit la requete wps
-                var rqtWPS = buildPostRequest(dictInputs, _identifierXY);
-                processXYOnNetwork(rqtWPS);
+                _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
+                // defini des valeurs globales dans le cas d'une reexecution
+                // si le process posse en file d'attente et execute le process
+                _refreshTime = 2000;
+                _timeOut = 5000;
+                processExecution();
                 //mviewer.showLocation('EPSG:2154', _xy[0], _xy[1]);
             });
             mviewer.getMap().addInteraction(_draw);
@@ -616,8 +585,10 @@ mviewer.customControls.calcModel = (function () {
                                 InBasin: $("#inBasin").is(":checked"),
                                 ListStations: listStations
                 };
-                var rqtWPS = buildPostRequest(dictInputs, _identifierGetMeasuredFlow);
-                processGetMeasuredStations(rqtWPS);
+                _rqtWPS = buildPostRequest(dictInputs, _identifierGetMeasuredFlow);
+                // defini des valeurs globales dans le cas d'une reexecution
+                // si le process posse en file d'attente et execute le process
+                processExecution();
             } else {
                 alert("Veuillez simuler le débit avant d'appuyer sur ce bouton")
             }
@@ -664,8 +635,11 @@ mviewer.customControls.calcModel = (function () {
                             fcBtn = divBtn.firstChild;
                         }
                     }
-                    // execute le process
-                    processCalcModel(_rqtWPS);
+                    // defini des valeurs globales dans le cas d'une reexecution
+                    // si le process posse en file d'attente et execute le process
+                    _refreshTime = 25000;
+                    _timeOut = 22000;
+                    processExecution();
                     // affiche le panneau de resultat
                     if ($("#bottom-panel").hasClass("")) {
                         $("#bottom-panel").toggleClass("active");
