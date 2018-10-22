@@ -167,7 +167,7 @@ mviewer.customControls.calcModel = (function () {
         }
     }
 
-    function updateProcess(updating, url, popup) {
+    function updateProcess(url, popup) {
         var start_time = new Date().getTime();
         _xhrGet = getXDomainRequest();
         _xhrGet.open("GET", ajaxURL(url), true);
@@ -261,7 +261,7 @@ mviewer.customControls.calcModel = (function () {
                 // Recupere l'url de la variable statusLocation
                 var statusLocationURL = response.statusLocation;
                 _updating = setInterval(function () {
-                    updateProcess(_updating, statusLocationURL, false);
+                    updateProcess(statusLocationURL, false);
                 }, _refreshTimeXY);
             }
         });
@@ -282,7 +282,7 @@ mviewer.customControls.calcModel = (function () {
                 processingBarUpdate(5, "Vérification de la file d'attente...");
                 // Debut d'ecoute du resultat
                 _updating = setInterval(function () {
-                    updateProcess(_updating, statusLocationURL, true);
+                    updateProcess(statusLocationURL, true);
                 }, _refreshTime);
             }
         });
@@ -307,7 +307,7 @@ mviewer.customControls.calcModel = (function () {
                 processingBarUpdate(5, "Vérification de la file d'attente...");
                 // Debut d'ecoute du resultat
                 _updating = setInterval(function () {
-                    updateProcess(_updating, statusLocationURL, true);
+                    updateProcess(statusLocationURL, true);
                 }, _refreshTime);
             }
         });
@@ -550,6 +550,7 @@ mviewer.customControls.calcModel = (function () {
             $("div").remove(".layerdisplay-legend");
             $(".mv-layer-options[data-layerid='calcModel'] .form-group-opacity").hide();
             document.getElementsByClassName("mv-header")[0].children[0].textContent = "Résultats";
+            document.getElementById("searchtool").remove();
             // Configure la fenetre de resultat
             if ($("#toolsBoxPopup").length == 0) {
                 $(".popup-content").append("\
