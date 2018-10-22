@@ -304,7 +304,8 @@ Ajout d'outils et fonctions spécifiques au projet SIMFEN.
 ***
 ##### Powered by
 
-[![AGROCAMPUS-OUEST](http://geoinfo.agrocampus-ouest.fr/illustrations/logo_agrocampusouest.jpg | width=100)](http://www.agrocampus-ouest.fr)
+<a href="http://www.agrocampus-ouest.fr"><img src="http://geoinfo.agrocampus-ouest.fr/illustrations/logo_agrocampusouest.jpg" width="150px"></a>
+
 ***
 [![Creative Commons License](https://licensebuttons.net/l/by-sa/3.0/88x31.png)](https://creativecommons.org/licenses/by-sa/4.0/)
 
