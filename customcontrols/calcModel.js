@@ -627,44 +627,54 @@ mviewer.customControls.calcModel = (function () {
             if (_xy) {
                 if ($("#listStations").val() === "") {
                     listStations = "None";
-                } else {
+                //condition pour verifier que l'utilisateur respecte bien la
+                //syntaxe de la liste des stations
+                } else if ((((($("#listStations").val().length > 8 
+                    && $("#listStations").val()[8] === ",") 
+                    || ($("#listStations").val().length === 8)) === true) 
+                    && (/\s/.test($("#listStations").val())) === false)) {
                     listStations = $("#listStations").val();
+                } else {
+                    alert("Veuillez respecter la syntaxe de la liste des stations à employer");
+                    listStations = ""
                 }
 
-                // permet de supprimer les decimales, mais cree une chaine de texte a split
-                var dictInputs = {
-                                X: String(_xy).split(',')[0],
-                                Y: String(_xy).split(',')[1],
-                                Start: $("#dateStart").val(),
-                                End: $("#dateEnd").val(),
-                                DeltaT: $("input[name='deltaT']:checked").val(),
-                                InBasin: $("#inBasin").is(":checked"),
-                                ListStations: listStations
-                };
-                // construit la requete xml POST
-                _rqtWPS = buildPostRequest(dictInputs, _identifier);
-                console.log("Voici la requête WPS envoyée : " + _rqtWPS);
-                // supprime les resultats du precedent process
-                if (document.getElementById("graphFlowSimulated").firstChild) {
-                    document.getElementById("graphFlowSimulated").firstChild.remove();
-                    document.getElementById("divPopup1").firstChild.remove();
-                    var divBtn = document.getElementById("divPopup2");
-                    var fcBtn = divBtn.firstChild;
-                    while(fcBtn) {
-                        divBtn.removeChild(fcBtn);
-                        fcBtn = divBtn.firstChild;
+                if (listStations) {
+                    // permet de supprimer les decimales, mais cree une chaine de texte a split
+                    var dictInputs = {
+                                    X: String(_xy).split(',')[0],
+                                    Y: String(_xy).split(',')[1],
+                                    Start: $("#dateStart").val(),
+                                    End: $("#dateEnd").val(),
+                                    DeltaT: $("input[name='deltaT']:checked").val(),
+                                    InBasin: $("#inBasin").is(":checked"),
+                                    ListStations: listStations
+                    };
+                    // construit la requete xml POST
+                    _rqtWPS = buildPostRequest(dictInputs, _identifier);
+                    console.log("Voici la requête WPS envoyée : " + _rqtWPS);
+                    // supprime les resultats du precedent process
+                    if (document.getElementById("graphFlowSimulated").firstChild) {
+                        document.getElementById("graphFlowSimulated").firstChild.remove();
+                        document.getElementById("divPopup1").firstChild.remove();
+                        var divBtn = document.getElementById("divPopup2");
+                        var fcBtn = divBtn.firstChild;
+                        while(fcBtn) {
+                            divBtn.removeChild(fcBtn);
+                            fcBtn = divBtn.firstChild;
+                        }
                     }
+                    // execute le process
+                    processCalcModel(_rqtWPS);
+                    // affiche le panneau de resultat
+                    if ($("#bottom-panel").hasClass("")) {
+                        $("#bottom-panel").toggleClass("active");
+                    };
                 }
-                // execute le process
-                processCalcModel(_rqtWPS);
-                // affiche le panneau de resultat
-                if ($("#bottom-panel").hasClass("")) {
-                    $("#bottom-panel").toggleClass("active");
-                };
 
-            } else {
-                alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
+                } else {
+                    alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
+                }
             }
-        }
-    };
-}());
+        };
+    }());
