@@ -1,6 +1,5 @@
 
 # Bienvenue sur l'Addon du MViewer pour le projet SIMFEN
-=============
 
 Dans le cadre de l'Appel à Manifestation d'Intérêt pour l'acquisition et le partage de connaissances dans le domaine de la gestion intégrée de l'eau, l'Agrocampus-Ouest a déposé un projet de Service Interopérable de Modélisation des Flux d'Eau et de Nutriments dans les bassins versants de Bretagne (SIMFEN). Ce projet s'effectue en partenariat avec l'IRSTEA Antony, GéoBretagne, le pôle métier "EAU" de GéoBretagne et l'Observatoire de l'Eau en Bretagne.
 
@@ -11,7 +10,6 @@ Pour une utilisation simplifiée de ces outils, une application web a été dév
 Voici le lien permettant d'accéder à cet add-on : [Portail web SIMFEN](http://geowww.agrocampus-ouest.fr/mviewer/?config=/apps/simfen/simfen.xml)
 
 ## Navigateurs compatibles
------------
 
 - Firefox
 - Chrome
@@ -19,7 +17,6 @@ Voici le lien permettant d'accéder à cet add-on : [Portail web SIMFEN](http://
 - Internet Explorer
 
 ## Documentation
------------
 
 L'interface web dispose d'une documentation ([__simfen_help.xml__](simfen_help.xml)) accessible directement dans le navigateur. Celle-ci dispose de plusieurs onglets :
 - Accueil : Première chose que l'utilisateur voit lorsqu'il arrive sur l'application web. Corresponds à une présentation succincte du portail cartographique du projet SIMFEN et le fonctionnement de l'outil principal de cette application qui est la "Simulation du débit".
@@ -28,12 +25,10 @@ L'interface web dispose d'une documentation ([__simfen_help.xml__](simfen_help.x
 - Crédits : Les financeurs, partenaires et collègues ayant permis et participé à l'élaboration de ce projet sont cités dans cet onglet. La documentation du MViewer est également référencée dans cet onglet.
 
 ## Outil nécessaire
------------
 
 Cette application web est un add-on pour le MViewer, il est donc nécessaire de télécharger cet outil pour pouvoir l'utiliser.
 
 ## Organisation d'un outil : exemple de la "Simulation d'un débit"
------------
 
 Dans le MViewer, chaque outil correspond à une couche. Une couche est référencée dans le fichier [__simfen.xml__](simfen.xml) par la balise "layer" (il est possible de faire un group). Une couche n'est pas nécessairement un objet spatial, comme un vecteur ou un raster, mais peut être un formulaire. Cette couche nécessite de créer un fichier JavaScript dans le répertoire "customlayers" ([__calcModel.js__](customlayers/calcModel.js)) afin de créer cet objet. Ensuite, il faut créer deux fichiers dans le répertoire "customcontrols" :
 - un fichier HTML qui va contenir le formulaire du modèle ([__calcModel.html__](customcontrols/calcModel.html)).
@@ -42,7 +37,6 @@ Dans le MViewer, chaque outil correspond à une couche. Une couche est référen
 Cette méthode est à reproduire pour chaque nouvel outil que l'on souhaite rendre disponible au sein de cette application web. En dupliquant ces scripts, il est possible de conserver une partie des fonctions qui sont génériques pour certaines.
 
 ## Fonctions génériques pour un outil WPS :
------------
 
 Voici les étapes composant l'exécution d'un process disponible sur le web service à partir de l'add-ons SIMFEN du MViewer :
 1. Collecte des données (formulaire, interaction avec la carte, etc...),
@@ -308,7 +302,9 @@ __TODO :__
 Ajout d'outils et fonctions spécifiques au projet SIMFEN.
 
 ***
-##### Powered by [![AGROCAMPUS-OUEST](http://geoinfo.agrocampus-ouest.fr/illustrations/logo_agrocampusouest.jpg)](http://www.agrocampus-ouest.fr)
+##### Powered by
+
+[![AGROCAMPUS-OUEST](http://geoinfo.agrocampus-ouest.fr/illustrations/logo_agrocampusouest.jpg | width=100)](http://www.agrocampus-ouest.fr)
 ***
 [![Creative Commons License](https://licensebuttons.net/l/by-sa/3.0/88x31.png)](https://creativecommons.org/licenses/by-sa/4.0/)
 
