@@ -2,6 +2,7 @@
 <!DOCTYPE simfen [
   <!ENTITY path "/apps/simfen-dev">
 ]>
+
 <config>
     <application
         title="Portail cartographique du projet SIMFEN"
@@ -23,6 +24,15 @@
     </baselayers>
     <themes mini="false">    	
         <theme name="SIMFEN" collapsed="false" id="simfen" icon="file-text">
+
+            <!-- couche d'initialisation qui se supprime juste après-->
+            <layer id="initSimfen" name="Boite à outils" visible="true" queryable="false"
+                type="customlayer" opacity="0.5" legendurl="img/blank.gif"
+                url="&path;/customlayers/initSimfen.js"
+                customcontrol="true" customcontrolpath="&path;/customcontrols/"
+                expanded="false">           
+            </layer>
+
             <group name="Services" id="services">
                 <layer id="calcModel" name="Simulation du débit" visible="true" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
@@ -34,7 +44,7 @@
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/plotStations.js"
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
-                    expanded="false">
+                    expanded="true">
                 </layer>
                 <!--<layer id="calcGhosh" name="calcGhosh" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"

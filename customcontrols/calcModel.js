@@ -2,12 +2,7 @@ mviewer.customControls.calcModel = (function () {
     /*
      * Private
      */
-    var _draw; // global so we can remove it later
-    var _xy;
-    var _xhrPost;
-    var _xhrGet;
-    var _xmlRequest;
-    var _rqtWPS;
+     
     // $.getScript("module.js", function(){
     //     alert("Script loaded but not necessarily executed.");
     // });
@@ -27,6 +22,12 @@ mviewer.customControls.calcModel = (function () {
     // }
     // rawFile.send(null);
 
+    var _draw; // global so we can remove it later
+    var _xy;
+    var _xhrPost;
+    var _xhrGet;
+    var _xmlRequest;
+    var _rqtWPS;
     var _urlWPS = "http://wps.geosas.fr/simfen-dev?";
     var _service = "WPS";
     var _version = "1.0.0";
@@ -514,28 +515,6 @@ mviewer.customControls.calcModel = (function () {
             // mandatory - code executed when panel is opened
             $("div").remove(".layerdisplay-legend");
             $(".mv-layer-options[data-layerid='calcModel'] .form-group-opacity").hide();
-            document.getElementsByClassName("mv-header")[0].children[0].textContent = "Résultats";
-            document.getElementById("searchtool").remove();
-            // Configure la fenetre de resultat
-            if ($("#toolsBoxPopup").length == 0) {
-                $(".popup-content").append("\
-                <div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;\
-                    height: 320px; position: absolute;'>\
-                    <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
-                        background-color: #808080'>\
-                        <div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar'\ style='background-color: #007ACC; width:0%;'>\
-                            <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;'>\
-                            Aucun processus en cours\
-                            </p>\
-                        </div>\
-                    </div>\
-                    <div id='divPopup1'></div>\
-                    <div id='divPopup2'></div>\
-                    <div id='divPopup3'></div>\
-                </div>\
-                <div id='graphFlowSimulated' class='profile-addon panel-graph' style='height: 320px; width:50%; margin: 0 auto;'></div>\
-                </div>");
-            }
             info.disable();
         },
 

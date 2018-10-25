@@ -24,9 +24,15 @@ L'interface web dispose d'une documentation ([__simfen_help.xml__](simfen_help.x
 - Références : Cette application web repose sur une valorisation scientifique de travaux de thèses, sur des outils ayant fait l'objet de publications scientifiques, d'outils préexistants. De plus, l'ensemble du projet SIMFEN fait l'objet d'une valorisation scientifique, en matière de développement hydro-informatique, qui est également référencée dans cet onglet.
 - Crédits : Les financeurs, partenaires et collègues ayant permis et participé à l'élaboration de ce projet sont cités dans cet onglet. La documentation du MViewer est également référencée dans cet onglet.
 
-## Outil nécessaire
+## Outils nécessaires
 
 Cette application web est un add-on pour le MViewer, il est donc nécessaire de télécharger cet outil pour pouvoir l'utiliser.
+
+Le serveur WPS repose sur PyWPS 4.0.0, cela est important puisque la réponse du process dépend de la version. En version 4.2.0, les Tags XML et les complexOutputs sont dans des fichiers indépendants, les scripts seront donc à adapter.
+
+## Fichier d'initialisation [__initSimfen.js__](customcontrols/initSimfen.js)
+
+Les différents outils produits pour l'add-on SIMFEN utilise certaines fonctions, outils et balises qui peuvent être considérées comme générique dans le terme de ce projet. Au départ, ceux-ci étaient intégrés dans chacun des outils. Cependant, il a été décidé de simplifier les outils aux fonctions propres à l'outil, et non pas les fonctions permettant de modifier l'interface par défaut du MViewer, mais aussi concernant l'initialisation des balises d'affichages (div des graphiques, initialisation de la barre de progression, etc...). Une couche a donc été créée dans cet objectif, tout en limitant sa visibilité étant donné que ce n'est pas un outil en lui même. Etant donné son objectif d'initialisation, elle s'auto-supprime juste après.
 
 ## Organisation d'un outil : exemple de la "Simulation d'un débit"
 
@@ -280,6 +286,7 @@ Ainsi, la généricité de cet add-ons se situe dans :
 
 Voici quelques remarques pour développer votre propre add-ons :
 - Évitez de commencer des lignes de code avec des [] car Internet Explorer ne sait pas gérer cela :
+
 ```JavaScript
 // ne fonctionne pas sous Internet Explorer
 var dictInputs = {
