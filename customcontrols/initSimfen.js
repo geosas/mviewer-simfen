@@ -2,7 +2,7 @@ mviewer.customControls.initSimfen = (function () {
     /*
      * Private
      */
-
+    var _names;
     // $.getScript("module.js", function(){
     //     alert("Script loaded but not necessarily executed.");
     // });
@@ -55,6 +55,67 @@ mviewer.customControls.initSimfen = (function () {
 
             // commande pour supprimer le layer une fois l'initialisation terminée
             $("li").remove(".list-group-item[data-layerid='initSimfen']");
+            //---------------------------------------------------------------
+            // Ajoute la possibilite de selectionner les features affichees et de faire une
+            // zone de selection avec ctrl
+
+            // Ajoute le geojson des exutoires en epsg 3857 sur le navigateur correspondant
+            // aux exutoires sur la mer. GeoJSON local pour faciliter la selection
+            // via une dragBox.
+            // var styleExutoire = new ol.style.Style({
+            //         image: new ol.style.Circle({
+            //             fill: new ol.style.Fill({
+            //             color: "red",
+            //             }),
+            //             radius: 4
+            //         })
+            //     });
+
+            // var exutoireSource = new ol.source.Vector({
+            //     url: "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/datas/noeud_baie_saint_brieuc.json",
+            //     format: new ol.format.GeoJSON()
+            // });
+
+            // var outletLayer = new ol.layer.Vector({
+            //     name: "exutoire",
+            //     source: exutoireSource,
+            //     style: styleExutoire
+            // });
+
+            // _map.addLayer(outletLayer);
+
+            // //---------------------------------------------
+            // // a normal select interaction to handle click
+            // var select = new ol.interaction.Select();
+            // _map.addInteraction(select);
+
+            // // cree la variable dragbox qui se declenche en cliquant sur ctrl
+            // var dragBox = new ol.interaction.DragBox({
+            //     condition: ol.events.condition.platformModifierKeyOnly
+            // });
+            // _map.addInteraction(dragBox);
+
+            // var selectedFeatures = select.getFeatures();
+
+            // dragBox.on('boxend', function() {
+            //     // features that intersect the box are added to the collection of
+            //     // selected features
+            //     var extent = dragBox.getGeometry().getExtent();
+            //     outletLayer.getSource().forEachFeatureIntersectingExtent(extent, function(feature) {
+            //         selectedFeatures.push(feature);
+            //     });
+            // });
+
+            // // clear selection when drawing a new box and when clicking on the map
+            // dragBox.on('boxstart', function() {
+            //     selectedFeatures.clear();
+            // });
+
+            // selectedFeatures.on(['add'], function() {
+            //     _names = selectedFeatures.getArray().map(function(feature) {
+            //         return feature.get('id');
+            //     });
+            // });
         } 
     };
 }());

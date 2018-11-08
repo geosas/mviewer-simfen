@@ -285,7 +285,8 @@ Ainsi, la généricité de cet add-ons se situe dans :
 ## Remarques :
 
 Voici quelques remarques pour développer votre propre add-ons :
-- Évitez de commencer des lignes de code avec des [] car Internet Explorer ne sait pas gérer cela :
+
+- Évitez de commencer des lignes de code avec des [  ] car Internet Explorer ne sait pas gérer cela :
 
 ```JavaScript
 // ne fonctionne pas sous Internet Explorer
@@ -298,6 +299,19 @@ var dictInputs = {
     X: String(_xy).split(',')[0],
     Y: String(_xy).split(',')[1]
 };
+```
+
+- Si vous souhaitez empêcher des requêtes GetFeatureInfo lorsque l'on clique sur la carte, il faut ajouter dans le fichier .js dans la fonction init cette ligne de texte : info.disable(); Par contre, il n'est pas possible de combiner le placement d'un exutoire et une requête GetFeatureInfo compte tenu du fonctionnement du mviewer. De ce fait, il faut programmer à nouveau le GetFeatureInfo pour une utilisation conjointe.
+
+- Exemple pour afficher une couche WMS pour l'utiliser avec un GetFeatureInfo :
+```
+<layer id="nomLayer" name="Exutoires baie de Saint Brieuc" visible="true" tiled="false"                    
+    queryable="true" fields="" aliases=""
+    infoformat="application/vnd.ogc.gml" featurecount="10"                      
+    style="point"               
+    opacity="1"                     
+    url="http://geowww.agrocampus-ouest.fr/geoserver/storeName/wms">
+</layer>
 ```
 
 ## Conclusion :

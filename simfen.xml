@@ -34,31 +34,26 @@
             </layer>
 
             <group name="Services" id="services">
-                <layer id="calcModel" name="Simulation du débit" visible="true" queryable="false"
+                <layer id="showAvailableStations" name="Affichage des stations disponibles" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
-                    url="&path;/customlayers/calcModel.js"
-                    customcontrol="true" customcontrolpath="&path;/customcontrols/"
-                    expanded="true">           
-                </layer>
-                <layer id="plotStations" name="Affichage des stations disponibles" visible="false" queryable="false"
-                    type="customlayer" opacity="0.8" legendurl="img/blank.gif"
-                    url="&path;/customlayers/plotStations.js"
+                    url="&path;/customlayers/showAvailableStations.js"
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">
                 </layer>
-                <!--<layer id="calcGhosh" name="calcGhosh" visible="false" queryable="false"
+                <layer id="waterFlowSimulation" name="Simulation du débit" visible="true" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
-                    url="customlayers/calcGhosh.js"
-                    customcontrol="true"
-                    expanded="false">
-                </layer>-->
+                    url="&path;/customlayers/waterFlowSimulation.js"
+                    customcontrol="true" customcontrolpath="&path;/customcontrols/"
+                    expanded="true">           
+                </layer>
             </group>
             <group name="Fonds de carte" id="fondsDeCarte">
-                <layer id="reseauHydro" name="Réseau hydrographique" visible="true" queryable="false"
-                    type="customlayer" opacity="0.5" legendurl="img/blank.gif"
-                    url="&path;/customlayers/reseauHydro.js"
-                    customcontrol="false" customcontrolpath="&path;/customcontrols/"
-                    expanded="false">           
+                <layer id="reseau_updated_octobre" name="Réseau hydrographique" visible="true" tiled="false"                    
+                    queryable="false" fields="" aliases=""
+                    infoformat="application/vnd.ogc.gml"                     
+                    style="line"               
+                    opacity="0.8"                     
+                    url="http://geoxxx.agrocampus-ouest.fr/geoserver/donatien/wms">
                 </layer>
             </group>
         </theme>
