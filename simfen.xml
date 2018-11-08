@@ -48,12 +48,12 @@
                 </layer>
             </group>
             <group name="Fonds de carte" id="fondsDeCarte">
-                <layer id="reseau_updated_octobre" name="Réseau hydrographique" visible="true" tiled="false"                    
+                <layer id="reseau_hydro_simfen" name="Réseau hydrographique" visible="true" tiled="false"                    
                     queryable="false" fields="" aliases=""
                     infoformat="application/vnd.ogc.gml"                     
                     style="line"               
                     opacity="0.8"                     
-                    url="http://geoxxx.agrocampus-ouest.fr/geoserver/donatien/wms">
+                    url="http://geowww.agrocampus-ouest.fr/geoserver/simfen/wms">
                 </layer>
             </group>
         </theme>
