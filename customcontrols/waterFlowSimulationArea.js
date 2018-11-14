@@ -1,4 +1,4 @@
-mviewer.customControls.waterFlowSimulation = (function () {
+mviewer.customControls.waterFlowSimulationArea = (function () {
     /*
      * Private
      */
@@ -48,6 +48,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _timeoutCount = 0;
     var _colors = ["red", "gold", "DarkOrange", "LightSeaGreen", "purple"];
     var _processing = false;
+    var _outletLayer;
+    var _outletSelectedByUser;
 
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
@@ -605,81 +607,124 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         init: function () {
             // mandatory - code executed when panel is opened
-            $("#legend-waterFlowSimulation").hide();
-            $(".mv-layer-options[data-layerid='waterFlowSimulation'] .form-group-opacity").hide();
+            $("#legend-waterFlowSimulationArea").hide();
+            $(".mv-layer-options[data-layerid='waterFlowSimulationArea'] .form-group-opacity").hide();
 
-            // ajoute un evenement de selection
-            var select = new ol.interaction.Select();
-            _map.addInteraction(select);
+            // Ajoute la possibilite de selectionner les features affichees et de faire une
+            // zone de selection avec ctrl
 
-            // variable contenant les stations selectionnees
-            var selectedFeatures = select.getFeatures();
-
-            // variable stockant les id des stations selectionnees
-            selectedFeatures.on(['add', 'remove'], function () {
-                _stationsSelectedByUser = selectedFeatures.getArray().map(function (feature) {
-                    console.log(feature.get('name'));
-                    return feature.get('name');
+            // Ajoute le geojson des exutoires en epsg 3857 sur le navigateur correspondant
+            // aux exutoires sur la mer. GeoJSON local pour faciliter la selection
+            // via une dragBox.
+            var styleExutoire = new ol.style.Style({
+                    image: new ol.style.Circle({
+                        fill: new ol.style.Fill({
+                        color: "red",
+                        }),
+                        radius: 4
+                    })
                 });
+
+            var exutoireSource = new ol.source.Vector({
+                url: "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/datas/noeud_baie_saint_brieuc.json",
+                format: new ol.format.GeoJSON()
             });
+
+            _outletLayer = new ol.layer.Vector({
+                name: "exutoires",
+                source: exutoireSource,
+                style: styleExutoire
+            });
+
+            _map.addLayer(_outletLayer);
+
+            // bug mais fonctionne ????
+            require("jsts");
+
+            // var selectArea = new ol.interaction.Select();
+            // _map.addInteraction(selectArea);
+
+            // //-------------------------------------------
+            // // cree la variable dragbox qui se declenche en cliquant sur ctrl
+            // var dragBox = new ol.interaction.DragBox({
+            //     condition: ol.events.condition.platformModifierKeyOnly
+            // });
+            // _map.addInteraction(dragBox);
+
+            // var selectedFeaturesArea = selectArea.getFeatures();
+
+            // dragBox.on('boxend', function() {
+            //     // features that intersect the box are added to the collection of
+            //     // selected features
+            //     var extent = dragBox.getGeometry().getExtent();
+            //     outletLayer.getSource().forEachFeatureIntersectingExtent(extent, function(feature) {
+            //         selectedFeaturesArea.push(feature);
+            //     });
+            // });
+
+            // // clear selection when drawing a new box and when clicking on the map
+            // dragBox.on('boxstart', function() {
+            //     selectedFeaturesArea.clear();
+            // });
+
+            // selectedFeaturesArea.on(['add','remove'], function() {
+            //     _outletSelectedByUser = selectedFeaturesArea.getArray().map(function(feature) {
+            //         return feature.get('id');
+            //     });
+            // });
         },
 
-        getXY: function () {
-            if (_processing === false){
-                _draw = new ol.interaction.Draw({
-                    type: 'Point'
-                });
-                _draw.on('drawend', function (event) {
-                    _xy = ol.proj.transform(event.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:2154');
-                    mviewer.getMap().removeInteraction(_draw);
-                    var template = '{x},{y}';
-                    coord = ol.coordinate.format(_xy, template);
-                    // defini les parametres x,y du service
-                    var dictInputs = {
-                        X: String(_xy).split(',')[0],
-                        Y: String(_xy).split(',')[1]
-                    };
-                    // construit la requete wps
-                    _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
-                    // defini des valeurs globales dans le cas d'une reexecution
-                    // si le process posse en file d'attente et execute le process
-                    _refreshTime = 2000;
-                    _timeOut = 5000;
-                    processExecution();
-                    _processing = true;
-                    //mviewer.showLocation('EPSG:2154', _xy[0], _xy[1]);
-                });
-                mviewer.getMap().addInteraction(_draw);
-            } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
-            }
-        },
+        GetOutlets: function () {
+            //cree la variable select
+            var select;
+            //defini un parser de geometry pour faire l'intersection via la bibliotheque jsts
+            var parser = new jsts.io.OL3Parser();
+            //defini le vecteur qui va correspondre au polygone dessiné pour seelctionner les exutoires
+            var polygonSelection = new ol.layer.Vector({
+                id: 'polygonSelection',
+                source: new ol.source.Vector()
+            });
+            //cree l'interaction de dessin du polygone
+            _draw = new ol.interaction.Draw({
+                source: polygonSelection.getSource(),
+                type: 'Polygon'
+            });
+            //ajoute l'interaction
+            mviewer.getMap().addInteraction(_draw);
 
-        showAvailableStations: function () {
-            if (_processing === false){
-                if (_xy) {
-                    // permet de supprimer les decimales, mais cree une chaine de texte a split
-                    var dictInputs = {
-                        X: String(_xy).split(',')[0],
-                        Y: String(_xy).split(',')[1],
-                        Start: $("#dateStartWaterFlowSimulation").val(),
-                        End: $("#dateEndWaterFlowSimulation").val(),
-                        Distance: 50000
-                    };
-                    // construit la requete xml POST
-                    _rqtWPS = buildPostRequest(dictInputs, _getStations);
-                    console.log("Voici la requête WPS envoyée : " + _rqtWPS);
-                    // execute le process
-                    _refreshTime = 2000;
-                    _timeOut = 5000;
-                    processExecution();
-                    _processing = true;
-                } else {
-                    alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
-                }
-            } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
-            }
+            //a la fin du pol
+            _draw.on('drawend', function (event) {
+                //recupere la geometrie de la feature creee
+                var featureDraw = event.feature.getGeometry();
+                var jsts_geom_select = parser.read(featureDraw);
+
+                //recupere chaque elements de la couche exutoire qui sont dans le polygone
+                var layer_select_geometries = _outletLayer.getSource().getFeatures().filter(function(el) {
+                    if (jsts_geom_select.contains(parser.read(el.getGeometry()))) {
+                        return true;
+                    }
+                });
+                //nettoye les selections
+                polygonSelection.getSource().clear();
+                select.getFeatures().clear();
+
+                //selectionne visuellement les exutoires
+                select.getFeatures().extend(layer_select_geometries);
+
+                //recupere l'id des entites intersectees et le stocke pour effectuer le traitement
+                _outletSelectedByUser = layer_select_geometries.map(function(feature) {
+                    return feature.P.id;
+                });
+
+                //enleve l'interaction permettant de créer le polygone
+                mviewer.getMap().removeInteraction(_draw);
+            });
+
+            // Crée l'interaction de selection des exutoires
+            select = new ol.interaction.Select({
+                layers: [_outletLayer]
+            });
+            _map.addInteraction(select);
         },
 
         getMeasuredFlow: function () {
@@ -715,24 +760,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         },
 
-        waterFlowSimulation: function () {
+        waterFlowSimulationArea: function () {
             if (_processing === false){
-                if (_xy) {
-                    if (typeof _stationsSelectedByUser === 'undefined' || _stationsSelectedByUser.length === 0) {
-                        _stationsSelectedByUser = "None";
-                    }
-                    if (_stationsSelectedByUser.length > 5) {
-                        alert("Veuillez sélectionner 5 stations au plus.");
+                if (_outletSelectedByUser) {
+                    if (typeof _outletSelectedByUser === 'undefined' || _outletSelectedByUser.length === 0) {
+                        alert("veuillez selectionner des exutoires sur la carte.");
                     } else {
                         // permet de supprimer les decimales, mais cree une chaine de texte a split
                         var dictInputs = {
-                            X: String(_xy).split(',')[0],
-                            Y: String(_xy).split(',')[1],
                             Start: $("#dateStartWaterFlowSimulation").val(),
                             End: $("#dateEndWaterFlowSimulation").val(),
                             DeltaT: $("input[name='deltaTWaterFlowSimulation']:checked").val(),
-                            InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
-                            ListStations: _stationsSelectedByUser.toString()
+                            ListOutlets: _outletSelectedByUser.toString()
                         };
 
                         // construit la requete xml POST
@@ -755,6 +794,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         _timeOut = 22000;
                         processExecution();
                         _processing = true;
+
+                        //supprime la variable select pour qu'elle ne rentre pas en conflit avec
+                        //d'autres select d'autres outils
+                        mviewer.getMap().removeInteraction(select);
+
                         // affiche le panneau de resultat
                         if ($("#bottom-panel").hasClass("")) {
                             $("#bottom-panel").toggleClass("active");

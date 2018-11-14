@@ -2,7 +2,6 @@ mviewer.customControls.initSimfen = (function () {
     /*
      * Private
      */
-    var _names;
     // $.getScript("module.js", function(){
     //     alert("Script loaded but not necessarily executed.");
     // });

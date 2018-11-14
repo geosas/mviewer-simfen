@@ -192,7 +192,7 @@ mviewer.customControls.showAvailableStations = (function () {
                                 _xy = outputTag.Data.LiteralData.split(" ");
                                 mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
 
-                            } else if (outputTag.Identifier === "Stations") {
+                            } else if (outputTag.Identifier === "StationsAvailable") {
                                 plotStation(outputTag.Data.ComplexData.FeatureCollection.featureMember);
 
                             }
@@ -297,7 +297,7 @@ mviewer.customControls.showAvailableStations = (function () {
         // supprime la precedente couche de station si elle existe
         var layersToRemove = [];
         _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'stations')) { //|| layer.get('name') === 'stations2')) {
+            if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) { //|| layer.get('name') === 'stations2')) {
                 layersToRemove.push(layer);
             }
         });
@@ -312,7 +312,7 @@ mviewer.customControls.showAvailableStations = (function () {
         // cree le vecteur qui va contenir les stations
         var arrStations = new Array();
         var stationLayer = new ol.layer.Vector({
-            name: "stations",
+            name: "StationsAvailable",
             source: stationSource,
             style: pointStyleFunctionSelected
         });

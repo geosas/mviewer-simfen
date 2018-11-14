@@ -34,15 +34,21 @@
             </layer>
 
             <group name="Services" id="services">
-                <layer id="showAvailableStations" name="Affichage des stations disponibles" visible="false" queryable="false"
+                <!-- <layer id="showAvailableStations" name="Affichage des stations disponibles" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/showAvailableStations.js"
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">
-                </layer>
+                </layer> -->
                 <layer id="waterFlowSimulation" name="Simulation du débit" visible="true" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/waterFlowSimulation.js"
+                    customcontrol="true" customcontrolpath="&path;/customcontrols/"
+                    expanded="true">           
+                </layer>
+                <layer id="waterFlowSimulationArea" name="Simulation du débit (zone)" visible="false" queryable="false"
+                    type="customlayer" opacity="0.8" legendurl="img/blank.gif"
+                    url="&path;/customlayers/waterFlowSimulationArea.js"
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">           
                 </layer>
