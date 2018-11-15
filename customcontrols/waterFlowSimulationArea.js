@@ -640,38 +640,6 @@ mviewer.customControls.waterFlowSimulationArea = (function () {
 
             // bug mais fonctionne ????
             require("jsts");
-
-            // var selectArea = new ol.interaction.Select();
-            // _map.addInteraction(selectArea);
-
-            // //-------------------------------------------
-            // // cree la variable dragbox qui se declenche en cliquant sur ctrl
-            // var dragBox = new ol.interaction.DragBox({
-            //     condition: ol.events.condition.platformModifierKeyOnly
-            // });
-            // _map.addInteraction(dragBox);
-
-            // var selectedFeaturesArea = selectArea.getFeatures();
-
-            // dragBox.on('boxend', function() {
-            //     // features that intersect the box are added to the collection of
-            //     // selected features
-            //     var extent = dragBox.getGeometry().getExtent();
-            //     outletLayer.getSource().forEachFeatureIntersectingExtent(extent, function(feature) {
-            //         selectedFeaturesArea.push(feature);
-            //     });
-            // });
-
-            // // clear selection when drawing a new box and when clicking on the map
-            // dragBox.on('boxstart', function() {
-            //     selectedFeaturesArea.clear();
-            // });
-
-            // selectedFeaturesArea.on(['add','remove'], function() {
-            //     _outletSelectedByUser = selectedFeaturesArea.getArray().map(function(feature) {
-            //         return feature.get('id');
-            //     });
-            // });
         },
 
         GetOutlets: function () {
@@ -797,7 +765,7 @@ mviewer.customControls.waterFlowSimulationArea = (function () {
 
                         //supprime la variable select pour qu'elle ne rentre pas en conflit avec
                         //d'autres select d'autres outils
-                        mviewer.getMap().removeInteraction(select);
+                        //mviewer.getMap().removeInteraction(select);
 
                         // affiche le panneau de resultat
                         if ($("#bottom-panel").hasClass("")) {

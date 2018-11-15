@@ -23,6 +23,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
     // rawFile.send(null);
 
     var _draw; // global so we can remove it later
+    var _drawPolygon;
+    var _stationLayer;
     var _xy;
     var _xhrPost;
     var _xhrGet;
@@ -48,6 +50,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _timeoutCount = 0;
     var _colors = ["red", "gold", "DarkOrange", "LightSeaGreen", "purple"];
     var _processing = false;
+    var _stationsSelectedByUser;
 
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
@@ -461,7 +464,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         // cree le vecteur qui va contenir les stations
         var arrStations = new Array();
-        var stationLayer = new ol.layer.Vector({
+        var _stationLayer = new ol.layer.Vector({
             name: "StationsAvailable",
             source: stationSource,
             style: pointStyleFunctionSelected
@@ -485,7 +488,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             stationSource.addFeature(featureThing);
         }
         // ajoute la couche de point des stations a la carte
-        _map.addLayer(stationLayer);
+        _map.addLayer(_stationLayer);
     }
 
     function plotStation(features) {
@@ -563,7 +566,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         // cree le vecteur qui va contenir les stations
         var arrStations = new Array();
-        var stationLayer = new ol.layer.Vector({
+        var _stationLayer = new ol.layer.Vector({
             name: "StationsSelected",
             source: stationSource,
             style: pointStyleFunctionSelected
@@ -595,7 +598,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         }
         // ajoute la couche de point des stations a la carte
-        _map.addLayer(stationLayer);
+        _map.addLayer(_stationLayer);
     }
 
     return {
@@ -609,19 +612,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
             $(".mv-layer-options[data-layerid='waterFlowSimulation'] .form-group-opacity").hide();
 
             // ajoute un evenement de selection
-            var select = new ol.interaction.Select();
-            _map.addInteraction(select);
+            // var select = new ol.interaction.Select();
+            // _map.addInteraction(select);
 
-            // variable contenant les stations selectionnees
-            var selectedFeatures = select.getFeatures();
+            // // variable contenant les stations selectionnees
+            // var selectedFeatures = select.getFeatures();
 
-            // variable stockant les id des stations selectionnees
-            selectedFeatures.on(['add', 'remove'], function () {
-                _stationsSelectedByUser = selectedFeatures.getArray().map(function (feature) {
-                    console.log(feature.get('name'));
-                    return feature.get('name');
-                });
-            });
+            // // variable stockant les id des stations selectionnees
+            // selectedFeatures.on(['add', 'remove'], function () {
+            //     _stationsSelectedByUser = selectedFeatures.getArray().map(function (feature) {
+            //         console.log(feature.get('name'));
+            //         return feature.get('name');
+            //     });
+            // });
         },
 
         getXY: function () {
@@ -680,6 +683,65 @@ mviewer.customControls.waterFlowSimulation = (function () {
             } else {
                 alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
             }
+        },
+
+        selectAvailableStations: function () {
+            //cree la variable select
+            var select;
+            //defini un parser de geometry pour faire l'intersection via la bibliotheque jsts
+            var parser = new jsts.io.OL3Parser();
+            //defini le vecteur qui va correspondre au polygone dessiné pour seelctionner les exutoires
+            var polygonSelection = new ol.layer.Vector({
+                id: 'polygonSelection',
+                source: new ol.source.Vector()
+            });
+            //cree l'interaction de dessin du polygone
+            _drawPolygon = new ol.interaction.Draw({
+                source: polygonSelection.getSource(),
+                type: 'Polygon'
+            });
+            //ajoute l'interaction
+            mviewer.getMap().addInteraction(_drawPolygon);
+
+            //recupere chaque elements de la couche exutoire qui sont dans le polygone
+            _map.getLayers().forEach(function (layer) {
+            if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
+                _stationLayer = layer;
+                }
+            });
+
+            //a la fin du pol
+            _drawPolygon.on('drawend', function (event) {
+                //recupere la geometrie de la feature creee
+                var featureDraw = event.feature.getGeometry();
+                var jsts_geom_select = parser.read(featureDraw);
+
+                var layer_select_geometries = _stationLayer.getSource().getFeatures().filter(function(el) {
+                    if (jsts_geom_select.contains(parser.read(el.getGeometry()))) {
+                        return true;
+                    }
+                });
+                //nettoye les selections
+                polygonSelection.getSource().clear();
+                select.getFeatures().clear();
+
+                //selectionne visuellement les exutoires
+                select.getFeatures().extend(layer_select_geometries);
+
+                //recupere l'id des entites intersectees et le stocke pour effectuer le traitement
+                _stationsSelectedByUser = layer_select_geometries.map(function(feature) {
+                    return feature.P.name;
+                });
+
+                //enleve l'interaction permettant de créer le polygone
+                mviewer.getMap().removeInteraction(_drawPolygon);
+            });
+
+            // Crée l'interaction de selection des exutoires
+            select = new ol.interaction.Select({
+                layers: [_stationLayer]
+            });
+            _map.addInteraction(select);
         },
 
         getMeasuredFlow: function () {
