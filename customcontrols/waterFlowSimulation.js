@@ -311,7 +311,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
     function setDownloadFile(datasx, datasy) {
         // header of csvfile
-        var str = 'date;runoff' + '\r\n';
+        var str = 'date;runoff(m3/s)' + '\r\n';
 
         // construit chaque ligne du csv selon les donnees
         for (var i = 0; i < datasx.length; i++) {

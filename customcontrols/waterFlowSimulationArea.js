@@ -626,7 +626,7 @@ mviewer.customControls.waterFlowSimulationArea = (function () {
                 });
 
             var exutoireSource = new ol.source.Vector({
-                url: "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/datas/noeud_baie_saint_brieuc.json",
+                url: "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/datas/exutoires_bretagne.json",
                 format: new ol.format.GeoJSON()
             });
 
