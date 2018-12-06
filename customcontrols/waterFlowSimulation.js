@@ -611,20 +611,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
             $("#legend-waterFlowSimulation").hide();
             $(".mv-layer-options[data-layerid='waterFlowSimulation'] .form-group-opacity").hide();
 
-            // ajoute un evenement de selection
-            // var select = new ol.interaction.Select();
-            // _map.addInteraction(select);
 
-            // // variable contenant les stations selectionnees
-            // var selectedFeatures = select.getFeatures();
-
-            // // variable stockant les id des stations selectionnees
-            // selectedFeatures.on(['add', 'remove'], function () {
-            //     _stationsSelectedByUser = selectedFeatures.getArray().map(function (feature) {
-            //         console.log(feature.get('name'));
-            //         return feature.get('name');
-            //     });
-            // });
+            // Fonction pour afficher la coordonnee X,Y a la volee
+            var mousePositionControl = new ol.control.MousePosition({
+                coordinateFormat: ol.coordinate.createStringXY(0),
+                projection: 'EPSG:2154',
+                className: 'custom-mouse-position',
+                target: document.getElementById('mouse-position'),
+                undefinedHTML: 'EPSG : 2154'
+            });
+            mviewer.getMap().addControl(mousePositionControl);
         },
 
         getXY: function () {
@@ -650,7 +646,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _timeOut = 5000;
                     processExecution();
                     _processing = true;
-                    //mviewer.showLocation('EPSG:2154', _xy[0], _xy[1]);
                 });
                 mviewer.getMap().addInteraction(_draw);
             } else {
@@ -779,6 +774,25 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         waterFlowSimulation: function () {
             if (_processing === false){
+            	//si on souhaite renseigner manuellement la coordonnees xy
+                if ($("#XYWaterFlowSimulation").val()) {
+                    // defini les parametres x,y du service
+                    var dictInputs = {
+                        X: String($("#XYWaterFlowSimulation").val()).split(',')[0],
+                        Y: String($("#XYWaterFlowSimulation").val()).split(',')[1]
+                    };
+                    // construit la requete wps
+                    _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
+                    // defini des valeurs globales dans le cas d'une reexecution
+                    // si le process posse en file d'attente et execute le process
+                    _refreshTime = 2000;
+                    _timeOut = 5000;
+                    processExecution();
+                    _processing = true;
+                    //clear le champ
+                    $("#XYWaterFlowSimulation").val("")
+                }
+
                 if (_xy) {
                     if (typeof _stationsSelectedByUser === 'undefined' || _stationsSelectedByUser.length === 0) {
                         _stationsSelectedByUser = "None";
