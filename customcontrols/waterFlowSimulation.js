@@ -653,6 +653,33 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         },
 
+        getXYFromCoordinate: function () {
+        	if (_processing === false){
+	        	//si on souhaite renseigner manuellement la coordonnees xy
+	            if ($("#XYWaterFlowSimulation").val()) {
+	                // defini les parametres x,y du service
+	                var dictInputs = {
+	                    X: String($("#XYWaterFlowSimulation").val()).split(',')[0],
+	                    Y: String($("#XYWaterFlowSimulation").val()).split(',')[1]
+	                };
+	                // construit la requete wps
+	                _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
+	                // defini des valeurs globales dans le cas d'une reexecution
+	                // si le process posse en file d'attente et execute le process
+	                _refreshTime = 2000;
+	                _timeOut = 5000;
+	                processExecution();
+	                _processing = true;
+	                //clear le champ
+	                $("#XYWaterFlowSimulation").val("")
+	            } else {
+	            	alert("Veuillez indiquer une coordonnée X,Y.");
+	            }
+	        } else {
+	        	alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
+	        }
+        },
+
         showAvailableStations: function () {
             if (_processing === false){
                 if (_xy) {
@@ -774,25 +801,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         waterFlowSimulation: function () {
             if (_processing === false){
-            	//si on souhaite renseigner manuellement la coordonnees xy
-                if ($("#XYWaterFlowSimulation").val()) {
-                    // defini les parametres x,y du service
-                    var dictInputs = {
-                        X: String($("#XYWaterFlowSimulation").val()).split(',')[0],
-                        Y: String($("#XYWaterFlowSimulation").val()).split(',')[1]
-                    };
-                    // construit la requete wps
-                    _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
-                    // defini des valeurs globales dans le cas d'une reexecution
-                    // si le process posse en file d'attente et execute le process
-                    _refreshTime = 2000;
-                    _timeOut = 5000;
-                    processExecution();
-                    _processing = true;
-                    //clear le champ
-                    $("#XYWaterFlowSimulation").val("")
-                }
-
                 if (_xy) {
                     if (typeof _stationsSelectedByUser === 'undefined' || _stationsSelectedByUser.length === 0) {
                         _stationsSelectedByUser = "None";
