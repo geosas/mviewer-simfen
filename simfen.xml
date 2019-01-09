@@ -46,12 +46,12 @@
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">           
                 </layer>
-                <layer id="waterFlowSimulationArea" name="Simulation du débit (zone)" visible="false" queryable="false"
+                <!-- <layer id="waterFlowSimulationArea" name="Simulation du débit (zone)" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/waterFlowSimulationArea.js"
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">           
-                </layer>
+                </layer> -->
             </group>
             <group name="Fonds de carte" id="fondsDeCarte">
             	<layer id="reseau_hydrographique_theorique" name="Réseau hydrographique théorique" visible="true" tiled="false"                    

@@ -309,9 +309,32 @@ mviewer.customControls.waterFlowSimulation = (function () {
         return xmlDoc;
     }
 
+    function setDownloadMetaDatas() {
+        listStations = "";
+        for (var i = 0; i < _nameColor.length; i++) {
+            listStations += _nameColor[i].key + ",";
+        }
+        listStations = listStations.substring(0, listStations.length - 1);
+                    
+        var str = "x;y;fDate;lDate;stations;deltaT;inBasin" + "\r\n";
+        str += String.format("{0};{1};{2};{3};{4};{5};{6}", _xy[0], _xy[1], $("#dateStartWaterFlowSimulation").val(), $("#dateEndWaterFlowSimulation").val(), listStations, $("input[name='deltaTWaterFlowSimulation']:checked").val(), $("#inBasinWaterFlowSimulation").is(":checked"));
+        // cree le csv
+        var blob = new Blob([str], {
+            type: "text/csv"
+        });
+        var url = URL.createObjectURL(blob);
+
+        var metaFile = document.createElement("a");
+        document.body.appendChild(metaFile);
+        metaFile.style = "display: none";
+        metaFile.setAttribute("href", url);
+        metaFile.setAttribute("download", "metadonnees_simulation.csv");
+        metaFile.click();
+    }
+
     function setDownloadFile(datasx, datasy) {
         // header of csvfile
-        var str = 'date;runoff(m3/s)' + '\r\n';
+        var str = "date;runoff(m3/s)" + "\r\n";
 
         // construit chaque ligne du csv selon les donnees
         for (var i = 0; i < datasx.length; i++) {
@@ -325,6 +348,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             type: "text/csv"
         });
         var url = URL.createObjectURL(blob);
+
         // cree l'url de telechargement et lie le fichier blob a celui-ci
         // et l'ajoute dans le tableau de bord
         var dlFile = document.createElement("a");
@@ -332,10 +356,20 @@ mviewer.customControls.waterFlowSimulation = (function () {
         dlFile.setAttribute("href", url);
         dlFile.setAttribute("target", "_blank");
         dlFile.setAttribute("style", "color:#337ab7;text-decoration:true;font-size:20px;");
-        dlFile.setAttribute("download", "water_flow.csv");
+        dlFile.setAttribute("download", "output_simulation.csv");
         dlFile.setAttribute("class", "glyphicon glyphicon-save");
         dlFile.appendChild(document.createTextNode("Téléchargement des débits"));
         document.getElementById("divPopup1").appendChild(dlFile);
+        dlFile.click();
+
+        var licenceFile = document.createElement("a");
+        document.body.appendChild(licenceFile);
+        licenceFile.style = "display: none";
+        licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
+        licenceFile.setAttribute("download", "licence_simulation.txt");
+        licenceFile.click();
+
+        setDownloadMetaDatas();
     }
 
     function plotDatas(points) {
@@ -657,13 +691,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
         	if (_processing === false){
 	        	//si on souhaite renseigner manuellement la coordonnees xy
 	            if ($("#XYWaterFlowSimulation").val()) {
+	            	//supprime les espaces, remplace les virgules et les points
+	            	inputCoordinate = $("#XYWaterFlowSimulation").val().replace(/ /g, "")
+	            	if (inputCoordinate.search(";") != -1){
+	            		inputCoordinate = inputCoordinate.replace(",",".").replace(";",",")
+                	}
 	                // defini les parametres x,y du service
 	                var dictInputs = {
-	                    X: String($("#XYWaterFlowSimulation").val()).split(',')[0],
-	                    Y: String($("#XYWaterFlowSimulation").val()).split(',')[1]
+	                    X: String(inputCoordinate).split(',')[0],
+	                    Y: String(inputCoordinate).split(',')[1]
 	                };
 	                // construit la requete wps
 	                _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
+	                console.log(_rqtWPS);
 	                // defini des valeurs globales dans le cas d'une reexecution
 	                // si le process posse en file d'attente et execute le process
 	                _refreshTime = 2000;
@@ -839,6 +879,15 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         _timeOut = 22000;
                         processExecution();
                         _processing = true;
+
+                        //supprime les stations selectionnees et la couche de stations à choisir
+                        _stationsSelectedByUser = "None";
+                        _map.getLayers().forEach(function(layer){
+                            if (layer.get("name") === "StationsAvailable"){
+                                _map.removeLayer(layer);
+                            }
+                        });
+                        
                         // affiche le panneau de resultat
                         if ($("#bottom-panel").hasClass("")) {
                             $("#bottom-panel").toggleClass("active");
