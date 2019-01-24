@@ -24,7 +24,7 @@
                 <table style="border-collapse:separate; border-spacing:3px;">
                     <tr>
                         <td>
-                            <label>Coordonnées X,Y (EPSG 2154) :</label>
+                            <label class="lang" key="waterFlowSimulationCoord">Coordonnées X,Y (EPSG 2154) :</label>
                             <input type="text" id="XYWaterFlowSimulation" name="XYWaterFlowSimulation">
                             <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.getXYFromCoordinate();">
                                 <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
@@ -33,29 +33,29 @@
                     </tr>
                     <tr>
                         <td>
-                            <label>Pas de temps des débits simulés :</label>
+                            <label class="lang" key="waterFlowSimulationDeltaT">Pas de temps des débits simulés :</label>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input type="radio" id="journalierWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=1440 checked="checked"> Journalier
-                            <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=60> Horaire
+                            <input type="radio" id="journalierWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=1440 checked="checked" class="lang" key="waterFlowSimulationDeltaT1"> Journalier
+                            <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=60 class="lang" key="waterFlowSimulationDeltaT2"> Horaire
                             <!--<input type="radio" id="minute" name="deltaT" value=1>-->
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <label>N'utiliser que les stations en aval de l'exutoire cible ?</label>
+                            <label class="lang" key="waterFlowSimulationStations">N'utiliser que les stations en aval de l'exutoire cible ?</label>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input type="checkbox" id="inBasinWaterFlowSimulation"> Oui
+                            <input type="checkbox" id="inBasinWaterFlowSimulation" class="lang" key="waterFlowSimulationStationsOui"> Oui
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <label>Afficher les stations disponibles pour selectionner celles-ci manuellement (shift + clic pour sélectionner plusieurs stations) :</label>
+                            <label class="lang" key="waterFlowSimulationStationsAvailable">Afficher les stations disponibles pour selectionner celles-ci manuellement :</label>
                             <button title="Afficher les stations disponibles" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.showAvailableStations();">
                                 <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
                             </button>

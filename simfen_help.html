@@ -46,37 +46,64 @@
 
 </style>
 
+<script type="text/javascript">
+    // cree les boutons de changement de langue
+    $(".modal-header").append("\
+    <button class='translate' id='en'>&#x1F1EC;&#x1F1E7;</button>\
+    <button class='translate' id='fr'>&#x1F1EB;&#x1F1F7;</button>");
+
+    // script pour gerer la double langue de l'interface
+    var arrLang = {};
+    $.getJSON("/apps/simfen-dev/translate.json", function(data){
+        arrLang = data;
+    });
+    
+
+    $(function(){
+        $(".translate").click(function(){
+            var lang = $(this).attr("id");
+            $(".lang").each(function(index, element){
+                $(this).text(arrLang[lang][$(this).attr("key")]);
+            });
+        });
+    });
+</script>
+
 <ul class="nav nav-tabs" role="tablist">
-    <li role="presentation" class="active"><a href="#h_simfen" aria-controls="profile" role="tab" data-toggle="tab">Accueil</a></li>
-    <li role="presentation"><a href="#h_aide" aria-controls="messages" role="tab" data-toggle="tab">Aides</a></li>
-    <li role="presentation"><a href="#h_reference" aria-controls="profile" role="tab" data-toggle="tab">Références</a></li>
-    <li role="presentation"><a href="#h_credits" aria-controls="settings" role="tab" data-toggle="tab">Crédits</a></li>
+    <li role="presentation" class="active"><a href="#h_simfen" aria-controls="profile" role="tab" data-toggle="tab" class="lang" key="accueil">Accueil</a></li>
+    <li role="presentation"><a href="#h_aide" aria-controls="messages" role="tab" data-toggle="tab" class="lang" key="aides">Aides</a></li>
+    <li role="presentation"><a href="#h_reference" aria-controls="profile" role="tab" data-toggle="tab" class="lang" key="references">Références</a></li>
+    <li role="presentation"><a href="#h_credits" aria-controls="settings" role="tab" data-toggle="tab" class="lang" key="credits">Crédits</a></li>
 </ul>
 
 <!-- Tab panes -->
+
+
 <div class="tab-content">
+    
     <div role="tabpanel" class="tab-pane active" id="h_simfen">
-        <h4>Bienvenue sur le portail cartographique du projet SIMFEN</h4>
 
-        <p>Cette interface a pour objectif de mettre à disposition un Service Interopérable de Modélisation des Flux d'Eau et de Nitrate dans les bassins versants de Bretagne (SIMFEN). Plus précisément, ce service permet de simuler des débits en tout point d'intérêt du réseau hydrographique à partir des débits mesurés sur le territoire, dont voici les étapes de fonctionnement :</p>
+        <h4 class="lang" key="bienvenue">Bienvenue sur le portail cartographique du projet SIMFEN</h4>
 
-        <p align="center" style="font-size: 18px">Fonctionnement de l'outil "Simulation du débit" : </p>
+        <p class="lang" key="intro">Cette interface a pour objectif de mettre à disposition un Service Interopérable de Modélisation des Flux d'Eau et de Nitrate dans les bassins versants de Bretagne (SIMFEN). Plus précisément, ce service permet de simuler des débits en tout point d'intérêt du réseau hydrographique à partir des débits mesurés sur le territoire, dont voici les étapes de fonctionnement :</p>
+
+        <p align="center" style="font-size: 18px" class="lang" key="introFonctionnement">Fonctionnement de l'outil 'Simulation du débit' : </p>
 
         <div align="center" style="padding-top: 20px;">
             <div class="circle" style="background: linear-gradient(+45deg, #007acc, #007acc 33%, #808080 33%, #808080);">
                 <p class="water-drop-text">
                     <font class="number-step">&#10112;</font>
-                    <br>Indiquez la période de simulation</p>
+                    <br><span class="lang" key="introFonctionnement1">Indiquez la période de simulation</span></p>
             </div>
             <div class="circle" style="background: linear-gradient(+45deg, #007acc, #007acc 64%, #808080 64%, #808080);">
                 <p class="water-drop-text">
                     <font class="number-step">&#10113;</font>
-                    <br>Utilisez le bouton <span class="glyphicon glyphicon-flag"></span> pour localiser sur la carte le point d'intérêt (marqueur rouge)</p>
+                    <br><span class="lang" key="introFonctionnement21">Utilisez le bouton </span><span class="glyphicon glyphicon-flag"></span><span class="lang" key="introFonctionnement22"> pour localiser sur la carte le point d'intérêt (marqueur rouge)</span></p>
             </div>
             <div class="circle" style="background: #007acc;">
                 <p class="water-drop-text">
                     <font class="number-step">&#10114;</font>
-                    <br>Lancez la simulation <br> du débit avec <span class="glyphicon glyphicon-play-circle"></span></p>
+                    <br><span class="lang" key="introFonctionnement3">Lancez la simulation avec </span><span class="glyphicon glyphicon-play-circle"></span></p>
             </div>
             
             <!--<div class="progress" style="margin-bottom: 0px !important;text-align: center; width: 700px; background-color: #808080;">
@@ -91,16 +118,16 @@
     </div>
 
     <div role="tabpanel" class="tab-pane" id="h_aide">
-        <h4>Simulation du débit :</h4>
-        <p>Ce service permet de simuler le débit en tout point du réseau hydrographique breton à partir des données de débit disponibles sur le web service de <a href="https://geobretagne.fr/m/?layers=dreal_b%3Ahydrometrie_qmj&title=Bretagne%20-%20hydrom%C3%A9trie">GéoBretagne</a>. Le modèle hydrologique employé provient des travaux de thèse <a href="http://www.theses.fr/2013NSARD072">d'Alban de Lavenne</a>. Ce service dispose de paramètres optionnels pour les utilisateurs qui souhaitent influer sur la configuration optimale du modèle.</p>
+        <h4 class="lang" key="panelOutil1">Simulation du débit :</h4>
+        <p><span class="lang" key="panelOutil1Para1">Ce service permet de simuler le débit en tout point du réseau hydrographique breton à partir des données de débit disponibles sur le web service de </span><a href="https://geobretagne.fr/m/?layers=dreal_b%3Ahydrometrie_qmj&title=Bretagne%20-%20hydrom%C3%A9trie">GéoBretagne</a>.<span class="lang" key="panelOutil1Para2">Le modèle hydrologique employé provient des travaux de thèse d'</span><a href="http://www.theses.fr/2013NSARD072">Alban de Lavenne</a>.</p>
 
-        <p>Ce service utilise 3 paramètres à renseigner impérativement : </p>
+        <p class="lang" key="panelOutil1Para4">Ce service utilise 3 paramètres à renseigner impérativement : </p>
         <ul>
-        	<li>Date de début de la simulation</li>
-            <li>Date de fin de la simulation</li>
-            <li>Localisation de la station à simuler (cliquer sur <span class="glyphicon glyphicon-flag"></span> puis sur la carte)</li>
+        	<li class="lang" key="panelOutil1Para5">Date de début de la simulation</li>
+            <li class="lang" key="panelOutil1Para6">Date de fin de la simulation</li>
+            <li class="lang" key="panelOutil1Para7">Localisation de la station à simuler (<span class="glyphicon glyphicon-flag"></span>)</li>
         </ul>
-        <p>Pour les utilisateurs ayant une connaissance avancée du milieu où va être simulé le débit, il est possible d'influer sur le fonctionnement du modèle par rapport aux paramètres déterminés par défaut (d'après les travaux de thèse d'Alban). Pour le moment, voici les paramètres pouvant être modifiés <span class="glyphicon glyphicon-wrench"></span> : </p>
+        <p><span class="lang" key="panelOutil1Para8">Pour les utilisateurs ayant une connaissance avancée du milieu où va être simulé le débit, il est possible d'influer sur le fonctionnement du modèle par rapport aux paramètres déterminés par défaut. Pour le moment, voici les paramètres pouvant être modifiés</span> <span class="glyphicon glyphicon-wrench"></span> : </p>
         <ul>
             <li>n'utiliser que les débits mesurés sur les stations en aval de la station simulée au lieu d'employer les stations à proximité et dont leurs bassins présentent une similitude avec le bassin cible.</li>
             <li>choisir manuellement les stations à employer en indiquant leur code de station (celui référencé sur GéoBretagne). Il est possible d'utiliser le service "Affichage des stations disponibles" pour connaitre ces codes. <b>Il est impératif de séparer chaque code de station par une virgule (,) sans mettre d'espaces.</b></li>
@@ -118,9 +145,9 @@
         <p><a href="http://www.opengeospatial.org/standards/wps">Web Processing Service</a></p>
     </div>
     <div role="tabpanel" class="tab-pane" id="h_credits">
-        <h4>Crédits </h4>
-        <p>Ce projet a été financé par le Conseil Régional de Bretagne, l'Agence de l'eau Loire-Bretagne et l'Agrocampus-Ouest.</p>
-        <p><a href="http://mviewerdoc.readthedocs.io/fr/latest/" target="_blank">Lien vers la documentation du Mviewer</a></p>
-        <p>Les données sont issues d'une simulation présentant une certitude non quantifiable. En conséquence, les utilisateurs utilisent les données sous leur responsabilité pleine et entière, sans recours possible contre le fournisseur dont la responsabilité ne saurait être engagée du fait d’un dommage résultant directement ou indirectement de l’utilisation de ces données.</p>
+        <h4 class="lang" key="panelCredits">Crédits </h4>
+        <p class="lang" key="panelCredits1">Ce projet a été financé par le Conseil Régional de Bretagne, l'Agence de l'eau Loire-Bretagne et l'Agrocampus-Ouest.</p>
+        <p><a href="http://mviewerdoc.readthedocs.io/fr/latest/" target="_blank"><span class="lang" key="panelCredits2">Lien vers la documentation du Mviewer</span></a></p>
+        <p class="lang" key="panelCredits3">Les données sont issues d'une simulation présentant une certitude non quantifiable. En conséquence, les utilisateurs utilisent les données sous leur responsabilité pleine et entière, sans recours possible contre le fournisseur dont la responsabilité ne saurait être engagée du fait d’un dommage résultant directement ou indirectement de l’utilisation de ces données.</p>
     </div>
 </div>

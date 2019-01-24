@@ -145,7 +145,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     function getAndSetStatus(response) {
         // Met a jour le tableau de resultat selon ce status
         if (response.Status.ProcessAccepted) {
-            processingBarUpdate(5, "File d'attente, veuillez patienter");
+            processingBarUpdate(5, response.Status.ProcessAccepted);
             //return response.Status.ProcessAccepted;
 
         } else if (response.Status.ProcessStarted) {
@@ -162,10 +162,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // a part si la requete est passee dans la base sqlite et donc, 
             // elle n'a pas pu etre recuperee lorsqu'il a ete possible de l'executer
             // supprime l'ancien updating
-            clearInterval(_updating);
+            //clearInterval(_updating);
             // execute la requete a nouveau
-            processExecution();
-            processingBarUpdate(5, "File d'attente, veuillez patienter");
+            //processExecution();
+            processingBarUpdate(0, response.Status.ProcessFailed);
             //alert("Relancez le traitement");
 
         } else {

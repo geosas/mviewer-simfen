@@ -29,6 +29,28 @@ mviewer.customControls.initSimfen = (function () {
         init: function () {
             // Modification de l'interface par défaut du MViewer
             document.getElementsByClassName("mv-header")[0].children[0].textContent = "Résultats";
+
+            document.getElementsByClassName("mv-header")[0].children[0].className += "lang";
+            document.getElementsByClassName("mv-header")[0].children[0].setAttribute("key","panelResultTitle");
+
+            document.getElementsByClassName("mv-title")[0].className += " lang";
+            document.getElementsByClassName("mv-title")[0].setAttribute("key","portalTitle");
+
+            for (var i = 0; i < $(".level-2").length; i++) {
+                $(".level-2")[i].childNodes[0].className += "lang";
+                $(".level-2")[i].childNodes[0].setAttribute("key",$(".level-2")[i].childNodes[0].textContent);
+            }
+
+            for (var i = 0; i < $(".mv-nav-item").length; i++) {
+                if (($(".mv-nav-item")[i].childNodes[0].innerHTML).includes("mv-unchecked")) {
+                    $(".mv-nav-item")[i].childNodes[0].innerHTML = "<span class=\"state-icon fa mv-unchecked\"></span><div class=\"lang\" key=\"" + $(".mv-nav-item")[i].dataset.layerid + "\">" + $(".mv-nav-item")[i].childNodes[0].textContent + "</div><input type=\"checkbox\" class=\"hidden\" value=\"false\">";
+                } else {
+                    $(".mv-nav-item")[i].childNodes[0].innerHTML = "<span class=\"state-icon fa mv-checked\"></span><div class=\"lang\" key=\"" + $(".mv-nav-item")[i].dataset.layerid + "\">" + $(".mv-nav-item")[i].childNodes[0].textContent + "</div><input type=\"checkbox\" class=\"hidden\" value=\"true\">";
+                }
+            }
+
+            
+
             document.getElementById("searchtool").remove();
 
             // Configure la fenetre de resultat
@@ -38,7 +60,7 @@ mviewer.customControls.initSimfen = (function () {
                     <div id='processingBar' class='progress' style='text-align: center; width: 400px;\
                         background-color: #808080'>\
                         <div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar'\ style='background-color: #007ACC; width:0%;'>\
-                            <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;'>\
+                            <p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;' class='lang' key='panelResultNoprocess'>\
                             Aucun processus en cours\
                             </p>\
                         </div>\
@@ -54,6 +76,10 @@ mviewer.customControls.initSimfen = (function () {
 
             // commande pour supprimer le layer une fois l'initialisation terminée
             $("li").remove(".list-group-item[data-layerid='initSimfen']");
+
+            for (var i = 0; i < $(".list-group").length; i++) {
+                $(".list-group")[0].childNodes[i].childNodes[0].childNodes[0].innerHTML = "<span class=\"state-icon glyphicon glyphicon-plus\"></span><span class=\"lang\" key=\"" + $(".list-group")[0].childNodes[1].childNodes[0].childNodes[0].offsetParent.dataset.layerid + "\">" + $(".list-group")[0].childNodes[1].childNodes[0].childNodes[0].textContent + "</span>";
+            }
         } 
     };
 }());
