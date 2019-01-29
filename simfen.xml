@@ -26,7 +26,7 @@
         <theme name="SIMFEN" collapsed="false" id="simfen" icon="file-text">
 
             <!-- couche d'initialisation qui se supprime juste après-->
-            <layer id="initSimfen" name="Boite à outils" visible="true" queryable="false"
+            <layer id="initSimfen" name="Resfresh page, not fully loaded, press F5" visible="true" queryable="false"
                 type="customlayer" opacity="0.5" legendurl="img/blank.gif"
                 url="&path;/customlayers/initSimfen.js"
                 customcontrol="true" customcontrolpath="&path;/customcontrols/"
@@ -34,17 +34,17 @@
             </layer>
 
             <group name="Services" id="Services">
-                <!-- <layer id="showAvailableStations" name="Affichage des stations disponibles" visible="false" queryable="false"
-                    type="customlayer" opacity="0.8" legendurl="img/blank.gif"
-                    url="&path;/customlayers/showAvailableStations.js"
-                    customcontrol="true" customcontrolpath="&path;/customcontrols/"
-                    expanded="true">
-                </layer> -->
                 <layer id="waterFlowSimulation" name="Simulation du débit" visible="true" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/waterFlowSimulation.js"
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">           
+                </layer>
+                <layer id="ghoshCalculation" name="Affichage des stations sélectionnées selon la distance de Ghosh" visible="false" queryable="false"
+                    type="customlayer" opacity="0.8" legendurl="img/blank.gif"
+                    url="&path;/customlayers/ghoshCalculation.js"
+                    customcontrol="true" customcontrolpath="&path;/customcontrols/"
+                    expanded="true">
                 </layer>
                 <!-- <layer id="waterFlowSimulationArea" name="Simulation du débit (zone)" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"

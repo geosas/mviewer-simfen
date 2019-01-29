@@ -5,13 +5,13 @@
         <table style="border-collapse:separate; border-spacing:3px;">
             <tr>
                 <td>
-                    <label>Start&nbsp;&nbsp;</label>
+                    <label class="lang" key="dateDebut">Début&nbsp;&nbsp;</label>
                     <input type="date" id="dateStartWaterFlowSimulation" name="dateStartWaterFlowSimulation" min="2017-10-05" max="2018-09-05" value="2017-10-05">
                 </td>
             </tr>
             <tr>
                 <td>
-                    <label>End&nbsp;&nbsp;&nbsp;</label>
+                    <label class="lang" key="dateFin">Fin&nbsp;&nbsp;&nbsp;</label>
                     <input type="date" id="dateEndWaterFlowSimulation" name="dateEndWaterFlowSimulation" min="2017-10-05" max="2018-09-05" value="2018-09-05">
                 </td>
             </tr>
@@ -24,8 +24,8 @@
                 <table style="border-collapse:separate; border-spacing:3px;">
                     <tr>
                         <td>
-                            <label class="lang" key="waterFlowSimulationCoord">Coordonnées X,Y (EPSG 2154) :</label>
-                            <input type="text" id="XYWaterFlowSimulation" name="XYWaterFlowSimulation">
+                            <label class="lang" key="setCoordText">Coordonnées X,Y (EPSG 2154) :</label>
+                            <input type="text" id="XYWaterFlowSimulation" name="XYWaterFlowSimulation" placeholder="273618.23,6786198.45">
                             <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.getXYFromCoordinate();">
                                 <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
                             </button>
@@ -38,19 +38,19 @@
                     </tr>
                     <tr>
                         <td>
-                            <input type="radio" id="journalierWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=1440 checked="checked" class="lang" key="waterFlowSimulationDeltaT1"> Journalier
-                            <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=60 class="lang" key="waterFlowSimulationDeltaT2"> Horaire
+                            <input type="radio" id="journalierWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=1440 checked="checked"><span class="lang" key="waterFlowSimulationDeltaT1"> Journalier</span>
+                            <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=60><span class="lang" key="waterFlowSimulationDeltaT2"> Horaire</span>
                             <!--<input type="radio" id="minute" name="deltaT" value=1>-->
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <label class="lang" key="waterFlowSimulationStations">N'utiliser que les stations en aval de l'exutoire cible ?</label>
+                            <label class="lang" key="onlyStationsOnWatershed">N'utiliser que les stations en aval de l'exutoire cible ?</label>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input type="checkbox" id="inBasinWaterFlowSimulation" class="lang" key="waterFlowSimulationStationsOui"> Oui
+                            <input type="checkbox" id="inBasinWaterFlowSimulation"><span class="lang" key="oui"> Oui</span>
                         </td>
                     </tr>
                     <tr>

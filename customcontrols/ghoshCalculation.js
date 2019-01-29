@@ -1,4 +1,4 @@
-mviewer.customControls.waterFlowSimulation = (function () {
+mviewer.customControls.ghoshCalculation = (function () {
     /*
      * Private
      */
@@ -34,17 +34,15 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _service = "WPS";
     var _version = "1.0.0";
     var _request = "Execute";
-    var _identifier = "waterFlowSimulation";
+    var _identifier = "ghoshCalculation";
     var _getStations = "getStationsGeobretagne";
     var _identifierXY = "xyOnNetwork";
-    var _identifierGetMeasuredFlow = "getMeasuredFlow";
     var _storeExecuteResponse = true;
     var _lineage = true;
     var _status = true;
     var _refreshTime;
     var _refreshTimeXY;
     var _timeOut;
-    var _waitingQueue = false;
     var _updating;
     var _nameColor = [];
     var _timeoutCount = 0;
@@ -154,7 +152,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     function getAndSetStatus(response) {
         // Met a jour le tableau de resultat selon ce status
         if (response.Status.ProcessAccepted) {
-            processingBarUpdate(5, response.Status.ProcessAccepted);
+            processingBarUpdate(0, response.Status.ProcessAccepted);
             //return response.Status.ProcessAccepted;
 
         } else if (response.Status.ProcessStarted) {
@@ -167,20 +165,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
             //return response.Status.ProcessSucceeded;
 
         } else if (response.Status.ProcessFailed) {
-            // relance la requete etant donne que le process n'a pas de raison de failed,
-            // a part si la requete est passee dans la base sqlite et donc, 
-            // elle n'a pas pu etre recuperee lorsqu'il a ete possible de l'executer
-            // supprime l'ancien updating
-            //clearInterval(_updating);
-            // execute la requete a nouveau
-            //processExecution();
             processingBarUpdate(0, response.Status.ProcessFailed);
-            //alert("Relancez le traitement");
+            clearInterval(_updating);
 
         } else {
             processingBarUpdate(0, "Le processus a échoué, actualisez la page")
             clearInterval(_updating);
-            //return 'Error';
         }
     }
 
@@ -239,34 +229,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
                                     _processing = false;
 
-                                } else if (outputTag.Identifier === "StationsAvailable") {
-                                    plotStationAvailable(outputTag.Data.ComplexData.FeatureCollection.featureMember);
-                                    _processing = false;
-
-                                } else if (outputTag.Identifier === "SimulatedFlow") {
-                                    plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
-                                    // ajoute le bouton pour afficher les debits mesures employes
-                                    $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append("\
-                                    <div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>\
-                                    <button class='btn btn-default' type='button'\
-                                    onclick='mviewer.customControls.waterFlowSimulation.getMeasuredFlow();'>\
-                                    Cliquez pour visualiser les débits mesurés employés</button></div>");
-                                    _processing = false;
-
                                 } else if (outputTag.Identifier === "StationsSelected") {
                                     plotStation(outputTag.Data.ComplexData.FeatureCollection.featureMember);
                                     _processing = false;
 
-                                } else if (outputTag.Identifier === "MeasuredFlow") {
-                                    plotMeasuredFlow(outputTag.Data.ComplexData);
-                                    // supprime le bouton
-                                    var divBtn = document.getElementById("divPopup2");
-                                    var fcBtn = divBtn.firstChild;
-                                    while (fcBtn) {
-                                        divBtn.removeChild(fcBtn);
-                                        fcBtn = divBtn.firstChild;
-                                    }
-                                    _processing = false;
                                 }
                             }
                         }
@@ -294,7 +260,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 // Recupere l'url de la variable statusLocation
                 var statusLocationURL = response.statusLocation;
                 // Maj de la barre de progression
-                processingBarUpdate(5, "Vérification de la file d'attente...");
+                processingBarUpdate(0, "Vérification de la file d'attente...");
                 // Debut d'ecoute du resultat
                 _updating = setInterval(function () {
                     updateProcess(statusLocationURL);
@@ -316,222 +282,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
             xmlDoc.loadXML(string);
         }
         return xmlDoc;
-    }
-
-    function setDownloadMetaDatas() {
-        listStations = "";
-        for (var i = 0; i < _nameColor.length; i++) {
-            listStations += _nameColor[i].key + ",";
-        }
-        listStations = listStations.substring(0, listStations.length - 1);
-                    
-        var str = "x;y;fDate;lDate;stations;deltaT;inBasin" + "\r\n";
-        str += String.format("{0};{1};{2};{3};{4};{5};{6}", _xy[0], _xy[1], $("#dateStartWaterFlowSimulation").val(), $("#dateEndWaterFlowSimulation").val(), listStations, $("input[name='deltaTWaterFlowSimulation']:checked").val(), $("#inBasinWaterFlowSimulation").is(":checked"));
-        // cree le csv
-        var blob = new Blob([str], {
-            type: "text/csv"
-        });
-        var url = URL.createObjectURL(blob);
-
-        var metaFile = document.createElement("a");
-        document.body.appendChild(metaFile);
-        metaFile.style = "display: none";
-        metaFile.setAttribute("href", url);
-        metaFile.setAttribute("download", "metadonnees_simulation.csv");
-        metaFile.click();
-    }
-
-    function setDownloadFile(datasx, datasy) {
-        // header of csvfile
-        var str = "date;runoff(m3/s)" + "\r\n";
-
-        // construit chaque ligne du csv selon les donnees
-        for (var i = 0; i < datasx.length; i++) {
-            var line = '';
-            line += datasx[i] + ";" + datasy[i]
-            str += line + '\r\n';
-        }
-
-        // cree le csv
-        var blob = new Blob([str], {
-            type: "text/csv"
-        });
-        var url = URL.createObjectURL(blob);
-
-        // cree l'url de telechargement et lie le fichier blob a celui-ci
-        // et l'ajoute dans le tableau de bord
-        var dlFile = document.createElement("a");
-        dlFile.setAttribute("id", "linkDownloadFlow");
-        dlFile.setAttribute("href", url);
-        dlFile.setAttribute("target", "_blank");
-        dlFile.setAttribute("style", "color:#337ab7;text-decoration:true;font-size:20px;");
-        dlFile.setAttribute("download", "output_simulation.csv");
-        dlFile.setAttribute("class", "glyphicon glyphicon-save");
-        dlFile.appendChild(document.createTextNode("Téléchargement des débits"));
-        document.getElementById("divPopup1").appendChild(dlFile);
-        dlFile.click();
-
-        var licenceFile = document.createElement("a");
-        document.body.appendChild(licenceFile);
-        licenceFile.style = "display: none";
-        licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
-        licenceFile.setAttribute("download", "licence_simulation.txt");
-        licenceFile.click();
-
-        setDownloadMetaDatas();
-    }
-
-    function plotDatas(points) {
-        var xDatas = [];
-        var yDatas = [];
-        for (var i = 0; i < points.length; i++) {
-            xDatas = xDatas.concat(points[i].MeasurementTVP.time);
-            yDatas = yDatas.concat(points[i].MeasurementTVP.value);
-        }
-
-        // cree un fichier contenant les donnees au format csv
-        // et permet son telechargement
-        setDownloadFile(xDatas, yDatas);
-
-        var trace = [{
-            name: "Débit simulé",
-            x: xDatas,
-            y: yDatas,
-            type: 'line'
-        }];
-
-        var layout = {
-            xaxis: {
-                title: 'Date',
-            },
-            yaxis: {
-                title: 'm3/s'
-            },
-            showlegend: true,
-            /*legend: {
-                "orientation": "h"
-            }*/
-        };
-
-        Plotly.newPlot(document.getElementById("graphFlowSimulated"), trace, layout);
-    }
-
-    function plotMeasuredFlow(datas) {
-        var datasJson = JSON.parse(datas);
-        var names = [];
-        for (var i = 0; i < datasJson.length; i++) {
-            names = names.concat(datasJson[i]["code_hydro"]);
-        }
-        // obtient les identifants uniques
-        names = Array.from(new Set(names));
-
-        for (var i = 0; i < names.length; i++) {
-            var xDatas = [];
-            var yDatas = [];
-            for (var j = 0; j < datasJson.length; j++) {
-                if (names[i] === datasJson[j].code_hydro) {
-                    xDatas = xDatas.concat(datasJson[j].date);
-                    yDatas = yDatas.concat(datasJson[j].debit_donnee_validee_m3);
-                }
-            }
-            for (var j = 0; j < _nameColor.length; j++) {
-                if (names[i] === _nameColor[j].key) {
-                    var color = _nameColor[j].value;
-                }
-
-                var trace = [{
-                    name: names[i],
-                    x: xDatas,
-                    y: yDatas,
-                    type: 'line',
-                    line: {
-                        color: color
-                    }
-                }];
-            }
-
-            Plotly.plot(document.getElementById("graphFlowSimulated"), trace);
-        }
-    }
-
-    function plotStationAvailable(features) {
-        /*recupere dans le document xml les informations spatiales des stations
-        pour ensuite les afficher sur la carte. Si une couche de station a deja ete
-        produite, la supprime avant*/
-
-        function pointStyleFunctionSelected(feature) {
-            return new ol.style.Style({
-                image: new ol.style.Circle({
-                    fill: new ol.style.Fill({
-                        color: "green"
-                    }),
-                    stroke: new ol.style.Stroke({
-                        width: 1,
-                        color: "green"
-                    }),
-                    radius: 7
-                }),
-                text: createTextStyle(feature)
-            });
-        }
-
-        var createTextStyle = function (feature) {
-            return new ol.style.Text({
-                font: '12px Calibri,sans-serif',
-                text: feature.get('name'),
-                offsetY: 20,
-                fill: new ol.style.Fill({
-                    color: '#000'
-                }),
-                stroke: new ol.style.Stroke({
-                    color: '#fff',
-                    width: 5
-                })
-            });
-        };
-
-        // supprime la precedente couche de station si elle existe
-        var layersToRemove = [];
-        _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) { //|| layer.get('name') === 'stations2')) {
-                layersToRemove.push(layer);
-            }
-        });
-        var len = layersToRemove.length;
-        for (var i = 0; i < len; i++) {
-            _map.removeLayer(layersToRemove[i]);
-        }
-
-        // initialise la source de donnees qui va contenir les entites
-        var stationSource = new ol.source.Vector({});
-
-        // cree le vecteur qui va contenir les stations
-        var arrStations = new Array();
-        var _stationLayer = new ol.layer.Vector({
-            name: "StationsAvailable",
-            source: stationSource,
-            style: pointStyleFunctionSelected
-        });
-
-        // pour chaque entite
-        for (var j = 0; j < features.length; j++) {
-            // recupere sa coordonnees et son nom
-            coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
-            nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
-            arrStations.push(nameStation);
-
-            // cree le point en veillant a changer la projection
-            var featureGeom = new ol.geom.Point(ol.proj.transform([coord[0], coord[1]], 'EPSG:2154', 'EPSG:3857'));
-            // cree la feature
-            var featureThing = new ol.Feature({
-                name: nameStation,
-                geometry: featureGeom
-            });
-            // ajoute la feature a la source
-            stationSource.addFeature(featureThing);
-        }
-        // ajoute la couche de point des stations a la carte
-        _map.addLayer(_stationLayer);
     }
 
     function plotStation(features) {
@@ -651,8 +401,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         init: function () {
             // mandatory - code executed when panel is opened
-            $("#legend-waterFlowSimulation").hide();
-            $(".mv-layer-options[data-layerid='waterFlowSimulation'] .form-group-opacity").hide();
+            $("#legend-ghoshCalculation").hide();
+            $(".mv-layer-options[data-layerid='ghoshCalculation'] .form-group-opacity").hide();
 
 
             // Fonction pour afficher la coordonnee X,Y a la volee
@@ -705,9 +455,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
         getXYFromCoordinate: function () {
         	if (_processing === false){
 	        	//si on souhaite renseigner manuellement la coordonnees xy
-	            if ($("#XYWaterFlowSimulation").val() && !$("#XYWaterFlowSimulation").val().match(/[a-z]/i)) {
+	            if ($("#XYghoshCalculation").val() && !$("#XYghoshCalculation").val().match(/[a-z]/i)) {
 	            	//supprime les espaces, remplace les virgules et les points
-	            	inputCoordinate = $("#XYWaterFlowSimulation").val().replace(/ /g, "")
+	            	inputCoordinate = $("#XYghoshCalculation").val().replace(/ /g, "")
 	            	if (inputCoordinate.search(";") != -1){
 	            		inputCoordinate = inputCoordinate.replace(",",".").replace(";",",")
                 	}
@@ -726,7 +476,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 	                processExecution();
 	                _processing = true;
 	                //clear le champ
-	                $("#XYWaterFlowSimulation").val("")
+	                $("#XYghoshCalculation").val("")
 	            } else {
 	            	alert("Veuillez indiquer une coordonnée X,Y.");
 	            }
@@ -735,126 +485,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 	        }
         },
 
-        showAvailableStations: function () {
-            if (_processing === false){
-                if (_xy) {
-                    // permet de supprimer les decimales, mais cree une chaine de texte a split
-                    var dictInputs = {
-                        X: String(_xy).split(',')[0],
-                        Y: String(_xy).split(',')[1],
-                        Start: $("#dateStartWaterFlowSimulation").val(),
-                        End: $("#dateEndWaterFlowSimulation").val(),
-                        Distance: 50000
-                    };
-                    // construit la requete xml POST
-                    _rqtWPS = buildPostRequest(dictInputs, _getStations);
-                    console.log("Voici la requête WPS envoyée : " + _rqtWPS);
-                    // execute le process
-                    _refreshTime = 2000;
-                    _timeOut = 5000;
-                    processExecution();
-                    _processing = true;
-                } else {
-                    alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
-                }
-            } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
-            }
-        },
-
-        selectAvailableStations: function () {
-            //cree la variable select
-            var select;
-            //defini un parser de geometry pour faire l'intersection via la bibliotheque jsts
-            var parser = new jsts.io.OL3Parser();
-            //defini le vecteur qui va correspondre au polygone dessiné pour seelctionner les exutoires
-            var polygonSelection = new ol.layer.Vector({
-                id: 'polygonSelection',
-                source: new ol.source.Vector()
-            });
-            //cree l'interaction de dessin du polygone
-            _drawPolygon = new ol.interaction.Draw({
-                source: polygonSelection.getSource(),
-                type: 'Polygon'
-            });
-            //ajoute l'interaction
-            mviewer.getMap().addInteraction(_drawPolygon);
-
-            //recupere chaque elements de la couche exutoire qui sont dans le polygone
-            _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
-                _stationLayer = layer;
-                }
-            });
-
-            //a la fin du pol
-            _drawPolygon.on('drawend', function (event) {
-                //recupere la geometrie de la feature creee
-                var featureDraw = event.feature.getGeometry();
-                var jsts_geom_select = parser.read(featureDraw);
-
-                var layer_select_geometries = _stationLayer.getSource().getFeatures().filter(function(el) {
-                    if (jsts_geom_select.contains(parser.read(el.getGeometry()))) {
-                        return true;
-                    }
-                });
-                //nettoye les selections
-                polygonSelection.getSource().clear();
-                select.getFeatures().clear();
-
-                //selectionne visuellement les exutoires
-                select.getFeatures().extend(layer_select_geometries);
-
-                //recupere l'id des entites intersectees et le stocke pour effectuer le traitement
-                _stationsSelectedByUser = layer_select_geometries.map(function(feature) {
-                    return feature.P.name;
-                });
-
-                //enleve l'interaction permettant de créer le polygone
-                mviewer.getMap().removeInteraction(_drawPolygon);
-            });
-
-            // Crée l'interaction de selection des exutoires
-            select = new ol.interaction.Select({
-                layers: [_stationLayer]
-            });
-            _map.addInteraction(select);
-        },
-
-        getMeasuredFlow: function () {
-            if (_processing === false){
-                // Verifier que le graphique existe pour pouvoir ajouter des
-                // courbes dedans
-                if (document.getElementById("btnMeasuredFlow")) {
-                    // Identifie les stations qui ont ete utilisees
-                    // pour indiquer la liste de stations a employer
-                    listStations = "";
-                    for (var i = 0; i < _nameColor.length; i++) {
-                        listStations += _nameColor[i].key + ",";
-                    }
-                    listStations = listStations.substring(0, listStations.length - 1);
-                    // construit la requete wps
-                    var dictInputs = {
-                        Start: $("#dateStartWaterFlowSimulation").val(),
-                        End: $("#dateEndWaterFlowSimulation").val(),
-                        ListStations: listStations
-                    };
-                    _rqtWPS = buildPostRequest(dictInputs, _identifierGetMeasuredFlow);
-                    // defini des valeurs globales dans le cas d'une reexecution
-                    // si le process posse en file d'attente et execute le process
-                    _refreshTime = 4000;
-                    _timeOut = 8000;
-                    processExecution();
-                    _processing = true;
-                } else {
-                    alert("Veuillez simuler le débit avant d'appuyer sur ce bouton");
-                }
-            } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
-            }
-        },
-
-        waterFlowSimulation: function () {
+        ghoshCalculation: function () {
             if (_processing === false){
                 if (_xy) {
                     if (typeof _stationsSelectedByUser === 'undefined' || _stationsSelectedByUser.length === 0) {
@@ -867,10 +498,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         var dictInputs = {
                             X: String(_xy).split(',')[0],
                             Y: String(_xy).split(',')[1],
-                            Start: $("#dateStartWaterFlowSimulation").val(),
-                            End: $("#dateEndWaterFlowSimulation").val(),
-                            DeltaT: $("input[name='deltaTWaterFlowSimulation']:checked").val(),
-                            InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
+                            Start: $("#dateStartghoshCalculation").val(),
+                            End: $("#dateEndghoshCalculation").val(),
+                            InBasin: $("#inBasinghoshCalculation").is(":checked"),
                             ListStations: _stationsSelectedByUser.toString()
                         };
 
@@ -890,8 +520,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         }
                         // defini des valeurs globales dans le cas d'une reexecution
                         // si le process posse en file d'attente et execute le process
-                        _refreshTime = 25000;
-                        _timeOut = 22000;
+                        _refreshTime = 8000;
+                        _timeOut = 10000;
                         processExecution();
                         _processing = true;
 

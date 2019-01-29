@@ -49,8 +49,6 @@ mviewer.customControls.initSimfen = (function () {
                 }
             }
 
-            
-
             document.getElementById("searchtool").remove();
 
             // Configure la fenetre de resultat
@@ -77,7 +75,7 @@ mviewer.customControls.initSimfen = (function () {
             // commande pour supprimer le layer une fois l'initialisation terminée
             $("li").remove(".list-group-item[data-layerid='initSimfen']");
 
-            for (var i = 0; i < $(".list-group").length; i++) {
+            for (var i = 0; i < $(".list-group-item").length; i++) {
                 $(".list-group")[0].childNodes[i].childNodes[0].childNodes[0].innerHTML = "<span class=\"state-icon glyphicon glyphicon-plus\"></span><span class=\"lang\" key=\"" + $(".list-group")[0].childNodes[1].childNodes[0].childNodes[0].offsetParent.dataset.layerid + "\">" + $(".list-group")[0].childNodes[1].childNodes[0].childNodes[0].textContent + "</span>";
             }
         } 

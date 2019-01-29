@@ -1,0 +1,58 @@
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://unpkg.com/jsts@2.0.1/dist/jsts.min.js"></script>
+<div class="row">
+    <div class="col-md-12">
+        <table style="border-collapse:separate; border-spacing:3px;">
+            <tr>
+                <td>
+                    <label class="lang" key="dateDebut">Début&nbsp;&nbsp;</label>
+                    <input type="date" id="dateStartghoshCalculation" name="dateStartghoshCalculation" min="2017-10-05" max="2018-09-05" value="2017-10-05">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="lang" key="dateFin">Fin&nbsp;&nbsp;&nbsp;</label>
+                    <input type="date" id="dateEndghoshCalculation" name="dateEndghoshCalculation" min="2017-10-05" max="2018-09-05" value="2018-09-05">
+                </td>
+            </tr>
+        </table>
+
+        <div class="collapse" id="ghoshCalculationOptions">
+            <div class="panel-body">
+                <table style="border-collapse:separate; border-spacing:3px;">
+                    <tr>
+                        <td>
+                            <label class="lang" key="setCoordText">Coordonnées X,Y (EPSG 2154) :</label>
+                            <input type="text" id="XYghoshCalculation" name="XYghoshCalculation" placeholder="273618.23,6786198.45">
+                            <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.ghoshCalculation.getXYFromCoordinate();">
+                                <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label class="lang" key="onlyStationsOnWatershed">N'utiliser que les stations en aval de l'exutoire cible ?</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="checkbox" id="inBasinWaterFlowSimulation"><span class="lang" key="oui"> Oui</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <button title="Options avancées" class="btn btn-default" type="button" data-toggle="collapse" data-target="#ghoshCalculationOptions" aria-expanded="false">
+            <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+            </button>
+        <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.ghoshCalculation.getXY();">
+                <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+            </button>
+        <button title="Lancer le calcul" class="btn btn-default" onclick="mviewer.customControls.ghoshCalculation.ghoshCalculation();">
+                <span class="glyphicon glyphicon-play-circle" aria-hidden="true"></span>
+            </button>
+        <button title="Afficher le panneau de résultat" class="btn btn-default" type="button" onclick="$('#bottom-panel').toggleClass('active')">
+            <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+            </button>
+    </div>
+</div>
