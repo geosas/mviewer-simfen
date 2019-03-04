@@ -257,6 +257,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     plotStation(outputTag.Data.ComplexData.FeatureCollection.featureMember);
                                     _processing = false;
 
+                                } else if (outputTag.Identifier === "Watersheds") {
+                                    plotWatersheds(outputTag.Data.ComplexData.FeatureCollection.featureMember);
+                                    _processing = false;
+
                                 } else if (outputTag.Identifier === "MeasuredFlow") {
                                     plotMeasuredFlow(outputTag.Data.ComplexData);
                                     // supprime le bouton
@@ -294,7 +298,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 // Recupere l'url de la variable statusLocation
                 var statusLocationURL = response.statusLocation;
                 // Maj de la barre de progression
-                processingBarUpdate(5, "Vérification de la file d'attente...");
+                processingBarUpdate(0, "Vérification de la file d'attente...");
                 // Debut d'ecoute du resultat
                 _updating = setInterval(function () {
                     updateProcess(statusLocationURL);
@@ -516,8 +520,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // pour chaque entite
         for (var j = 0; j < features.length; j++) {
             // recupere sa coordonnees et son nom
-            coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
-            nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
+            coord = features[j].stations.geometryProperty.Point.coordinates.split(",");
+            nameStation = features[j].stations.code_hydro;
             arrStations.push(nameStation);
 
             // cree le point en veillant a changer la projection
@@ -532,6 +536,142 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_stationLayer);
+    }
+
+    function plotWatersheds(features) {
+    	// variable pour assigner une couleur a une station
+        _nameColor = [];
+
+        function areaStyleFunctionSelected(feature) {
+            // assigne un identifiant a une couleur
+            for (var i = 0; i < _nameColor.length; i++) {
+                if (feature.get('name') === _nameColor[i].key) {
+                    var color = _nameColor[i].value;
+                }
+            }
+
+            return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    width: 3,
+                    color: color
+                }),
+                text: createTextStyleWatershed(feature, color)
+            });
+        };
+
+        var createTextStyleWatershed = function (feature, color) {
+            return new ol.style.Text({
+                font: '12px Calibri,sans-serif',
+                text: feature.get('label'),
+                offsetY: 20,
+                fill: new ol.style.Fill({
+                    color: color
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 5
+                })
+            });
+        };
+
+        function addWatershed(coords, nameWatershed, watershedsSource, area) {
+            // cree le point en veillant a changer la projection
+            polyCoords = [];
+            for (var i in coords){
+                var c = coords[i].split(',');
+                polyCoords.push(ol.proj.transform([parseFloat(c[0]), parseFloat(c[1])], 'EPSG:2154', 'EPSG:3857'));
+            }
+            //var featureGeom = new ol.geom.Polygon(ol.proj.transform(coord, 'EPSG:2154', 'EPSG:3857'));
+            // cree la feature
+            var feature = new ol.Feature({
+                name: nameWatershed,
+                geometry: new ol.geom.Polygon([polyCoords]),
+                label: area
+            });
+            // ajoute la feature a la source
+            watershedsSource.addFeature(feature);
+        };
+
+        // supprime la precedente couche de bv si elle existe
+        var layersToRemove = [];
+        _map.getLayers().forEach(function (layer) {
+            if (layer.get('name') != undefined && (layer.get('name') === 'Watersheds')) {
+                layersToRemove.push(layer);
+            }
+        });
+        var len = layersToRemove.length;
+        for (var i = 0; i < len; i++) {
+            _map.removeLayer(layersToRemove[i]);
+        }
+
+        // initialise la source de donnees qui va contenir les entites
+        var watershedsSource = new ol.source.Vector({});
+
+        // cree le vecteur qui va contenir les stations
+        var arrWatersheds = new Array();
+        var _watershedsLayer = new ol.layer.Vector({
+            name: "Watersheds",
+            source: watershedsSource,
+            style: areaStyleFunctionSelected
+        });
+
+        // s'il n'y a qu'une feature/station
+        if (features.length == null) {
+            try {    
+                coord = features.idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                nameWatershed = features.idug_basin.station;
+                area = features.idug_basin.area;
+                arrWatersheds.push(nameWatershed);
+                _nameColor.push({
+                    key: nameWatershed,
+                    value: _colors[0]
+                });
+                addWatershed(coord, nameWatershed, watershedsSource, area);
+            } catch(error) {
+                multiPolygons = features.idug_basin.geometryProperty.MultiPolygon.polygonMember;
+                for (var i = 0; i < multiPolygons.length; i++) {
+                    coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                    nameWatershed = features.idug_basin.station;
+                    area = features.idug_basin.area;
+                    arrWatersheds.push(nameWatershed);
+                    _nameColor.push({
+                        key: nameWatershed,
+                        value: _colors[0]
+                    });
+                    addWatershed(coord, nameWatershed, watershedsSource, area);
+                }
+            }
+        } else {
+            // s'il y en a plusieurs
+            for (var j = 0; j < features.length; j++) {
+                try {
+                    coord = features[j].idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                    nameWatershed = features[j].idug_basin.station;
+                    area = features[j].idug_basin.area;
+                    arrWatersheds.push(nameWatershed);
+                    _nameColor.push({
+                        key: nameWatershed,
+                        value: _colors[j]
+                    });
+                    addWatershed(coord, nameWatershed, watershedsSource, area);
+                } catch(error) {
+                    polygonsWatershed = features[j].idug_basin.geometryProperty.MultiPolygon.polygonMember;
+                    for (var i = 0; i < polygonsWatershed.length; i++) {
+                        coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                        nameWatershed = features[j].idug_basin.station;
+                        area = features[j].idug_basin.area;
+                        arrWatersheds.push(nameWatershed);
+                        _nameColor.push({
+                            key: nameWatershed,
+                            value: _colors[j]
+                        });
+                        addWatershed(coord, nameWatershed, watershedsSource, area);
+                    }
+                }
+            }
+        }
+        // ajoute la couche de point des stations a la carte
+        _map.addLayer(_watershedsLayer);
     }
 
     function plotStation(features) {
@@ -561,7 +701,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     }),
                     radius: 7
                 }),
-                text: createTextStyle(feature)
+                text: createTextStyle(feature, color)
             });
         }
 
@@ -577,13 +717,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
             stationSource.addFeature(featureThing);
         }
 
-        var createTextStyle = function (feature) {
+        var createTextStyle = function (feature, color) {
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: feature.get('name'),
                 offsetY: 20,
                 fill: new ol.style.Fill({
-                    color: '#000'
+                    color: color
                 }),
                 stroke: new ol.style.Stroke({
                     color: '#fff',
@@ -617,8 +757,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
-            coord = features.hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
-            nameStation = features.hydrometrie_qmj_historique.code_hydro;
+            coord = features.stations.geometryProperty.Point.coordinates.split(",");
+            nameStation = features.stations.code_hydro;
             arrStations.push(nameStation);
             _nameColor.push({
                 key: nameStation,
@@ -630,8 +770,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // s'il y en a plusieurs
             for (var j = 0; j < features.length; j++) {
                 // recupere sa coordonnees et son nom
-                coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
-                nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
+                coord = features[j].stations.geometryProperty.Point.coordinates.split(",");
+                nameStation = features[j].stations.code_hydro;
                 arrStations.push(nameStation);
                 _nameColor.push({
                     key: nameStation,

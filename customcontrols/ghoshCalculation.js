@@ -500,7 +500,8 @@ mviewer.customControls.ghoshCalculation = (function () {
                             Y: String(_xy).split(',')[1],
                             Start: $("#dateStartghoshCalculation").val(),
                             End: $("#dateEndghoshCalculation").val(),
-                            InBasin: $("#inBasinghoshCalculation").is(":checked"),
+                            //InBasin: $("#inBasinghoshCalculation").is(":checked"),
+                            InBasin: "false",
                             ListStations: _stationsSelectedByUser.toString()
                         };
 
