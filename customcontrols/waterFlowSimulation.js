@@ -48,7 +48,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _updating;
     var _nameColor = [];
     var _timeoutCount = 0;
-    var _colors = ["red", "gold", "DarkOrange", "LightSeaGreen", "purple"];
+    var _colors = ["red", "SaddleBrown", "DarkOrange", "LightSeaGreen", "purple"];
     var _processing = false;
     var _stationsSelectedByUser;
 
@@ -562,7 +562,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var createTextStyleWatershed = function (feature, color) {
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
-                text: feature.get('label'),
+                text: feature.get('label')+"km2",
                 offsetY: 20,
                 fill: new ol.style.Fill({
                     color: color
@@ -581,7 +581,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 var c = coords[i].split(',');
                 polyCoords.push(ol.proj.transform([parseFloat(c[0]), parseFloat(c[1])], 'EPSG:2154', 'EPSG:3857'));
             }
-            //var featureGeom = new ol.geom.Polygon(ol.proj.transform(coord, 'EPSG:2154', 'EPSG:3857'));
+
             // cree la feature
             var feature = new ol.Feature({
                 name: nameWatershed,
@@ -615,13 +615,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
             style: areaStyleFunctionSelected
         });
 
+        // order features
+        features = features.sort(function(a, b) { return parseFloat(a.idug_basin.area) - parseFloat(b.idug_basin.area); });
+        features = features.reverse();
+        
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
             try {    
                 coord = features.idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                 nameWatershed = features.idug_basin.station;
                 area = features.idug_basin.area;
-                arrWatersheds.push(nameWatershed);
                 _nameColor.push({
                     key: nameWatershed,
                     value: _colors[0]
@@ -633,7 +636,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features.idug_basin.station;
                     area = features.idug_basin.area;
-                    arrWatersheds.push(nameWatershed);
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[0]
@@ -648,7 +650,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     coord = features[j].idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features[j].idug_basin.station;
                     area = features[j].idug_basin.area;
-                    arrWatersheds.push(nameWatershed);
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[j]
@@ -660,7 +661,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                         nameWatershed = features[j].idug_basin.station;
                         area = features[j].idug_basin.area;
-                        arrWatersheds.push(nameWatershed);
                         _nameColor.push({
                             key: nameWatershed,
                             value: _colors[j]
@@ -672,6 +672,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_watershedsLayer);
+
+        // pour mettre en surbrillance les bv
+        hoverBV = new ol.interaction.Select({
+            condition: ol.events.condition.pointerMove,
+            layers: [_watershedsLayer]
+        });
+        _map.addInteraction(hoverBV);
     }
 
     function plotStation(features) {
