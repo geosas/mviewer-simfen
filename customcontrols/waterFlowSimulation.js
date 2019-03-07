@@ -200,6 +200,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     clearInterval(_updating);
                     processingBarUpdate(0, "Le serveur ne répond pas, actualisez le navigateur");
                     _timeoutCount = 0;
+                    _processing = false;
                 }
             }
             _xhrGet.addEventListener('readystatechange', function () {
@@ -401,7 +402,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
             name: "Débit simulé",
             x: xDatas,
             y: yDatas,
-            type: 'line'
+            type: 'line',
+            line: {color: 'black'}
         }];
 
         var layout = {
@@ -424,7 +426,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var datasJson = JSON.parse(datas);
         var names = [];
         for (var i = 0; i < datasJson.length; i++) {
-            names = names.concat(datasJson[i]["code_hydro"]);
+            names = names.concat(datasJson[i]["station"]);
+            //names = names.concat(datasJson[i]["code_hydro"]);
         }
         // obtient les identifants uniques
         names = Array.from(new Set(names));
@@ -433,9 +436,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
             var xDatas = [];
             var yDatas = [];
             for (var j = 0; j < datasJson.length; j++) {
-                if (names[i] === datasJson[j].code_hydro) {
+                if (names[i] === datasJson[j].station) {
                     xDatas = xDatas.concat(datasJson[j].date);
-                    yDatas = yDatas.concat(datasJson[j].debit_donnee_validee_m3);
+                    //yDatas = yDatas.concat(datasJson[j].debit_donnee_validee_m3);
+                    yDatas = yDatas.concat(datasJson[j].qm3s);
                 }
             }
             for (var j = 0; j < _nameColor.length; j++) {
@@ -560,9 +564,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
         };
 
         var createTextStyleWatershed = function (feature, color) {
+            if(feature.get('weight')!=0){
+                label = feature.get('label')+"km2\nweight:"+feature.get('weight');
+            } else {
+                label = feature.get('label')+"km2";
+            };
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
-                text: feature.get('label')+"km2",
+                text: label,
                 offsetY: 20,
                 fill: new ol.style.Fill({
                     color: color
@@ -574,7 +583,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             });
         };
 
-        function addWatershed(coords, nameWatershed, watershedsSource, area) {
+        function addWatershed(coords, nameWatershed, watershedsSource, area, wghosh) {
             // cree le point en veillant a changer la projection
             polyCoords = [];
             for (var i in coords){
@@ -586,7 +595,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
             var feature = new ol.Feature({
                 name: nameWatershed,
                 geometry: new ol.geom.Polygon([polyCoords]),
-                label: area
+                label: area,
+                weight: wghosh
             });
             // ajoute la feature a la source
             watershedsSource.addFeature(feature);
@@ -625,22 +635,24 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 coord = features.idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                 nameWatershed = features.idug_basin.station;
                 area = features.idug_basin.area;
+                wghosh = features.idug_basin.weights;
                 _nameColor.push({
                     key: nameWatershed,
                     value: _colors[0]
                 });
-                addWatershed(coord, nameWatershed, watershedsSource, area);
+                addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
             } catch(error) {
                 multiPolygons = features.idug_basin.geometryProperty.MultiPolygon.polygonMember;
                 for (var i = 0; i < multiPolygons.length; i++) {
                     coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features.idug_basin.station;
                     area = features.idug_basin.area;
+                    wghosh = features.idug_basin.weights;
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[0]
                     });
-                    addWatershed(coord, nameWatershed, watershedsSource, area);
+                    addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
                 }
             }
         } else {
@@ -650,22 +662,24 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     coord = features[j].idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features[j].idug_basin.station;
                     area = features[j].idug_basin.area;
+                    wghosh = features[j].idug_basin.weights;
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[j]
                     });
-                    addWatershed(coord, nameWatershed, watershedsSource, area);
+                    addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
                 } catch(error) {
                     polygonsWatershed = features[j].idug_basin.geometryProperty.MultiPolygon.polygonMember;
                     for (var i = 0; i < polygonsWatershed.length; i++) {
                         coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                         nameWatershed = features[j].idug_basin.station;
                         area = features[j].idug_basin.area;
+                        wghosh = features[j].idug_basin.weights;
                         _nameColor.push({
                             key: nameWatershed,
                             value: _colors[j]
                         });
-                        addWatershed(coord, nameWatershed, watershedsSource, area);
+                        addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
                     }
                 }
             }
@@ -989,8 +1003,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _rqtWPS = buildPostRequest(dictInputs, _identifierGetMeasuredFlow);
                     // defini des valeurs globales dans le cas d'une reexecution
                     // si le process posse en file d'attente et execute le process
-                    _refreshTime = 4000;
-                    _timeOut = 8000;
+                    _refreshTime = 25000;
+                    _timeOut = 22000;
                     processExecution();
                     _processing = true;
                 } else {
