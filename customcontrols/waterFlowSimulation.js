@@ -154,7 +154,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     function getAndSetStatus(response) {
         // Met a jour le tableau de resultat selon ce status
         if (response.Status.ProcessAccepted) {
-            processingBarUpdate(5, response.Status.ProcessAccepted);
+            processingBarUpdate(5, "File d'attente, veuillez patienter...");
             //return response.Status.ProcessAccepted;
 
         } else if (response.Status.ProcessStarted) {
@@ -237,7 +237,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                                 if (outputTag.Identifier === "XY") {
                                     _xy = outputTag.Data.LiteralData.split(" ");
-                                    mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
+                                    if (Number(_xy[0]) == 0 && Number(_xy[1]) == 0){
+                                        alert("La coordonnée indiquée possède une altitude de 0, aucune simulation possible. Veuillez indiquer un point plus en amont");
+                                    } else {
+                                        mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
+                                    }
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "StationsAvailable") {
@@ -260,6 +264,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                                 } else if (outputTag.Identifier === "Watersheds") {
                                     plotWatersheds(outputTag.Data.ComplexData.FeatureCollection.featureMember);
+                                    _processing = false;
+
+                                } else if (outputTag.Identifier === "TargetWatershed") {
+                                    console.log(outputTag.Data.ComplexData.ExecuteResponse.ProcessOutputs.Output[0].Data.ComplexData.FeatureCollection.featureMember);
+                                    plotTargetWatershed(outputTag.Data.ComplexData.ExecuteResponse.ProcessOutputs.Output[0].Data.ComplexData.FeatureCollection.featureMember);
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "MeasuredFlow") {
@@ -542,11 +551,89 @@ mviewer.customControls.waterFlowSimulation = (function () {
         _map.addLayer(_stationLayer);
     }
 
+    function plotTargetWatershed(features) {
+
+        function styleFunction(feature) {
+            return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    width: 3,
+                    color: "black"
+                }),
+                text: styleWatershed(feature)
+            });
+        };
+
+        var styleWatershed = function (feature) {
+            label = feature.get('label')+"ha";
+            return new ol.style.Text({
+                font: '12px Calibri,sans-serif',
+                text: label,
+                offsetY: 20,
+                fill: new ol.style.Fill({
+                    color: "black"
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 5
+                })
+            });
+        };
+
+        function addWatershed(coords, nameWatershed, watershedsSource, area) {
+            // cree le point en veillant a changer la projection
+            polyCoords = [];
+            for (var i in coords){
+                var c = coords[i].split(',');
+                polyCoords.push(ol.proj.transform([parseFloat(c[0]), parseFloat(c[1])], 'EPSG:2154', 'EPSG:3857'));
+            }
+
+            // cree la feature
+            var feature = new ol.Feature({
+                name: nameWatershed,
+                geometry: new ol.geom.Polygon([polyCoords]),
+                label: area
+            });
+            // ajoute la feature a la source
+            watershedsSource.addFeature(feature);
+        };
+
+        // supprime la precedente couche de bv si elle existe
+        var layersToRemove = [];
+        _map.getLayers().forEach(function (layer) {
+            if (layer.get('name') != undefined && ((layer.get('name') === 'Watersheds') || (layer.get('name') === 'StationsSelected'))) {
+                layersToRemove.push(layer);
+            }
+        });
+        var len = layersToRemove.length;
+        for (var i = 0; i < len; i++) {
+            _map.removeLayer(layersToRemove[i]);
+        }
+
+        // initialise la source de donnees qui va contenir les entites
+        var watershedsSource = new ol.source.Vector({});
+
+        // cree le vecteur qui va contenir les stations
+        var arrWatersheds = new Array();
+        var _watershedsLayer = new ol.layer.Vector({
+            name: "Watersheds",
+            source: watershedsSource,
+            style: styleFunction
+        });
+        
+        coord = features.bv.the_geom.MultiPolygon.polygonMember.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+        nameWatershed = features.bv.code;
+        area = features.bv.surface_ha;
+        addWatershed(coord, nameWatershed, watershedsSource, area);
+        
+        // ajoute la couche de point des stations a la carte
+        _map.addLayer(_watershedsLayer);
+    }
+
     function plotWatersheds(features) {
     	// variable pour assigner une couleur a une station
         _nameColor = [];
 
-        function areaStyleFunctionSelected(feature) {
+        function styleFunction(feature) {
             // assigne un identifiant a une couleur
             for (var i = 0; i < _nameColor.length; i++) {
                 if (feature.get('name') === _nameColor[i].key) {
@@ -622,7 +709,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var _watershedsLayer = new ol.layer.Vector({
             name: "Watersheds",
             source: watershedsSource,
-            style: areaStyleFunctionSelected
+            style: styleFunction
         });
 
         // order features
