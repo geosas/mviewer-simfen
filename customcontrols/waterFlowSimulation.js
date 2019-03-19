@@ -44,7 +44,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _refreshTime;
     var _refreshTimeXY;
     var _timeOut;
-    var _waitingQueue = false;
     var _updating;
     var _nameColor = [];
     var _timeoutCount = 0;
@@ -93,66 +92,64 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
     }
 
-    function insideProjectArea(X,Y){
+    function insideProjectArea(X, Y) {
         // si le point cliqué est dans la zone du projet, permet son execution
-        if (X < 87000 || X > 412000 || Y < 6658714 || Y > 6902794) {
-            return false
+        if (X < 87000 || X > 412000 || Y < 6658714 || Y > 6902794) {
+            return false;
         } else {
-            return true
+            return true;
         }
     }
 
-    // Cree la requete POST du process
     function buildPostRequest(dictInputs, identifier) {
-        _xmlRequest = String.format('<?xml version="1.0" encoding="UTF-8"?>\
-            <wps:{0} xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="{1}" service="{2}" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">\
-            <ows:Identifier>{3}</ows:Identifier>\
-            <wps:DataInputs>\
-            ', _request, _version, _service, identifier);
+        // Cree la requete POST du process
+        _xmlRequest = String.format(['<?xml version="1.0" encoding="UTF-8"?>',
+            '<wps:{0} xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:wps="http://www.opengis.net/wps/1.0.0" ',
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="{1}" service="{2}" ',
+            'xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">',
+            '<ows:Identifier>{3}</ows:Identifier><wps:DataInputs>'
+        ].join(""), _request, _version, _service, identifier);
 
+        // split le dictionnaire contenant les parametres et valeurs
         var dataIdentifiers = Object.keys(dictInputs);
         var dataInputs = Object.keys(dictInputs).map(function (itm) {
             return dictInputs[itm];
         });
 
+        // genere la partie du xml contenant les parametres et valeurs
         for (var i = 0; i < dataIdentifiers.length; i++) {
-            inputXml = String.format('\
-            <wps:Input>\
-            <ows:Identifier>{0}</ows:Identifier>\
-            <wps:Data>\
-            <wps:LiteralData>{1}</wps:LiteralData>\
-            </wps:Data>\
-            </wps:Input>', dataIdentifiers[i], dataInputs[i]);
+            inputXml = String.format(['<wps:Input><ows:Identifier>{0}</ows:Identifier>',
+                '<wps:Data><wps:LiteralData>{1}</wps:LiteralData></wps:Data></wps:Input>'
+            ].join(""), dataIdentifiers[i], dataInputs[i]);
             _xmlRequest += inputXml;
         }
 
-        _xmlRequest += String.format('\
-              </wps:DataInputs>\
-               <wps:ResponseForm>\
-                <wps:ResponseDocument storeExecuteResponse="{0}" lineage="{1}" status="{2}">\
-                </wps:ResponseDocument>\
-               </wps:ResponseForm>\
-              </wps:{3}>', _storeExecuteResponse, _lineage, _status, _request);
+        // termine la generation du document pour une execution asynchrone et contenant le statut et les parametres en entree
+        _xmlRequest += String.format(['</wps:DataInputs><wps:ResponseForm><wps:ResponseDocument ',
+            'storeExecuteResponse="{0}" lineage="{1}" status="{2}"></wps:ResponseDocument>',
+            '</wps:ResponseForm></wps:{3}>'
+        ].join(""), _storeExecuteResponse, _lineage, _status, _request);
 
         return _xmlRequest;
     }
 
     function processingBarUpdate(percent, message) {
-        // si le traitement est termine
+        // Fonction pour mettre a jour la barre de progression selon les valeurs du wps
         if (percent === 100) {
-            // supprime l'animation (via la valeur 0), et met le fond en bleu
+            // si le traitement est termine, supprime l'animation (via la valeur 0), et met le fond en bleu
             percent = 0;
-            document.getElementById("processingBar").style.backgroundColor = "#007ACC";
+            $("#processingBar").css("backgroundColor", "#007ACC");
         } else {
-            document.getElementById("processingBar").style.backgroundColor = "#808080";
+            $("#processingBar").css("backgroundColor", "#808080");
         }
-        document.getElementById("progression").style.width = String.format("{0}%", percent);
-        document.getElementById("progression").setAttribute("aria-valuenow", String.format("{0}", percent));
-        document.getElementById("processing-text").innerHTML = message;
+        $("#progression").css("width", percent);
+        $("#progression").attr("aria-valuenow", percent);
+        $("#processing-text").text(message);
     }
 
     function getAndSetStatus(response) {
-        // Met a jour le tableau de resultat selon ce status
+        // Met a jour le texte dans la barre de progression selon le document de reponse du wps
+        // et arrete l'actualisation du process s'il est termine ou failed
         if (response.Status.ProcessAccepted) {
             processingBarUpdate(5, "File d'attente, veuillez patienter...");
             //return response.Status.ProcessAccepted;
@@ -175,10 +172,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // execute la requete a nouveau
             //processExecution();
             processingBarUpdate(0, response.Status.ProcessFailed);
+            clearInterval(_updating);
             //alert("Relancez le traitement");
 
         } else {
-            processingBarUpdate(0, "Le processus a échoué, actualisez la page")
+            processingBarUpdate(0, "Le processus a échoué, actualisez la page");
             clearInterval(_updating);
             //return 'Error';
         }
@@ -202,7 +200,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _timeoutCount = 0;
                     _processing = false;
                 }
-            }
+            };
             _xhrGet.addEventListener('readystatechange', function () {
                 if (_xhrGet.readyState === XMLHttpRequest.DONE && _xhrGet.status === 200) {
                     // Converti le xml en JSON pour pouvoir interagir avec les tags
@@ -222,22 +220,24 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 return response.ProcessOutputs[itm];
                             });
                             //if (Object.values(response.ProcessOutputs)[0].length > 1) {
+                            var iteration;
                             if (outputsTags[0].length > 1) {
-                                var iteration = outputsTags[0].length;
+                                iteration = outputsTags[0].length;
                             } else {
-                                var iteration = outputsTags.length;
+                                iteration = outputsTags.length;
                             }
 
                             for (var i = 0; i < iteration; i++) {
+                                var outputTag;
                                 if (iteration === 1) {
-                                    var outputTag = outputsTags[0];
+                                    outputTag = outputsTags[0];
                                 } else {
-                                    var outputTag = outputsTags[0][i];
+                                    outputTag = outputsTags[0][i];
                                 }
 
                                 if (outputTag.Identifier === "XY") {
                                     _xy = outputTag.Data.LiteralData.split(" ");
-                                    if (Number(_xy[0]) == 0 && Number(_xy[1]) == 0){
+                                    if (Number(_xy[0]) == 0 && Number(_xy[1]) == 0) {
                                         alert("La coordonnée indiquée possède une altitude de 0, aucune simulation possible. Veuillez indiquer un point plus en amont");
                                     } else {
                                         mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
@@ -251,11 +251,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 } else if (outputTag.Identifier === "SimulatedFlow") {
                                     plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
                                     // ajoute le bouton pour afficher les debits mesures employes
-                                    $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append("\
-                                    <div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>\
-                                    <button class='btn btn-default' type='button'\
-                                    onclick='mviewer.customControls.waterFlowSimulation.getMeasuredFlow();'>\
-                                    Cliquez pour visualiser les débits mesurés employés</button></div>");
+                                    $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append(["<div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>",
+                                        "<button class='btn btn-default' type='button'",
+                                        "onclick='mviewer.customControls.waterFlowSimulation.getMeasuredFlow();'>",
+                                        "Cliquez pour visualiser les débits mesurés employés</button></div>"
+                                    ].join(""));
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "StationsSelected") {
@@ -267,7 +267,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "TargetWatershed") {
-                                    console.log(outputTag.Data.ComplexData.ExecuteResponse.ProcessOutputs.Output[0].Data.ComplexData.FeatureCollection.featureMember);
                                     plotTargetWatershed(outputTag.Data.ComplexData.ExecuteResponse.ProcessOutputs.Output[0].Data.ComplexData.FeatureCollection.featureMember);
                                     _processing = false;
 
@@ -338,7 +337,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             listStations += _nameColor[i].key + ",";
         }
         listStations = listStations.substring(0, listStations.length - 1);
-                    
+
         var str = "x;y;fDate;lDate;stations;deltaT;inBasin" + "\r\n";
         str += String.format("{0};{1};{2};{3};{4};{5};{6}", _xy[0], _xy[1], $("#dateStartWaterFlowSimulation").val(), $("#dateEndWaterFlowSimulation").val(), listStations, $("input[name='deltaTWaterFlowSimulation']:checked").val(), $("#inBasinWaterFlowSimulation").is(":checked"));
         // cree le csv
@@ -362,7 +361,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // construit chaque ligne du csv selon les donnees
         for (var i = 0; i < datasx.length; i++) {
             var line = '';
-            line += datasx[i] + ";" + datasy[i]
+            line += datasx[i] + ";" + datasy[i];
             str += line + '\r\n';
         }
 
@@ -382,7 +381,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         dlFile.setAttribute("download", "output_simulation.csv");
         dlFile.setAttribute("class", "glyphicon glyphicon-save");
         dlFile.appendChild(document.createTextNode("Téléchargement des débits"));
-        document.getElementById("divPopup1").appendChild(dlFile);
+        $("#divPopup1").append(dlFile);
         dlFile.click();
 
         var licenceFile = document.createElement("a");
@@ -412,7 +411,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
             x: xDatas,
             y: yDatas,
             type: 'line',
-            line: {color: 'black'}
+            line: {
+                color: 'black'
+            }
         }];
 
         var layout = {
@@ -428,20 +429,21 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }*/
         };
 
-        Plotly.newPlot(document.getElementById("graphFlowSimulated"), trace, layout);
+        Plotly.newPlot($("#graphFlowSimulated")[0], trace, layout);
     }
 
     function plotMeasuredFlow(datas) {
         var datasJson = JSON.parse(datas);
         var names = [];
+        var trace;
         for (var i = 0; i < datasJson.length; i++) {
-            names = names.concat(datasJson[i]["station"]);
+            names = names.concat(datasJson[i].station); //["station"]);
             //names = names.concat(datasJson[i]["code_hydro"]);
         }
         // obtient les identifants uniques
         names = Array.from(new Set(names));
 
-        for (var i = 0; i < names.length; i++) {
+        for (i = 0; i < names.length; i++) {
             var xDatas = [];
             var yDatas = [];
             for (var j = 0; j < datasJson.length; j++) {
@@ -451,18 +453,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     yDatas = yDatas.concat(datasJson[j].qm3s);
                 }
             }
-            for (var j = 0; j < _nameColor.length; j++) {
+            for (j = 0; j < _nameColor.length; j++) {
+                var colorTrace;
                 if (names[i] === _nameColor[j].key) {
-                    var color = _nameColor[j].value;
+                    colorTrace = _nameColor[j].value;
                 }
 
-                var trace = [{
+                trace = [{
                     name: names[i],
                     x: xDatas,
                     y: yDatas,
-                    type: 'line',
+                    type: "line",
                     line: {
-                        color: color
+                        color: colorTrace
                     }
                 }];
             }
@@ -523,7 +526,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var stationSource = new ol.source.Vector({});
 
         // cree le vecteur qui va contenir les stations
-        var arrStations = new Array();
+        var arrStations = [];
         var _stationLayer = new ol.layer.Vector({
             name: "StationsAvailable",
             source: stationSource,
@@ -561,10 +564,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 }),
                 text: styleWatershed(feature)
             });
-        };
+        }
 
         var styleWatershed = function (feature) {
-            label = feature.get('label')+"ha";
+            label = feature.get('label') + "ha";
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
@@ -582,7 +585,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         function addWatershed(coords, nameWatershed, watershedsSource, area) {
             // cree le point en veillant a changer la projection
             polyCoords = [];
-            for (var i in coords){
+            for (var i in coords) {
                 var c = coords[i].split(',');
                 polyCoords.push(ol.proj.transform([parseFloat(c[0]), parseFloat(c[1])], 'EPSG:2154', 'EPSG:3857'));
             }
@@ -595,7 +598,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             });
             // ajoute la feature a la source
             watershedsSource.addFeature(feature);
-        };
+        }
 
         // supprime la precedente couche de bv si elle existe
         var layersToRemove = [];
@@ -612,56 +615,56 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // initialise la source de donnees qui va contenir les entites
         var watershedsSource = new ol.source.Vector({});
 
-        // cree le vecteur qui va contenir les stations
-        var arrWatersheds = new Array();
+        // cree le vecteur qui va contenir les bassins versants
         var _watershedsLayer = new ol.layer.Vector({
             name: "Watersheds",
             source: watershedsSource,
             style: styleFunction
         });
-        
+
         coord = features.bv.the_geom.MultiPolygon.polygonMember.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
         nameWatershed = features.bv.code;
         area = features.bv.surface_ha;
         addWatershed(coord, nameWatershed, watershedsSource, area);
-        
+
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_watershedsLayer);
     }
 
     function plotWatersheds(features) {
-    	// variable pour assigner une couleur a une station
+        // variable pour assigner une couleur a une station
         _nameColor = [];
 
         function styleFunction(feature) {
             // assigne un identifiant a une couleur
+            var colorWatershed;
             for (var i = 0; i < _nameColor.length; i++) {
                 if (feature.get('name') === _nameColor[i].key) {
-                    var color = _nameColor[i].value;
+                    colorWatershed = _nameColor[i].value;
                 }
             }
 
             return new ol.style.Style({
                 stroke: new ol.style.Stroke({
                     width: 3,
-                    color: color
+                    color: colorWatershed
                 }),
-                text: createTextStyleWatershed(feature, color)
+                text: createTextStyleWatershed(feature, colorWatershed)
             });
-        };
+        }
 
-        var createTextStyleWatershed = function (feature, color) {
-            if(feature.get('weight')!=0){
-                label = feature.get('label')+"km2\nweight:"+feature.get('weight');
+        var createTextStyleWatershed = function (feature, colorWatershed) {
+            if (feature.get('weight') != 0) {
+                label = feature.get('label') + "km2\nweight:" + feature.get('weight');
             } else {
-                label = feature.get('label')+"km2";
-            };
+                label = feature.get('label') + "km2";
+            }
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
                 offsetY: 20,
                 fill: new ol.style.Fill({
-                    color: color
+                    color: colorWatershed
                 }),
                 stroke: new ol.style.Stroke({
                     color: '#fff',
@@ -673,7 +676,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         function addWatershed(coords, nameWatershed, watershedsSource, area, wghosh) {
             // cree le point en veillant a changer la projection
             polyCoords = [];
-            for (var i in coords){
+            for (var i in coords) {
                 var c = coords[i].split(',');
                 polyCoords.push(ol.proj.transform([parseFloat(c[0]), parseFloat(c[1])], 'EPSG:2154', 'EPSG:3857'));
             }
@@ -687,7 +690,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             });
             // ajoute la feature a la source
             watershedsSource.addFeature(feature);
-        };
+        }
 
         // supprime la precedente couche de bv si elle existe
         var layersToRemove = [];
@@ -705,7 +708,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var watershedsSource = new ol.source.Vector({});
 
         // cree le vecteur qui va contenir les stations
-        var arrWatersheds = new Array();
+        var arrWatersheds = [];
         var _watershedsLayer = new ol.layer.Vector({
             name: "Watersheds",
             source: watershedsSource,
@@ -713,12 +716,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
         });
 
         // order features
-        features = features.sort(function(a, b) { return parseFloat(a.idug_basin.area) - parseFloat(b.idug_basin.area); });
+        features = features.sort(function (a, b) {
+            return parseFloat(a.idug_basin.area) - parseFloat(b.idug_basin.area);
+        });
         features = features.reverse();
-        
+
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
-            try {    
+            try {
                 coord = features.idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                 nameWatershed = features.idug_basin.station;
                 area = features.idug_basin.area;
@@ -728,9 +733,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     value: _colors[0]
                 });
                 addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
-            } catch(error) {
+            } catch (error) {
                 multiPolygons = features.idug_basin.geometryProperty.MultiPolygon.polygonMember;
-                for (var i = 0; i < multiPolygons.length; i++) {
+                for (i = 0; i < multiPolygons.length; i++) {
                     coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features.idug_basin.station;
                     area = features.idug_basin.area;
@@ -755,9 +760,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         value: _colors[j]
                     });
                     addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
-                } catch(error) {
+                } catch (error) {
                     polygonsWatershed = features[j].idug_basin.geometryProperty.MultiPolygon.polygonMember;
-                    for (var i = 0; i < polygonsWatershed.length; i++) {
+                    for (i = 0; i < polygonsWatershed.length; i++) {
                         coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                         nameWatershed = features[j].idug_basin.station;
                         area = features[j].idug_basin.area;
@@ -792,24 +797,25 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         function pointStyleFunctionSelected(feature) {
             // assigne un identifiant a une couleur
+            var colorStation;
             for (var i = 0; i < _nameColor.length; i++) {
                 if (feature.get('name') === _nameColor[i].key) {
-                    var color = _nameColor[i].value;
+                    colorStation = _nameColor[i].value;
                 }
             }
 
             return new ol.style.Style({
                 image: new ol.style.Circle({
                     fill: new ol.style.Fill({
-                        color: color
+                        color: colorStation
                     }),
                     stroke: new ol.style.Stroke({
                         width: 1,
-                        color: color
+                        color: colorStation
                     }),
                     radius: 7
                 }),
-                text: createTextStyle(feature, color)
+                text: createTextStyle(feature, colorStation)
             });
         }
 
@@ -825,13 +831,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
             stationSource.addFeature(featureThing);
         }
 
-        var createTextStyle = function (feature, color) {
+        var createTextStyle = function (feature, colorStation) {
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: feature.get('name'),
                 offsetY: 20,
                 fill: new ol.style.Fill({
-                    color: color
+                    color: colorStation
                 }),
                 stroke: new ol.style.Stroke({
                     color: '#fff',
@@ -856,7 +862,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var stationSource = new ol.source.Vector({});
 
         // cree le vecteur qui va contenir les stations
-        var arrStations = new Array();
+        var arrStations = [];
         var _stationLayer = new ol.layer.Vector({
             name: "StationsSelected",
             source: stationSource,
@@ -915,7 +921,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         },
 
         getXY: function () {
-            if (_processing === false){
+            if (_processing === false) {
                 _draw = new ol.interaction.Draw({
                     type: 'Point'
                 });
@@ -926,7 +932,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     coord = ol.coordinate.format(_xy, template);
 
                     // si le point clique dans la zone n'est pas dans le projet, ne lance pas le service
-                    if (insideProjectArea(String(_xy).split(',')[0],String(_xy).split(',')[1])===true) {
+                    if (insideProjectArea(String(_xy).split(',')[0], String(_xy).split(',')[1]) === true) {
                         // defini les parametres x,y du service
                         var dictInputs = {
                             X: String(_xy).split(',')[0],
@@ -941,7 +947,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         processExecution();
                         _processing = true;
                     } else {
-                        alert("Veuillez cliquer dans la zone du projet SIMFEN.")
+                        alert("Veuillez cliquer dans la zone du projet SIMFEN.");
                     }
                 });
                 mviewer.getMap().addInteraction(_draw);
@@ -951,40 +957,40 @@ mviewer.customControls.waterFlowSimulation = (function () {
         },
 
         getXYFromCoordinate: function () {
-        	if (_processing === false){
-	        	//si on souhaite renseigner manuellement la coordonnees xy
-	            if ($("#XYWaterFlowSimulation").val() && !$("#XYWaterFlowSimulation").val().match(/[a-z]/i)) {
-	            	//supprime les espaces, remplace les virgules et les points
-	            	inputCoordinate = $("#XYWaterFlowSimulation").val().replace(/ /g, "")
-	            	if (inputCoordinate.search(";") != -1){
-	            		inputCoordinate = inputCoordinate.replace(",",".").replace(";",",")
-                	}
-	                // defini les parametres x,y du service
-	                var dictInputs = {
-	                    X: String(inputCoordinate).split(',')[0],
-	                    Y: String(inputCoordinate).split(',')[1]
-	                };
-	                // construit la requete wps
-	                _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
-	                console.log(_rqtWPS);
-	                // defini des valeurs globales dans le cas d'une reexecution
-	                // si le process posse en file d'attente et execute le process
-	                _refreshTime = 2000;
-	                _timeOut = 5000;
-	                processExecution();
-	                _processing = true;
-	                //clear le champ
-	                $("#XYWaterFlowSimulation").val("")
-	            } else {
-	            	alert("Veuillez indiquer une coordonnée X,Y.");
-	            }
-	        } else {
-	        	alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
-	        }
+            if (_processing === false) {
+                //si on souhaite renseigner manuellement la coordonnees xy
+                if ($("#XYWaterFlowSimulation").val() && !$("#XYWaterFlowSimulation").val().match(/[a-z]/i)) {
+                    //supprime les espaces, remplace les virgules et les points
+                    inputCoordinate = $("#XYWaterFlowSimulation").val().replace(/ /g, "");
+                    if (inputCoordinate.search(";") != -1) {
+                        inputCoordinate = inputCoordinate.replace(",", ".").replace(";", ",");
+                    }
+                    // defini les parametres x,y du service
+                    var dictInputs = {
+                        X: String(inputCoordinate).split(',')[0],
+                        Y: String(inputCoordinate).split(',')[1]
+                    };
+                    // construit la requete wps
+                    _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
+                    console.log(_rqtWPS);
+                    // defini des valeurs globales dans le cas d'une reexecution
+                    // si le process posse en file d'attente et execute le process
+                    _refreshTime = 2000;
+                    _timeOut = 5000;
+                    processExecution();
+                    _processing = true;
+                    //clear le champ
+                    $("#XYWaterFlowSimulation").val("");
+                } else {
+                    alert("Veuillez indiquer une coordonnée X,Y.");
+                }
+            } else {
+                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
+            }
         },
 
         showAvailableStations: function () {
-            if (_processing === false){
+            if (_processing === false) {
                 if (_xy) {
                     // permet de supprimer les decimales, mais cree une chaine de texte a split
                     var dictInputs = {
@@ -1030,8 +1036,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
             //recupere chaque elements de la couche exutoire qui sont dans le polygone
             _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
-                _stationLayer = layer;
+                if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
+                    _stationLayer = layer;
                 }
             });
 
@@ -1041,7 +1047,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 var featureDraw = event.feature.getGeometry();
                 var jsts_geom_select = parser.read(featureDraw);
 
-                var layer_select_geometries = _stationLayer.getSource().getFeatures().filter(function(el) {
+                var layer_select_geometries = _stationLayer.getSource().getFeatures().filter(function (el) {
                     if (jsts_geom_select.contains(parser.read(el.getGeometry()))) {
                         return true;
                     }
@@ -1054,7 +1060,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 select.getFeatures().extend(layer_select_geometries);
 
                 //recupere l'id des entites intersectees et le stocke pour effectuer le traitement
-                _stationsSelectedByUser = layer_select_geometries.map(function(feature) {
+                _stationsSelectedByUser = layer_select_geometries.map(function (feature) {
                     return feature.P.name;
                 });
 
@@ -1070,10 +1076,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
         },
 
         getMeasuredFlow: function () {
-            if (_processing === false){
+            if (_processing === false) {
                 // Verifier que le graphique existe pour pouvoir ajouter des
                 // courbes dedans
-                if (document.getElementById("btnMeasuredFlow")) {
+                if ($("#btnMeasuredFlow")) {
                     // Identifie les stations qui ont ete utilisees
                     // pour indiquer la liste de stations a employer
                     listStations = "";
@@ -1103,62 +1109,68 @@ mviewer.customControls.waterFlowSimulation = (function () {
         },
 
         waterFlowSimulation: function () {
-            if (_processing === false){
-                if (_xy) {
-                    if (typeof _stationsSelectedByUser === 'undefined' || _stationsSelectedByUser.length === 0) {
-                        _stationsSelectedByUser = "None";
-                    }
-                    if (_stationsSelectedByUser.length > 5) {
-                        alert("Veuillez sélectionner 5 stations au plus.");
-                    } else {
-                        // permet de supprimer les decimales, mais cree une chaine de texte a split
-                        var dictInputs = {
-                            X: String(_xy).split(',')[0],
-                            Y: String(_xy).split(',')[1],
-                            Start: $("#dateStartWaterFlowSimulation").val(),
-                            End: $("#dateEndWaterFlowSimulation").val(),
-                            DeltaT: $("input[name='deltaTWaterFlowSimulation']:checked").val(),
-                            InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
-                            ListStations: _stationsSelectedByUser.toString()
-                        };
+            if (_processing === false) {
+                if ($("#dateStartWaterFlowSimulation").val() < $("#dateStartWaterFlowSimulation").attr("min")) {
+                    alert("Veuillez indiquer une date supérieure au " + $("#dateStartWaterFlowSimulation").attr("min"));
+                } else if ($("#dateEndWaterFlowSimulation").val() > $("#dateEndWaterFlowSimulation").attr("max")) {
+                    alert("Veuillez indiquer une date inférieure au " + $("#dateStartWaterFlowSimulation").attr("max"));
+                } else {
+                    if (_xy) {
+                        if (typeof _stationsSelectedByUser === 'undefined' || _stationsSelectedByUser.length === 0) {
+                            _stationsSelectedByUser = "None";
+                        }
+                        if (_stationsSelectedByUser.length > 5) {
+                            alert("Veuillez sélectionner 5 stations au plus.");
+                        } else {
+                            // permet de supprimer les decimales, mais cree une chaine de texte a split
+                            var dictInputs = {
+                                X: String(_xy).split(',')[0],
+                                Y: String(_xy).split(',')[1],
+                                Start: $("#dateStartWaterFlowSimulation").val(),
+                                End: $("#dateEndWaterFlowSimulation").val(),
+                                DeltaT: $("input[name='deltaTWaterFlowSimulation']:checked").val(),
+                                InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
+                                ListStations: _stationsSelectedByUser.toString()
+                            };
 
-                        // construit la requete xml POST
-                        _rqtWPS = buildPostRequest(dictInputs, _identifier);
-                        console.log("Voici la requête WPS envoyée : " + _rqtWPS);
-                        // supprime les resultats du precedent process
-                        if (document.getElementById("graphFlowSimulated").firstChild) {
-                            document.getElementById("graphFlowSimulated").firstChild.remove();
-                            document.getElementById("divPopup1").firstChild.remove();
-                            var divBtn = document.getElementById("divPopup2");
-                            var fcBtn = divBtn.firstChild;
-                            while (fcBtn) {
-                                divBtn.removeChild(fcBtn);
-                                fcBtn = divBtn.firstChild;
+                            // construit la requete xml POST
+                            _rqtWPS = buildPostRequest(dictInputs, _identifier);
+                            console.log("Voici la requête WPS envoyée : " + _rqtWPS);
+                            // supprime les resultats du precedent process
+                            if ($("#graphFlowSimulated").firstChild) {
+                                $("#graphFlowSimulated").firstChild.remove();
+                                $("#divPopup1").firstChild.remove();
+                                var divBtn = $("#divPopup2");
+                                var fcBtn = divBtn.firstChild;
+                                while (fcBtn) {
+                                    divBtn.removeChild(fcBtn);
+                                    fcBtn = divBtn.firstChild;
+                                }
+                            }
+                            // defini des valeurs globales dans le cas d'une reexecution
+                            // si le process posse en file d'attente et execute le process
+                            _refreshTime = 25000;
+                            _timeOut = 22000;
+                            processExecution();
+                            _processing = true;
+
+                            //supprime les stations selectionnees et la couche de stations à choisir
+                            _stationsSelectedByUser = "None";
+                            _map.getLayers().forEach(function (layer) {
+                                if (layer.get("name") === "StationsAvailable") {
+                                    _map.removeLayer(layer);
+                                }
+                            });
+
+                            // affiche le panneau de resultat
+                            if ($("#bottom-panel").hasClass("")) {
+                                $("#bottom-panel").toggleClass("active");
                             }
                         }
-                        // defini des valeurs globales dans le cas d'une reexecution
-                        // si le process posse en file d'attente et execute le process
-                        _refreshTime = 25000;
-                        _timeOut = 22000;
-                        processExecution();
-                        _processing = true;
 
-                        //supprime les stations selectionnees et la couche de stations à choisir
-                        _stationsSelectedByUser = "None";
-                        _map.getLayers().forEach(function(layer){
-                            if (layer.get("name") === "StationsAvailable"){
-                                _map.removeLayer(layer);
-                            }
-                        });
-                        
-                        // affiche le panneau de resultat
-                        if ($("#bottom-panel").hasClass("")) {
-                            $("#bottom-panel").toggleClass("active");
-                        };
+                    } else {
+                        alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
                     }
-
-                } else {
-                    alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
                 }
             } else {
                 alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
