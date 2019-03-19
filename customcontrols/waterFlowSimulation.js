@@ -567,7 +567,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
 
         var styleWatershed = function (feature) {
-            label = feature.get('label') + "ha";
+            label = feature.get('label') + "km2";
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
@@ -624,7 +624,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         coord = features.bv.the_geom.MultiPolygon.polygonMember.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
         nameWatershed = features.bv.code;
-        area = features.bv.surface_ha;
+        area = (features.bv.surface_ha / 100).toFixed(2);
         addWatershed(coord, nameWatershed, watershedsSource, area);
 
         // ajoute la couche de point des stations a la carte
