@@ -234,7 +234,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 } else {
                                     outputTag = outputsTags[0][i];
                                 }
-
+                                
                                 if (outputTag.Identifier === "XY") {
                                     _xy = outputTag.Data.LiteralData.split(" ");
                                     if (Number(_xy[0]) == 0 && Number(_xy[1]) == 0) {
@@ -273,12 +273,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 } else if (outputTag.Identifier === "MeasuredFlow") {
                                     plotMeasuredFlow(outputTag.Data.ComplexData);
                                     // supprime le bouton
-                                    var divBtn = document.getElementById("divPopup2");
-                                    var fcBtn = divBtn.firstChild;
-                                    while (fcBtn) {
-                                        divBtn.removeChild(fcBtn);
-                                        fcBtn = divBtn.firstChild;
-                                    }
+                                    $("#divPopup2").children().first().remove();
                                     _processing = false;
                                 }
                             }
@@ -513,7 +508,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // supprime la precedente couche de station si elle existe
         var layersToRemove = [];
         _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) { //|| layer.get('name') === 'stations2')) {
+            if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
                 layersToRemove.push(layer);
             }
         });
@@ -536,8 +531,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // pour chaque entite
         for (var j = 0; j < features.length; j++) {
             // recupere sa coordonnees et son nom
-            coord = features[j].stations.geometryProperty.Point.coordinates.split(",");
-            nameStation = features[j].stations.code_hydro;
+            coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
+            nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
             arrStations.push(nameStation);
 
             // cree le point en veillant a changer la projection
@@ -589,7 +584,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 var c = coords[i].split(',');
                 polyCoords.push(ol.proj.transform([parseFloat(c[0]), parseFloat(c[1])], 'EPSG:2154', 'EPSG:3857'));
             }
-
             // cree la feature
             var feature = new ol.Feature({
                 name: nameWatershed,
@@ -621,7 +615,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             source: watershedsSource,
             style: styleFunction
         });
-
+        
         coord = features.bv.the_geom.MultiPolygon.polygonMember.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
         nameWatershed = features.bv.code;
         area = (features.bv.surface_ha / 100).toFixed(2);
@@ -942,10 +936,15 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
                         // defini des valeurs globales dans le cas d'une reexecution
                         // si le process posse en file d'attente et execute le process
-                        _refreshTime = 2000;
-                        _timeOut = 5000;
+                        _refreshTime = 22000;
+                        _timeOut = 25000;
                         processExecution();
                         _processing = true;
+
+                        // affiche le panneau de resultat
+                        if ($("#bottom-panel").hasClass("")) {
+                            $("#bottom-panel").toggleClass("active");
+                        }
                     } else {
                         alert("Veuillez cliquer dans la zone du projet SIMFEN.");
                     }
@@ -975,12 +974,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     console.log(_rqtWPS);
                     // defini des valeurs globales dans le cas d'une reexecution
                     // si le process posse en file d'attente et execute le process
-                    _refreshTime = 2000;
+                    _refreshTime = 3000;
                     _timeOut = 5000;
                     processExecution();
                     _processing = true;
                     //clear le champ
                     $("#XYWaterFlowSimulation").val("");
+                    // affiche le panneau de resultat
+                    if ($("#bottom-panel").hasClass("")) {
+                        $("#bottom-panel").toggleClass("active");
+                    }
                 } else {
                     alert("Veuillez indiquer une coordonnée X,Y.");
                 }
@@ -992,7 +995,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
         showAvailableStations: function () {
             if (_processing === false) {
                 if (_xy) {
-                    // permet de supprimer les decimales, mais cree une chaine de texte a split
                     var dictInputs = {
                         X: String(_xy).split(',')[0],
                         Y: String(_xy).split(',')[1],
@@ -1122,7 +1124,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         if (_stationsSelectedByUser.length > 5) {
                             alert("Veuillez sélectionner 5 stations au plus.");
                         } else {
-                            // permet de supprimer les decimales, mais cree une chaine de texte a split
                             var dictInputs = {
                                 X: String(_xy).split(',')[0],
                                 Y: String(_xy).split(',')[1],
@@ -1137,15 +1138,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             _rqtWPS = buildPostRequest(dictInputs, _identifier);
                             console.log("Voici la requête WPS envoyée : " + _rqtWPS);
                             // supprime les resultats du precedent process
-                            if ($("#graphFlowSimulated").firstChild) {
-                                $("#graphFlowSimulated").firstChild.remove();
-                                $("#divPopup1").firstChild.remove();
-                                var divBtn = $("#divPopup2");
-                                var fcBtn = divBtn.firstChild;
-                                while (fcBtn) {
-                                    divBtn.removeChild(fcBtn);
-                                    fcBtn = divBtn.firstChild;
-                                }
+                            if ($("#graphFlowSimulated").children().first()) {
+                                $("#graphFlowSimulated").children().first().remove();
+                                $("#divPopup1").children().first().remove();
+                                $("#divPopup2").children().first().remove();
                             }
                             // defini des valeurs globales dans le cas d'une reexecution
                             // si le process posse en file d'attente et execute le process

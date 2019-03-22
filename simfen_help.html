@@ -46,7 +46,7 @@
 
 </style>
 
-<script type="text/javascript">
+<!-- <script type="text/javascript">
     // cree les boutons de changement de langue
     $(".modal-header").append("\
     <button class='translate' id='en'>&#x1F1EC;&#x1F1E7;</button>\
@@ -67,7 +67,7 @@
             });
         });
     });
-</script>
+</script> -->
 
 <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#h_simfen" aria-controls="profile" role="tab" data-toggle="tab" class="lang" key="accueil">Accueil</a></li>
@@ -119,7 +119,19 @@
 
     <div role="tabpanel" class="tab-pane" id="h_aide">
         <h4 class="lang" key="panelOutil1">Simulation du débit :</h4>
-        <p><span class="lang" key="panelOutil1Para1">Ce service permet de simuler le débit en tout point du réseau hydrographique breton à partir des données de débit disponibles sur le web service de </span><a href="https://geobretagne.fr/m/?layers=dreal_b%3Ahydrometrie_qmj&title=Bretagne%20-%20hydrom%C3%A9trie">GéoBretagne</a>.<span class="lang" key="panelOutil1Para2">Le modèle hydrologique employé provient des travaux de thèse d'</span><a href="http://www.theses.fr/2013NSARD072">Alban de Lavenne</a>.</p>
+        <p>
+            <span class="lang" key="panelOutil1Para1">
+                Ce service permet de simuler le débit en tout point du réseau hydrographique breton à partir de mesures de débit. Ces mesures peuvent être
+                obtenues à partir d'un service web, comme celui de
+            </span>
+                <a href="https://geobretagne.fr/m/?layers=dreal_b%3Ahydrometrie_qmj&title=Bretagne%20-%20hydrom%C3%A9trie">GéoBretagne</a>.
+            <span class="lang" key="panelOutil1Para2">
+                Le modèle hydrologique employé provient des travaux de thèse d'
+            </span>
+            <a href="http://www.theses.fr/2013NSARD072">
+                Alban de Lavenne.
+            </a>
+        </p>
 
         <p class="lang" key="panelOutil1Para4">Ce service utilise 3 paramètres à renseigner impérativement : </p>
         <ul>
@@ -127,11 +139,18 @@
             <li class="lang" key="panelOutil1Para6">Date de fin de la simulation</li>
             <li class="lang" key="panelOutil1Para7">Localisation de la station à simuler (<span class="glyphicon glyphicon-flag"></span>)</li>
         </ul>
-        <p><span class="lang" key="panelOutil1Para8">Pour les utilisateurs ayant une connaissance avancée du milieu où va être simulé le débit, il est possible d'influer sur le fonctionnement du modèle par rapport aux paramètres déterminés par défaut. Pour le moment, voici les paramètres pouvant être modifiés</span> <span class="glyphicon glyphicon-wrench"></span> : </p>
+        <p><span class="lang" key="panelOutil1Para8">Pour les utilisateurs ayant une connaissance avancée du milieu où va être simulé le débit,
+             il est possible d'influer sur le fonctionnement du modèle par rapport aux paramètres déterminés par défaut.
+             Pour le moment, voici les paramètres pouvant être modifiés </span> <span class="glyphicon glyphicon-wrench"></span> : </p>
         <ul>
-            <li>n'utiliser que les débits mesurés sur les stations en aval de la station simulée au lieu d'employer les stations à proximité et dont leurs bassins présentent une similitude avec le bassin cible.</li>
-            <li>choisir manuellement les stations à employer en indiquant leur code de station (celui référencé sur GéoBretagne). Il est possible d'utiliser le service "Affichage des stations disponibles" pour connaitre ces codes. <b>Il est impératif de séparer chaque code de station par une virgule (,) sans mettre d'espaces.</b></li>
-            <li>modifier le pas de temps des données simulées. Le projet Simfen a pour vocation de fournir des données au pas de temps horaire, mais le pas de temps journalier peut être choisi.</li>
+            <li>localiser manuellement le point où simuler le débit à partir de sa coordonnée X,Y en Lambert 93 (EPSG:2154).
+                <b>Remarque : Veuillez respecter la syntaxe indiquée.</b></li>
+            <li>choisir manuellement les stations à employer en utilisant <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                pour les faire apparaître et <span class="glyphicon glyphicon-unchecked" aria-hidden="true"></span> pour dessiner un polygon afin de les selectionner.
+            <b>Remarque : Il est possible de selectionner 5 stations au plus.</b></li>
+            <li>modifier le pas de temps des données simulées. <b>Remarque : un pas de temps horaire augmente considérablement le temps de traitement,
+                qu'importe la taille du bassin cible. Une simulation horaire sur 1 an (8760 lignes) prend 2 minutes 20 en moyenne. Donc pour 10 ans, environ 23 minutes.</b>
+            </li>
         </ul>
         <p> Le process est exécuté avec le bouton <span class="glyphicon glyphicon-play-circle"></span> ouvrant alors le panneau de résultat pouvant être ouvert et fermé avec le bouton <span class="glyphicon glyphicon-stats"></span>. Ce panneau permet de suivre la progression du traitement et télécharger le résultat au format CSV et visualiser celui-ci. Il est également possible de visualiser les débits mesurés qui ont été employés pour cette simulation en cliquant sur le bouton à gauche du graphique. <b>Remarque : il est important de comparer le débit par rapport à la surface du bassin. Il est préférable de comparer la présence des évenements entre les débits mesurés et débit simulé.</b></p>
 
