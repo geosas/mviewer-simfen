@@ -40,12 +40,12 @@
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">           
                 </layer>
-                <layer id="ghoshCalculation" name="Affichage des stations sélectionnées selon la distance de Ghosh" visible="false" queryable="false"
+                <!-- <layer id="ghoshCalculation" name="Affichage des stations sélectionnées selon la distance de Ghosh" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/ghoshCalculation.js"
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">
-                </layer>
+                </layer> -->
                 <!-- <layer id="waterFlowSimulationArea" name="Simulation du débit (zone)" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/waterFlowSimulationArea.js"

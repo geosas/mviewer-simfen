@@ -941,6 +941,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         processExecution();
                         _processing = true;
 
+                        // supprime les resultats du precedent process
+                        if ($("#graphFlowSimulated").children().first()) {
+                            $("#graphFlowSimulated").children().first().remove();
+                            $("#divPopup1").children().first().remove();
+                            $("#divPopup2").children().first().remove();
+                        }
+
                         // affiche le panneau de resultat
                         if ($("#bottom-panel").hasClass("")) {
                             $("#bottom-panel").toggleClass("active");
@@ -980,6 +987,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _processing = true;
                     //clear le champ
                     $("#XYWaterFlowSimulation").val("");
+                    // supprime les resultats du precedent process
+                    if ($("#graphFlowSimulated").children().first()) {
+                        $("#graphFlowSimulated").children().first().remove();
+                        $("#divPopup1").children().first().remove();
+                        $("#divPopup2").children().first().remove();
+                    }
                     // affiche le panneau de resultat
                     if ($("#bottom-panel").hasClass("")) {
                         $("#bottom-panel").toggleClass("active");
