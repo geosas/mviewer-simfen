@@ -267,7 +267,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "TargetWatershed") {
-                                    plotTargetWatershed(outputTag.Data.ComplexData.ExecuteResponse.ProcessOutputs.Output[0].Data.ComplexData.FeatureCollection.featureMember);
+                                    plotTargetWatershed(outputTag.Data.ComplexData.FeatureCollection.featureMember);
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "MeasuredFlow") {
@@ -562,7 +562,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
 
         var styleWatershed = function (feature) {
-            label = feature.get('label') + "km2";
+            label = "target";//feature.get('label') + "km2";
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
@@ -616,11 +616,41 @@ mviewer.customControls.waterFlowSimulation = (function () {
             style: styleFunction
         });
         
-        coord = features.bv.the_geom.MultiPolygon.polygonMember.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-        nameWatershed = features.bv.code;
-        area = (features.bv.surface_ha / 100).toFixed(2);
-        addWatershed(coord, nameWatershed, watershedsSource, area);
-
+        // s'il n'y a qu'une feature/station
+        if (features.length == null) {
+            try {
+                coord = features.targetW.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                nameWatershed = features.targetW.station;
+                area = 0;
+                addWatershed(coord, nameWatershed, watershedsSource, area);
+            } catch (error) {
+                multiPolygons = features.targetW.geometryProperty.MultiPolygon.polygonMember;
+                for (i = 0; i < multiPolygons.length; i++) {
+                    coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                    nameWatershed = features.targetW.station;
+                    area = 0;
+                    addWatershed(coord, nameWatershed, watershedsSource, area);
+                }
+            }
+        } else {
+            // s'il y en a plusieurs
+            for (var j = 0; j < features.length; j++) {
+                try {
+                    coord = features[j].targetW.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                    nameWatershed = features[j].targetW.station;
+                    area = 0;
+                    addWatershed(coord, nameWatershed, watershedsSource, area);
+                } catch (error) {
+                    polygonsWatershed = features[j].targetW.geometryProperty.MultiPolygon.polygonMember;
+                    for (i = 0; i < polygonsWatershed.length; i++) {
+                        coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                        nameWatershed = features[j].targetW.station;
+                        area = 0;
+                        addWatershed(coord, nameWatershed, watershedsSource, area);
+                    }
+                }
+            }
+        }
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_watershedsLayer);
     }
