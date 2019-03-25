@@ -302,7 +302,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 // Recupere l'url de la variable statusLocation
                 var statusLocationURL = response.statusLocation;
                 // Maj de la barre de progression
-                processingBarUpdate(0, "Vérification de la file d'attente...");
+                processingBarUpdate(5, "Lancement du process...");
                 // Debut d'ecoute du resultat
                 _updating = setInterval(function () {
                     updateProcess(statusLocationURL);
@@ -333,8 +333,17 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
         listStations = listStations.substring(0, listStations.length - 1);
 
-        var str = "x;y;fDate;lDate;stations;deltaT;inBasin" + "\r\n";
-        str += String.format("{0};{1};{2};{3};{4};{5};{6}", _xy[0], _xy[1], $("#dateStartWaterFlowSimulation").val(), $("#dateEndWaterFlowSimulation").val(), listStations, $("input[name='deltaTWaterFlowSimulation']:checked").val(), $("#inBasinWaterFlowSimulation").is(":checked"));
+        var str = "x;y;fDate;lDate;stations;Timestep;inBasin" + "\r\n";
+        var period;
+        if ($("input[name='deltaTWaterFlowSimulation']:checked").val()==1440) {
+            period = "journalier";
+        } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val()==60){
+            period = "horaire";
+        }
+        str += String.format("{0};{1};{2};{3};{4};{5};{6}",
+                             _xy[0], _xy[1], $("#dateStartWaterFlowSimulation").val(),
+                             $("#dateEndWaterFlowSimulation").val(),
+                             listStations, period, $("#inBasinWaterFlowSimulation").is(":checked"));
         // cree le csv
         var blob = new Blob([str], {
             type: "text/csv"
@@ -465,7 +474,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 }];
             }
 
-            Plotly.plot(document.getElementById("graphFlowSimulated"), trace);
+            Plotly.plot($("#graphFlowSimulated")[0], trace);
         }
     }
 
@@ -1011,8 +1020,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     console.log(_rqtWPS);
                     // defini des valeurs globales dans le cas d'une reexecution
                     // si le process posse en file d'attente et execute le process
-                    _refreshTime = 3000;
-                    _timeOut = 5000;
+                    _refreshTime = 22000;
+                    _timeOut = 25000;
                     processExecution();
                     _processing = true;
                     //clear le champ
