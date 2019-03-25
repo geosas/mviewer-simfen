@@ -142,7 +142,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         } else {
             $("#processingBar").css("backgroundColor", "#808080");
         }
-        $("#progression").css("width", percent);
+        $("#progression").css("width", percent+"%");
         $("#progression").attr("aria-valuenow", percent);
         $("#processing-text").text(message);
     }
@@ -151,7 +151,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // Met a jour le texte dans la barre de progression selon le document de reponse du wps
         // et arrete l'actualisation du process s'il est termine ou failed
         if (response.Status.ProcessAccepted) {
-            processingBarUpdate(5, "File d'attente, veuillez patienter...");
+            processingBarUpdate(5, "Lancement du process...");
             //return response.Status.ProcessAccepted;
 
         } else if (response.Status.ProcessStarted) {
@@ -562,7 +562,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
 
         var styleWatershed = function (feature) {
-            label = "target";//feature.get('label') + "km2";
+            label = "Bassin cible";//feature.get('label') + "km2";
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
