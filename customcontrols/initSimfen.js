@@ -70,7 +70,7 @@ mviewer.customControls.initSimfen = (function () {
                 "<div id='graphFlowSimulated' class='profile-addon panel-graph' style='height: 320px; width:50%; margin: 0 auto;'></div>",
                 "</div>"
             ].join(""));
-
+            
             info.disable();
 
             // commande pour supprimer le layer une fois l'initialisation terminée

@@ -599,3 +599,10 @@ button.btn.btn-default.navbar-btn.mv-navbar-btn:focus{
     padding-left: 5px !important;
     padding-right: 5px !important;
 }
+
+.glyphicon {
+    font-family: inherit;
+}
+.glyphicon:before{
+    font-family:'Glyphicons Halflings';
+}

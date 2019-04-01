@@ -57,7 +57,7 @@
 	"ZoneHydro" : "Hydrographic areas - BD Carthage (2016)",
 	"Sage" : "Water Management and Planning Schemes (SAGE) 2015",
 	"EntiteHydroGeol" : "Level 3 (Local) Hydrogeological Entities - BDLISA v.2",
-	"Services" : "Services",
+	"Fonctions" : "Functions",
 	"Couches : Réseaux" : "Layers : Networks",
 	"Couches : Points" : "Layers : Points",
 	"Couches : Surfaces" : "Layers : Areas"
@@ -120,7 +120,7 @@
 	"ZoneHydro" : "Zones hydrographiques - BD Carthage (2016)",
 	"Sage" : "Schémas d'Aménagement et de Gestion des Eaux (SAGE) 2015",
 	"EntiteHydroGeol" : "Entités hydrogéologiques de niveau 3 (local) - BDLISA v.2",
-	"Services" : "Services",
+	"Fonctions" : "Fonctions",
 	"Couches : Réseaux" : "Couches : Réseaux",
 	"Couches : Points" : "Couches : Points",
 	"Couches : Surfaces" : "Couches : Surfaces"

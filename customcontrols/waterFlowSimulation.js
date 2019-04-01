@@ -42,7 +42,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _lineage = true;
     var _status = true;
     var _refreshTime;
-    var _refreshTimeXY;
     var _timeOut;
     var _updating;
     var _nameColor = [];
@@ -350,12 +349,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
         });
         var url = URL.createObjectURL(blob);
 
+        var glyphiconSave = document.createElement("span");
+        glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
+
         var metaFile = document.createElement("a");
-        document.body.appendChild(metaFile);
-        metaFile.style = "display: none";
+        metaFile.setAttribute("id", "linkMetadata");
+        metaFile.setAttribute("target", "_blank");
+        metaFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
         metaFile.setAttribute("href", url);
-        metaFile.setAttribute("download", "metadonnees_simulation.csv");
-        metaFile.click();
+        if ($("#identifiantSimulation").val()){
+            metaFile.setAttribute("download", String.format("{0}_metadonnees.csv", $("#identifiantSimulation").val()));
+        } else {
+            metaFile.setAttribute("download", "metadonnees_simulation.csv");
+        }
+        metaFile.appendChild(document.createTextNode("Métadonnée de simulation "));
+        $("#divPopup1").append(metaFile);
+        $("#linkMetadata").append(glyphiconSave);
     }
 
     function setDownloadFile(datasx, datasy) {
@@ -377,25 +386,45 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         // cree l'url de telechargement et lie le fichier blob a celui-ci
         // et l'ajoute dans le tableau de bord
+        var glyphiconSave = document.createElement("span");
+        glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
+
         var dlFile = document.createElement("a");
         dlFile.setAttribute("id", "linkDownloadFlow");
         dlFile.setAttribute("href", url);
         dlFile.setAttribute("target", "_blank");
-        dlFile.setAttribute("style", "color:#337ab7;text-decoration:true;font-size:20px;");
-        dlFile.setAttribute("download", "output_simulation.csv");
-        dlFile.setAttribute("class", "glyphicon glyphicon-save");
-        dlFile.appendChild(document.createTextNode("Téléchargement des débits"));
+        dlFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
+        if ($("#identifiantSimulation").val()){
+            dlFile.setAttribute("download", String.format("{0}_debit.csv", $("#identifiantSimulation").val()));
+        } else {
+            dlFile.setAttribute("download", "output_simulation.csv");
+        }
+        dlFile.appendChild(document.createTextNode("Débits simulés "));
         $("#divPopup1").append(dlFile);
-        dlFile.click();
-
-        var licenceFile = document.createElement("a");
-        document.body.appendChild(licenceFile);
-        licenceFile.style = "display: none";
-        licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
-        licenceFile.setAttribute("download", "licence_simulation.txt");
-        licenceFile.click();
+        $("#linkDownloadFlow").append(glyphiconSave);
+        
 
         setDownloadMetaDatas();
+
+        // duplication obligatoire, impossible d'ajouter la meme icone
+        // 2 fois, la suivante remplace l'ancienne, a creuser
+        var glyphiconSave2 = document.createElement("span");
+        glyphiconSave2.setAttribute("class", "glyphicon glyphicon-save");
+
+        var licenceFile = document.createElement("a");
+        licenceFile.setAttribute("id", "linkLicence");
+        licenceFile.setAttribute("target", "_blank");
+        licenceFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
+        licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
+        if ($("#identifiantSimulation").val()){
+            licenceFile.setAttribute("download", String.format("{0}_licence.txt", $("#identifiantSimulation").val()));
+        } else {
+            licenceFile.setAttribute("download", "licence_simulation.txt");
+        }
+        licenceFile.appendChild(document.createTextNode("Licence "));
+        $("#divPopup1").append(licenceFile);
+        $("#linkLicence").append(glyphiconSave2);
+        
     }
 
     function plotDatas(points) {
@@ -882,7 +911,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // supprime la precedente couche de station si elle existe
         var layersToRemove = [];
         _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'StationsSelected')) { //|| layer.get('name') === 'stations2')) {
+            if (layer.get('name') != undefined && (layer.get('name') === 'StationsSelected')) {
                 layersToRemove.push(layer);
             }
         });
@@ -931,6 +960,45 @@ mviewer.customControls.waterFlowSimulation = (function () {
         _map.addLayer(_stationLayer);
     }
 
+    function timeProcessAlert(start, end, deltaT) {
+        var launchProcess;
+        var minutes;
+        var secondes;
+        // calcule la periode en jour
+        period = (new Date(end) - new Date(start)) / 86400000;
+        // si l'interval de temps = horaire et plus d'un an
+        if (deltaT == 60 && period > 365 ) {
+            launchProcess = confirm("Le traitement va ralentir votre navigateur, veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
+            if (launchProcess){
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
+        // si l'intervalle de temps est journalier
+        // } else if (deltaT == 1440) {
+        //     // estime le temps de traitement en prenant en reference 20s pour 1 an
+        //     // au pas de temps journalier. Coef directeur de 0.013 en prenant A(0,25) B(7300,120)
+        //     timeProEstimated = 0.013 * period + 25;
+        //      // si le temps de traitement est superieur à 5min
+        //     // affiche une alerte
+        //     minutes = Math.floor(timeProEstimated / 60);
+        //     secondes = (timeProEstimated - minutes * 60).toFixed(0);
+        //     if (secondes.length == 1){secondes = "0"+secondes;}
+        //     if (timeProEstimated > 60) {
+        //         launchProcess = confirm(String.format(["Le temps de traitement sera d'environ {0}:{1} minutes, souhaitez-vous lancer la simulation ?"].join(""), minutes, secondes));
+        //         if (launchProcess){
+        //             return true;
+        //         } else {
+        //             return false;
+        //         }
+        //     } else {
+        //         return true;
+        //     }
+    }
+
     return {
         /*
          * Public
@@ -955,47 +1023,53 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         getXY: function () {
             if (_processing === false) {
-                _draw = new ol.interaction.Draw({
-                    type: 'Point'
-                });
-                _draw.on('drawend', function (event) {
-                    _xy = ol.proj.transform(event.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:2154');
-                    mviewer.getMap().removeInteraction(_draw);
-                    var template = '{x},{y}';
-                    coord = ol.coordinate.format(_xy, template);
+                if (!_draw) {
+                    _draw = new ol.interaction.Draw({
+                        type: 'Point'
+                    });
+                    _draw.on('drawend', function (event) {
+                        _xy = ol.proj.transform(event.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:2154');
+                        mviewer.getMap().removeInteraction(_draw);
+                        var template = '{x},{y}';
+                        coord = ol.coordinate.format(_xy, template);
 
-                    // si le point clique dans la zone n'est pas dans le projet, ne lance pas le service
-                    if (insideProjectArea(String(_xy).split(',')[0], String(_xy).split(',')[1]) === true) {
-                        // defini les parametres x,y du service
-                        var dictInputs = {
-                            X: String(_xy).split(',')[0],
-                            Y: String(_xy).split(',')[1]
-                        };
-                        // construit la requete wps
-                        _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
-                        // defini des valeurs globales dans le cas d'une reexecution
-                        // si le process posse en file d'attente et execute le process
-                        _refreshTime = 22000;
-                        _timeOut = 25000;
-                        processExecution();
-                        _processing = true;
+                        // si le point clique dans la zone n'est pas dans le projet, ne lance pas le service
+                        if (insideProjectArea(String(_xy).split(',')[0], String(_xy).split(',')[1]) === true) {
+                            // defini les parametres x,y du service
+                            var dictInputs = {
+                                X: String(_xy).split(',')[0],
+                                Y: String(_xy).split(',')[1]
+                            };
+                            // construit la requete wps
+                            _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
+                            // defini des valeurs globales dans le cas d'une reexecution
+                            // si le process posse en file d'attente et execute le process
+                            _refreshTime = 3000;
+                            _timeOut = 5000;
+                            processExecution();
+                            _processing = true;
 
-                        // supprime les resultats du precedent process
-                        if ($("#graphFlowSimulated").children().first()) {
-                            $("#graphFlowSimulated").children().first().remove();
-                            $("#divPopup1").children().first().remove();
-                            $("#divPopup2").children().first().remove();
+                            // supprime les resultats du precedent process
+                            if ($("#graphFlowSimulated").children().first()) {
+                                $("#graphFlowSimulated").children().first().remove();
+                                $("#divPopup1").children().remove();
+                                $("#divPopup2").children().first().remove();
+                            }
+
+                            // affiche le panneau de resultat
+                            if ($("#bottom-panel").hasClass("")) {
+                                $("#bottom-panel").toggleClass("active");
+                            }
+                            _draw = "";
+                        } else {
+                            alert("Veuillez cliquer dans la zone du projet SIMFEN.");
+                            mviewer.getMap().addInteraction(_draw);
                         }
-
-                        // affiche le panneau de resultat
-                        if ($("#bottom-panel").hasClass("")) {
-                            $("#bottom-panel").toggleClass("active");
-                        }
-                    } else {
-                        alert("Veuillez cliquer dans la zone du projet SIMFEN.");
-                    }
-                });
-                mviewer.getMap().addInteraction(_draw);
+                    });
+                    mviewer.getMap().addInteraction(_draw);
+                } else {
+                    alert("Vous avez déjà activé l'outil, veuillez cliquer sur la carte.");
+                }
             } else {
                 alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
             }
@@ -1010,31 +1084,35 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     if (inputCoordinate.search(";") != -1) {
                         inputCoordinate = inputCoordinate.replace(",", ".").replace(";", ",");
                     }
-                    // defini les parametres x,y du service
-                    var dictInputs = {
-                        X: String(inputCoordinate).split(',')[0],
-                        Y: String(inputCoordinate).split(',')[1]
-                    };
-                    // construit la requete wps
-                    _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
-                    console.log(_rqtWPS);
-                    // defini des valeurs globales dans le cas d'une reexecution
-                    // si le process posse en file d'attente et execute le process
-                    _refreshTime = 22000;
-                    _timeOut = 25000;
-                    processExecution();
-                    _processing = true;
-                    //clear le champ
-                    $("#XYWaterFlowSimulation").val("");
-                    // supprime les resultats du precedent process
-                    if ($("#graphFlowSimulated").children().first()) {
-                        $("#graphFlowSimulated").children().first().remove();
-                        $("#divPopup1").children().first().remove();
-                        $("#divPopup2").children().first().remove();
-                    }
-                    // affiche le panneau de resultat
-                    if ($("#bottom-panel").hasClass("")) {
-                        $("#bottom-panel").toggleClass("active");
+                    if (insideProjectArea(String(inputCoordinate).split(',')[0], String(inputCoordinate).split(',')[1]) === true) {
+                        // defini les parametres x,y du service
+                        var dictInputs = {
+                            X: String(inputCoordinate).split(',')[0],
+                            Y: String(inputCoordinate).split(',')[1]
+                        };
+                        // construit la requete wps
+                        _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
+                        console.log(_rqtWPS);
+                        // defini des valeurs globales dans le cas d'une reexecution
+                        // si le process posse en file d'attente et execute le process
+                        _refreshTime = 3000;
+                        _timeOut = 5000;
+                        processExecution();
+                        _processing = true;
+                        //clear le champ
+                        $("#XYWaterFlowSimulation").val("");
+                        // supprime les resultats du precedent process
+                        if ($("#graphFlowSimulated").children().first()) {
+                            $("#graphFlowSimulated").children().first().remove();
+                            $("#divPopup1").children().remove();
+                            $("#divPopup2").children().first().remove();
+                        }
+                        // affiche le panneau de resultat
+                        if ($("#bottom-panel").hasClass("")) {
+                            $("#bottom-panel").toggleClass("active");
+                        }
+                    } else {
+                        alert("Veuillez indiquer une coordonnée dans la zone du projet SIMFEN.");
                     }
                 } else {
                     alert("Veuillez indiquer une coordonnée X,Y.");
@@ -1185,34 +1263,38 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
                                 ListStations: _stationsSelectedByUser.toString()
                             };
+                            // popup pour alerter sur le temps de traitement à venir
+                            launchProcess = timeProcessAlert(dictInputs.Start, dictInputs.End, dictInputs.DeltaT);
 
-                            // construit la requete xml POST
-                            _rqtWPS = buildPostRequest(dictInputs, _identifier);
-                            console.log("Voici la requête WPS envoyée : " + _rqtWPS);
-                            // supprime les resultats du precedent process
-                            if ($("#graphFlowSimulated").children().first()) {
-                                $("#graphFlowSimulated").children().first().remove();
-                                $("#divPopup1").children().first().remove();
-                                $("#divPopup2").children().first().remove();
-                            }
-                            // defini des valeurs globales dans le cas d'une reexecution
-                            // si le process posse en file d'attente et execute le process
-                            _refreshTime = 25000;
-                            _timeOut = 22000;
-                            processExecution();
-                            _processing = true;
-
-                            //supprime les stations selectionnees et la couche de stations à choisir
-                            _stationsSelectedByUser = "None";
-                            _map.getLayers().forEach(function (layer) {
-                                if (layer.get("name") === "StationsAvailable") {
-                                    _map.removeLayer(layer);
+                            if (launchProcess) {
+                                // construit la requete xml POST
+                                _rqtWPS = buildPostRequest(dictInputs, _identifier);
+                                console.log("Voici la requête WPS envoyée : " + _rqtWPS);
+                                // supprime les resultats du precedent process
+                                if ($("#graphFlowSimulated").children().first()) {
+                                    $("#graphFlowSimulated").children().first().remove();
+                                    $("#divPopup1").children().remove();
+                                    $("#divPopup2").children().first().remove();
                                 }
-                            });
+                                // defini des valeurs globales dans le cas d'une reexecution
+                                // si le process posse en file d'attente et execute le process
+                                _refreshTime = 5000;
+                                _timeOut = 8000;
+                                processExecution();
+                                _processing = true;
 
-                            // affiche le panneau de resultat
-                            if ($("#bottom-panel").hasClass("")) {
-                                $("#bottom-panel").toggleClass("active");
+                                //supprime les stations selectionnees et la couche de stations à choisir
+                                _stationsSelectedByUser = "None";
+                                _map.getLayers().forEach(function (layer) {
+                                    if (layer.get("name") === "StationsAvailable") {
+                                        _map.removeLayer(layer);
+                                    }
+                                });
+
+                                // affiche le panneau de resultat
+                                if ($("#bottom-panel").hasClass("")) {
+                                    $("#bottom-panel").toggleClass("active");
+                                }
                             }
                         }
 

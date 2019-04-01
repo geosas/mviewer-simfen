@@ -20,6 +20,8 @@
     <searchparameters bbox="false" localities="true" features="false" static="false"/>
     <baselayers style="default"> 
         <baselayer visible="true" id="positron" thumbgallery="img/basemap/positron.png" title="CartoDb" label="Positron" type="OSM" url="https://{a-c}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" attribution="Map tiles by  &lt;a href=&quot;https://cartodb.com/attributions&quot;&gt;CartoDb&lt;/a&gt;, under  &lt;a href=&quot;https://creativecommons.org/licenses/by/3.0/&quot;&gt;CC BY 3.0 &lt;/a&gt;"  ></baselayer> 
+        <baselayer  type="WMS" id="osm" label="OpenStreetMap" title="Plan OSM Géobretagne" thumbgallery="img/basemap/osm.png" url="http://osm.geobretagne.fr/gwc01/service/wms" layers="osm:google" format="image/png" visible="false" ></baselayer>
+        <baselayer  type="WMS" id="scan25" label="Scan 25 - IGN" title="Scan 25 - IGN" thumbgallery="" url="https://tile.geobretagne.fr:443/gwc02/service/wms" layers="carte" format="image/png" visible="false" ></baselayer>
         <baselayer visible="false" id="esriworldimagery" thumbgallery="img/basemap/esriworldwide.jpg" title="Esri world imagery" label="Esri world imagery" type="OSM" url="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" attribution="Esri world imagery"  ></baselayer>
     </baselayers>
     <themes mini="false">    	
@@ -33,7 +35,7 @@
                 expanded="false">           
             </layer>
 
-            <group name="Services" id="Services">
+            <group name="Fonctions" id="Fonctions">
                 <layer id="waterFlowSimulation" name="Simulation du débit" visible="true" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/waterFlowSimulation.js"
@@ -53,48 +55,13 @@
                     expanded="true">           
                 </layer> -->
             </group>
-            <group name="Couches : Réseaux" id="Réseaux">
-                <layer id="CoursEau" name="Cours d'eau - BD Carthage (2016)" visible="false" tiled="false"                    
-                    queryable="false" fields="" aliases=""
-                    infoformat="application/vnd.ogc.gml"                     
-                    style=""               
-                    opacity="0.8"                     
-                    url="http://services.sandre.eaufrance.fr/geo/eth_FXX">
-                </layer>
-                <layer id="TronconHydrograElt" name="Tronçons hydrographiques - BD Carthage (2016)" visible="false" tiled="false"                    
-                    queryable="false" fields="" aliases=""
-                    infoformat="application/vnd.ogc.gml"                     
-                    style=""               
-                    opacity="0.8"                     
-                    url="http://services.sandre.eaufrance.fr/geo/eth_FXX">
-                </layer>
-                <layer id="reseau_hydrographique_etendu" name="Réseau hydrographique étendu" visible="true" tiled="false"                    
-                    queryable="false" fields="" aliases=""
-                    infoformat="application/vnd.ogc.gml"                     
-                    style="line"               
-                    opacity="0.8"                     
-                    url="http://geowww.agrocampus-ouest.fr/geoserver/psn/wms">
-                </layer>
-                <layer id="reseau_hydrographique_theorique" name="Réseau hydrographique théorique" visible="false" tiled="false"                    
-                    queryable="false" fields="" aliases=""
-                    infoformat="application/vnd.ogc.gml"                     
-                    style="line"               
-                    opacity="0.8"                     
-                    url="http://geowww.agrocampus-ouest.fr/geoserver/psn/wms">
-                </layer>
-                <layer id="bzh_rh25ha" name="Réseau hydrographique modélisé seuillé à 25 ha (MNT 50m)" visible="false" tiled="false"                    
+            <group name="Couche : Réseau" id="Réseaux">
+                <layer id="bzh_rh25ha" name="Réseau hydrographique modélisé seuillé à 25 ha (MNT 50m)" visible="true" tiled="false"                    
                     queryable="false" fields="" aliases=""
                     infoformat="application/vnd.ogc.gml"                     
                     style=""               
                     opacity="0.8"                     
                     url="http://geowww.agrocampus-ouest.fr/geoserver/mntsurf/ows">
-                </layer>
-                <layer id="TronconElemMasseDEauRiviere_FXX" name="Tronçons élémentaires de masse d'eau cours d'eau (Rapportage 2016)" visible="false" 
-                    tiled="false" queryable="false" fields="" aliases=""
-                    infoformat="application/vnd.ogc.gml"                     
-                    style=""               
-                    opacity="0.8"                     
-                    url=" http://services.sandre.eaufrance.fr/geo/MasseDEau_VRAP2016">
                 </layer>
             </group>
             <group name="Couches : Points" id="Points">

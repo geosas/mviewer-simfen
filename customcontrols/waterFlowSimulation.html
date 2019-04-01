@@ -26,7 +26,13 @@
                 <table style="border-collapse:separate; border-spacing:3px;">
                     <tr>
                         <td>
-                            <label class="lang" key="setCoordText">Coordonnées X,Y (EPSG 2154) :</label>
+                            <label class="lang" key="identifiantSimulation">Identifiant :</label>
+                            <input type="text" id="identifiantSimulation" name="identifiantSimulation" placeholder="output_simulation">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label class="lang" key="setCoordText">Coordonnées X,Y (Lambert 93) :</label>
                             <input type="text" id="XYWaterFlowSimulation" name="XYWaterFlowSimulation" placeholder="273618.23,6786198.45">
                             <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.getXYFromCoordinate();">
                                 <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
