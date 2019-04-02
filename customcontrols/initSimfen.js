@@ -54,11 +54,10 @@ mviewer.customControls.initSimfen = (function () {
             $("#searchtool").remove();
 
             // Configure la fenetre de resultat
-            $(".popup-content").append(["<div id='toolsBoxPopup' style='margin-left: 10px; width: 400px;",
-                "height: 320px; position: absolute;'>",
-                "<div id='processingBar' class='progress' style='text-align: center; width: 400px;background-color: #808080'>",
+            $(".popup-content").append(["<div id='toolsBoxPopup'>",
+                "<div id='processingBar' class='progress'>",
                     "<div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar' style='background-color: #007ACC; width:0%;'>",
-                        "<p id='processing-text' style='text-align: center;width: 400px;color: white;font-size:18px;' class='lang' key='panelResultNoprocess'>",
+                        "<p id='processing-text' class='lang' key='panelResultNoprocess'>",
                             "Aucun processus en cours",
                         "</p>",
                     "</div>",
@@ -67,7 +66,7 @@ mviewer.customControls.initSimfen = (function () {
                 "<div id='divPopup2'></div>",
                 "<div id='divPopup3'></div>",
                 "</div>",
-                "<div id='graphFlowSimulated' class='profile-addon panel-graph' style='height: 320px; width:50%; margin: 0 auto;'></div>",
+                "<div id='graphFlowSimulated' class='profile-addon panel-graph'></div>",
                 "</div>"
             ].join(""));
             

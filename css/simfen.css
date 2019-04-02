@@ -606,3 +606,34 @@ button.btn.btn-default.navbar-btn.mv-navbar-btn:focus{
 .glyphicon:before{
     font-family:'Glyphicons Halflings';
 }
+
+#bottom-panel.active {
+    height: 550px !important;
+    opacity: 1;
+}
+
+#graphFlowSimulated {
+    height: 500px;
+    width:1240px;
+    padding-left: 410px;
+}
+
+#processingBar{
+  text-align: center;
+  width: 400px;
+  background-color: #808080;
+}
+
+#toolsBoxPopup {
+  margin-left: 10px;
+  width: 400px;
+  height: 320px;
+  position: absolute;
+}
+
+#processing-text {
+  text-align: center;
+  width: 400px;
+  color: white;
+  font-size:18px;
+}

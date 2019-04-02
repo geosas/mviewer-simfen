@@ -150,34 +150,23 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // Met a jour le texte dans la barre de progression selon le document de reponse du wps
         // et arrete l'actualisation du process s'il est termine ou failed
         if (response.Status.ProcessAccepted) {
-            processingBarUpdate(5, "Lancement du process...");
-            //return response.Status.ProcessAccepted;
+            processingBarUpdate(5, "File d'attente : veuillez patienter");
 
         } else if (response.Status.ProcessStarted) {
             var percent = response.Status.ProcessStarted.percentCompleted;
             processingBarUpdate(percent, response.Status.ProcessStarted);
-            //return response.Status.ProcessAccepted;
 
         } else if (response.Status.ProcessSucceeded) {
-            processingBarUpdate(100, "Processus terminé");
-            //return response.Status.ProcessSucceeded;
+            processingBarUpdate(100, "Terminé");
 
         } else if (response.Status.ProcessFailed) {
-            // relance la requete etant donne que le process n'a pas de raison de failed,
-            // a part si la requete est passee dans la base sqlite et donc, 
-            // elle n'a pas pu etre recuperee lorsqu'il a ete possible de l'executer
-            // supprime l'ancien updating
-            //clearInterval(_updating);
-            // execute la requete a nouveau
-            //processExecution();
+            // Arrête la requete
             processingBarUpdate(0, response.Status.ProcessFailed);
             clearInterval(_updating);
-            //alert("Relancez le traitement");
 
         } else {
-            processingBarUpdate(0, "Le processus a échoué, actualisez la page");
+            processingBarUpdate(0, "Erreur, actualisez la page");
             clearInterval(_updating);
-            //return 'Error';
         }
     }
 
@@ -195,7 +184,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 _timeoutCount += 1;
                 if (_timeoutCount === 4) {
                     clearInterval(_updating);
-                    processingBarUpdate(0, "Le serveur ne répond pas, actualisez le navigateur");
+                    processingBarUpdate(0, "Le serveur ne répond pas, relancez le traitement");
                     _timeoutCount = 0;
                     _processing = false;
                 }
@@ -301,7 +290,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 // Recupere l'url de la variable statusLocation
                 var statusLocationURL = response.statusLocation;
                 // Maj de la barre de progression
-                processingBarUpdate(5, "Lancement du process...");
+                processingBarUpdate(0, "Initialisation");
                 // Debut d'ecoute du resultat
                 _updating = setInterval(function () {
                     updateProcess(statusLocationURL);
@@ -325,30 +314,36 @@ mviewer.customControls.waterFlowSimulation = (function () {
         return xmlDoc;
     }
 
-    function setDownloadMetaDatas() {
+    function setOutMetadata() {
         listStations = "";
         for (var i = 0; i < _nameColor.length; i++) {
             listStations += _nameColor[i].key + ",";
         }
         listStations = listStations.substring(0, listStations.length - 1);
 
-        var str = "x;y;fDate;lDate;stations;Timestep;inBasin" + "\r\n";
+        var str = "x;y;start;end;stations;timestep;inBasin;rh" + "\r\n";
         var period;
         if ($("input[name='deltaTWaterFlowSimulation']:checked").val()==1440) {
             period = "journalier";
         } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val()==60){
             period = "horaire";
         }
-        str += String.format("{0};{1};{2};{3};{4};{5};{6}",
-                             _xy[0], _xy[1], $("#dateStartWaterFlowSimulation").val(),
+        str += String.format("{0};{1};{2};{3};{4};{5};{6};{7}",
+                             _xy[0],
+                             _xy[1],
+                             $("#dateStartWaterFlowSimulation").val(),
                              $("#dateEndWaterFlowSimulation").val(),
-                             listStations, period, $("#inBasinWaterFlowSimulation").is(":checked"));
+                             listStations,
+                             period,
+                             $("#inBasinWaterFlowSimulation").is(":checked"),
+                             "reseau hydrogrpahique modelise 25ha (MNT 50m)");
         // cree le csv
         var blob = new Blob([str], {
             type: "text/csv"
         });
         var url = URL.createObjectURL(blob);
 
+        // logo telechargement
         var glyphiconSave = document.createElement("span");
         glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
 
@@ -367,7 +362,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         $("#linkMetadata").append(glyphiconSave);
     }
 
-    function setDownloadFile(datasx, datasy) {
+    function setOutFiles(datasx, datasy) {
         // header of csvfile
         var str = "date;runoff(m3/s)" + "\r\n";
 
@@ -403,8 +398,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         $("#divPopup1").append(dlFile);
         $("#linkDownloadFlow").append(glyphiconSave);
         
-
-        setDownloadMetaDatas();
+        setOutMetadata();
 
         // duplication obligatoire, impossible d'ajouter la meme icone
         // 2 fois, la suivante remplace l'ancienne, a creuser
@@ -437,7 +431,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         // cree un fichier contenant les donnees au format csv
         // et permet son telechargement
-        setDownloadFile(xDatas, yDatas);
+        setOutFiles(xDatas, yDatas);
 
         var trace = [{
             name: "Débit simulé",
@@ -457,12 +451,15 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 title: 'm3/s'
             },
             showlegend: true,
-            /*legend: {
-                "orientation": "h"
-            }*/
+            margin: {
+                l: 40,
+                r: 20,
+                b: 40,
+                t: 20
+            }
         };
 
-        Plotly.newPlot($("#graphFlowSimulated")[0], trace, layout);
+        Plotly.newPlot($("#graphFlowSimulated")[0], trace, layout, {responsive: true, modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d", "autoScale2d"], scrollZoom: true});
     }
 
     function plotMeasuredFlow(datas) {

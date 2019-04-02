@@ -1,1 +1,3 @@
 Les donnees sont issues d'une simulation presentant une certitude non quantifiable. En consequence, les utilisateurs utilisent les donnees sous leur responsabilite pleine et entiere, sans recours possible contre le fournisseur dont la responsabilite ne saurait etre engagee du fait d’un dommage resultant directement ou indirectement de l’utilisation de ces donnees.
+
+La simulation ne prend pas les ouvrages anthropiques.
