@@ -44,6 +44,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _refreshTime;
     var _timeOut;
     var _updating;
+    var _countdown;
     var _nameColor = [];
     var _timeoutCount = 0;
     var _colors = ["red", "SaddleBrown", "DarkOrange", "LightSeaGreen", "purple"];
@@ -158,15 +159,21 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         } else if (response.Status.ProcessSucceeded) {
             processingBarUpdate(100, "Terminé");
+            clearInterval(_countdown);
+            $("#countdown")[0].textContent = "00:00";
 
         } else if (response.Status.ProcessFailed) {
             // Arrête la requete
             processingBarUpdate(0, response.Status.ProcessFailed);
             clearInterval(_updating);
+            clearInterval(_countdown);
+            $("#countdown")[0].textContent = "00:00";
 
         } else {
             processingBarUpdate(0, "Erreur, actualisez la page");
             clearInterval(_updating);
+            clearInterval(_countdown);
+            $("#countdown")[0].textContent = "00:00";
         }
     }
 
@@ -184,6 +191,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 _timeoutCount += 1;
                 if (_timeoutCount === 4) {
                     clearInterval(_updating);
+                    clearInterval(_countdown);
+                    $("#countdown")[0].textContent = "00:00";
                     processingBarUpdate(0, "Le serveur ne répond pas, relancez le traitement");
                     _timeoutCount = 0;
                     _processing = false;
@@ -773,12 +782,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
             source: watershedsSource,
             style: styleFunction
         });
-
-        // order features
-        features = features.sort(function (a, b) {
-            return parseFloat(a.idug_basin.area) - parseFloat(b.idug_basin.area);
-        });
-        features = features.reverse();
+        console.log(features);
+        // order features if more than one
+        if (features.length > 2) {
+            features = features.sort(function (a, b) {
+                return parseFloat(a.idug_basin.area) - parseFloat(b.idug_basin.area);
+            });
+            features = features.reverse();
+        }
 
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
@@ -964,7 +975,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // calcule la periode en jour
         period = (new Date(end) - new Date(start)) / 86400000;
         // si l'interval de temps = horaire et plus d'un an
-        if (deltaT == 60 && period > 365 ) {
+        if (deltaT == 60 && period > 3650 ) {
             launchProcess = confirm("Le traitement va ralentir votre navigateur, veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
             if (launchProcess){
                 return true;
@@ -996,6 +1007,23 @@ mviewer.customControls.waterFlowSimulation = (function () {
         //     }
     }
 
+    function startTimer(duration, display) {
+        var timer = duration, minutes, seconds;
+        _countdown = setInterval(function () {
+            minutes = parseInt(timer / 60, 10)
+            seconds = parseInt(timer % 60, 10);
+    
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+    
+            display.textContent = minutes + ":" + seconds;
+    
+            if (--timer < 0) {
+                clearInterval(_countdown);
+            }
+        }, 1000);
+    }    
+
     return {
         /*
          * Public
@@ -1003,7 +1031,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         init: function () {
             // mandatory - code executed when panel is opened
-            $("#legend-waterFlowSimulation").hide();
+            $(".list-group-item.mv-layer-details.draggable[data-layerid='waterFlowSimulation'] .row.layerdisplay-legend").hide();
             $(".mv-layer-options[data-layerid='waterFlowSimulation'] .form-group-opacity").hide();
 
 
@@ -1163,7 +1191,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             //ajoute l'interaction
             mviewer.getMap().addInteraction(_drawPolygon);
 
-            //recupere chaque elements de la couche exutoire qui sont dans le polygone
+            //recupere chaque elements de la couche stationsavailable qui sont dans le polygone
             _map.getLayers().forEach(function (layer) {
                 if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
                     _stationLayer = layer;
@@ -1190,9 +1218,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                 //recupere l'id des entites intersectees et le stocke pour effectuer le traitement
                 _stationsSelectedByUser = layer_select_geometries.map(function (feature) {
-                    return feature.P.name;
+                    return feature.values_.name;
                 });
-
+                console.log(_stationsSelectedByUser);
                 //enleve l'interaction permettant de créer le polygone
                 mviewer.getMap().removeInteraction(_drawPolygon);
             });
@@ -1277,6 +1305,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 // si le process posse en file d'attente et execute le process
                                 _refreshTime = 5000;
                                 _timeOut = 8000;
+
+                                var fiveMinutes = 60 * 1.15,
+                                display = document.querySelector('#countdown');
+                                startTimer(fiveMinutes, display);
+
                                 processExecution();
                                 _processing = true;
 
