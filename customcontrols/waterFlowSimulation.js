@@ -1071,6 +1071,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             // si le process posse en file d'attente et execute le process
                             _refreshTime = 3000;
                             _timeOut = 5000;
+
+                            var fiveMinutes = 60 * 1,
+                            display = document.querySelector('#countdown');
+                            startTimer(fiveMinutes, display);
+
                             processExecution();
                             _processing = true;
 
@@ -1122,6 +1127,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         // si le process posse en file d'attente et execute le process
                         _refreshTime = 3000;
                         _timeOut = 5000;
+
+                        var fiveMinutes = 60 * 1.15,
+                        display = document.querySelector('#countdown');
+                        startTimer(fiveMinutes, display);
+
                         processExecution();
                         _processing = true;
                         //clear le champ
@@ -1255,6 +1265,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     // si le process posse en file d'attente et execute le process
                     _refreshTime = 25000;
                     _timeOut = 22000;
+
+                    var fiveMinutes = 60 * 1.15,
+                    display = document.querySelector('#countdown');
+                    startTimer(fiveMinutes, display);
+
                     processExecution();
                     _processing = true;
                 } else {
