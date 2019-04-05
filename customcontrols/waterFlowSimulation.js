@@ -21,7 +21,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
     //     }
     // }
     // rawFile.send(null);
-
     var _draw; // global so we can remove it later
     var _drawPolygon;
     var _stationLayer;
@@ -142,7 +141,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         } else {
             $("#processingBar").css("backgroundColor", "#808080");
         }
-        $("#progression").css("width", percent+"%");
+        $("#progression").css("width", percent + "%");
         $("#progression").attr("aria-valuenow", percent);
         $("#processing-text").text(message);
     }
@@ -177,10 +176,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
     }
 
-    function updateProcess(url) {
-        try {
-            var start_time = new Date().getTime();
+    function updateProcess(url, cb) {
+        if (_processing) {
+            //var start_time = new Date().getTime();
             _xhrGet = getXDomainRequest();
+            _xhrGet.addEventListener("loadend", cb);
+            // test pour ne pas reexucter la requete, car le clearinterval possede un
+            // un envoie de trop en cas d'un ralentissement du navigateur
             _xhrGet.open("GET", ajaxURL(url), true);
             // indique un timeout pour empecher les requetes
             // de s'executer indefiniment dans le cas ou le navigateur
@@ -189,7 +191,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // si trop de timeout, arrete l'actualisation
             _xhrGet.ontimeout = function () {
                 _timeoutCount += 1;
-                if (_timeoutCount === 4) {
+                if (_timeoutCount === 1) {
                     clearInterval(_updating);
                     clearInterval(_countdown);
                     $("#countdown")[0].textContent = "00:00";
@@ -198,6 +200,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _processing = false;
                 }
             };
+
             _xhrGet.addEventListener('readystatechange', function () {
                 if (_xhrGet.readyState === XMLHttpRequest.DONE && _xhrGet.status === 200) {
                     // Converti le xml en JSON pour pouvoir interagir avec les tags
@@ -206,8 +209,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     var response = $.xml2json(_xhrGet.responseXML);
                     // recupere et met a jour le status du traitement
                     getAndSetStatus(response);
-                    var request_time = new Date().getTime() - start_time;
-                    console.log("La requete a pris : " + request_time);
+                    //var request_time = new Date().getTime() - start_time;
+                    //console.log("La requete a pris : " + request_time);
                     if (!(response.Status.ProcessAccepted) && !(response.Status.ProcessStarted)) {
                         // arrete l'ecoute du status puisque le process est termine
                         clearInterval(_updating);
@@ -216,7 +219,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             var outputsTags = Object.keys(response.ProcessOutputs).map(function (itm) {
                                 return response.ProcessOutputs[itm];
                             });
-                            //if (Object.values(response.ProcessOutputs)[0].length > 1) {
                             var iteration;
                             if (outputsTags[0].length > 1) {
                                 iteration = outputsTags[0].length;
@@ -231,7 +233,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 } else {
                                     outputTag = outputsTags[0][i];
                                 }
-                                
+
                                 if (outputTag.Identifier === "XY") {
                                     _xy = outputTag.Data.LiteralData.split(" ");
                                     if (Number(_xy[0]) == 0 && Number(_xy[1]) == 0) {
@@ -280,10 +282,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
             });
             _xhrGet.send();
 
-        } catch (error) {
+        } else {
             clearInterval(_updating);
-            processExecution();
-            console.log("La requete a ete reexecutee car il y a eu une erreur avec la reponse du service.");
+            clearInterval(_countdown);
+            console.log("Fin du traitement");
             _processing = false;
         }
     }
@@ -300,9 +302,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 var statusLocationURL = response.statusLocation;
                 // Maj de la barre de progression
                 processingBarUpdate(0, "Initialisation");
+
+                var promise = Promise.resolve(true);
                 // Debut d'ecoute du resultat
                 _updating = setInterval(function () {
-                    updateProcess(statusLocationURL);
+                    // permet de gerer l'attente avant de relancer une requete
+                    // par contre, dans le cas d'un ralentissement, une requete est
+                    // envoyee, d'ou le if dans updateProcess
+                    promise = promise.then(function () {
+                        return new Promise(function (resolve) {
+                            updateProcess(statusLocationURL, resolve);
+                        });
+                    });
                 }, _refreshTime);
             }
         });
@@ -332,20 +343,20 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         var str = "x;y;start;end;stations;timestep;inBasin;rh" + "\r\n";
         var period;
-        if ($("input[name='deltaTWaterFlowSimulation']:checked").val()==1440) {
+        if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 1440) {
             period = "journalier";
-        } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val()==60){
+        } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 60) {
             period = "horaire";
         }
         str += String.format("{0};{1};{2};{3};{4};{5};{6};{7}",
-                             _xy[0],
-                             _xy[1],
-                             $("#dateStartWaterFlowSimulation").val(),
-                             $("#dateEndWaterFlowSimulation").val(),
-                             listStations,
-                             period,
-                             $("#inBasinWaterFlowSimulation").is(":checked"),
-                             "reseau hydrogrpahique modelise 25ha (MNT 50m)");
+            _xy[0],
+            _xy[1],
+            $("#dateStartWaterFlowSimulation").val(),
+            $("#dateEndWaterFlowSimulation").val(),
+            listStations,
+            period,
+            $("#inBasinWaterFlowSimulation").is(":checked"),
+            "reseau hydrogrpahique modelise 25ha (MNT 50m)");
         // cree le csv
         var blob = new Blob([str], {
             type: "text/csv"
@@ -361,7 +372,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         metaFile.setAttribute("target", "_blank");
         metaFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
         metaFile.setAttribute("href", url);
-        if ($("#identifiantSimulation").val()){
+        if ($("#identifiantSimulation").val()) {
             metaFile.setAttribute("download", String.format("{0}_metadonnees.csv", $("#identifiantSimulation").val()));
         } else {
             metaFile.setAttribute("download", "metadonnees_simulation.csv");
@@ -398,7 +409,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         dlFile.setAttribute("href", url);
         dlFile.setAttribute("target", "_blank");
         dlFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
-        if ($("#identifiantSimulation").val()){
+        if ($("#identifiantSimulation").val()) {
             dlFile.setAttribute("download", String.format("{0}_debit.csv", $("#identifiantSimulation").val()));
         } else {
             dlFile.setAttribute("download", "output_simulation.csv");
@@ -406,7 +417,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         dlFile.appendChild(document.createTextNode("Débits simulés "));
         $("#divPopup1").append(dlFile);
         $("#linkDownloadFlow").append(glyphiconSave);
-        
+
         setOutMetadata();
 
         // duplication obligatoire, impossible d'ajouter la meme icone
@@ -419,7 +430,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         licenceFile.setAttribute("target", "_blank");
         licenceFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
         licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
-        if ($("#identifiantSimulation").val()){
+        if ($("#identifiantSimulation").val()) {
             licenceFile.setAttribute("download", String.format("{0}_licence.txt", $("#identifiantSimulation").val()));
         } else {
             licenceFile.setAttribute("download", "licence_simulation.txt");
@@ -427,7 +438,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         licenceFile.appendChild(document.createTextNode("Licence "));
         $("#divPopup1").append(licenceFile);
         $("#linkLicence").append(glyphiconSave2);
-        
+
     }
 
     function plotDatas(points) {
@@ -468,7 +479,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         };
 
-        Plotly.newPlot($("#graphFlowSimulated")[0], trace, layout, {responsive: true, modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d", "autoScale2d"], scrollZoom: true});
+        Plotly.newPlot($("#graphFlowSimulated")[0], trace, layout, {
+            responsive: true,
+            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d", "autoScale2d"],
+            scrollZoom: true
+        });
     }
 
     function plotMeasuredFlow(datas) {
@@ -606,7 +621,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
 
         var styleWatershed = function (feature) {
-            label = "Bassin cible";//feature.get('label') + "km2";
+            label = "Bassin cible"; //feature.get('label') + "km2";
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
@@ -659,7 +674,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             source: watershedsSource,
             style: styleFunction
         });
-        
+
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
             try {
@@ -782,7 +797,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             source: watershedsSource,
             style: styleFunction
         });
-        console.log(features);
+
         // order features if more than one
         if (features.length > 2) {
             features = features.sort(function (a, b) {
@@ -975,9 +990,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // calcule la periode en jour
         period = (new Date(end) - new Date(start)) / 86400000;
         // si l'interval de temps = horaire et plus d'un an
-        if (deltaT == 60 && period > 3650 ) {
+        if (deltaT == 60 && period > 3650) {
             launchProcess = confirm("Le traitement va ralentir votre navigateur, veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
-            if (launchProcess){
+            if (launchProcess) {
                 return true;
             } else {
                 return false;
@@ -1008,21 +1023,28 @@ mviewer.customControls.waterFlowSimulation = (function () {
     }
 
     function startTimer(duration, display) {
-        var timer = duration, minutes, seconds;
+        var timer = duration,
+            minutes, seconds;
         _countdown = setInterval(function () {
             minutes = parseInt(timer / 60, 10)
             seconds = parseInt(timer % 60, 10);
-    
+
             minutes = minutes < 10 ? "0" + minutes : minutes;
             seconds = seconds < 10 ? "0" + seconds : seconds;
-    
+
             display.textContent = minutes + ":" + seconds;
-    
+
             if (--timer < 0) {
                 clearInterval(_countdown);
             }
         }, 1000);
-    }    
+    }
+
+    function refreshTime(start, end, deltaT) {
+        // Fonction pour determiner le temps de refraichissement optimal
+        // pour recuperer le fichier de sortie en entier
+
+    }
 
     return {
         /*
@@ -1073,9 +1095,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             _timeOut = 5000;
 
                             var fiveMinutes = 60 * 1,
-                            display = document.querySelector('#countdown');
+                                display = document.querySelector('#countdown');
                             startTimer(fiveMinutes, display);
-
                             processExecution();
                             _processing = true;
 
@@ -1126,10 +1147,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         // defini des valeurs globales dans le cas d'une reexecution
                         // si le process posse en file d'attente et execute le process
                         _refreshTime = 3000;
-                        _timeOut = 5000;
+                        _timeOut = 100000;
 
                         var fiveMinutes = 60 * 1.15,
-                        display = document.querySelector('#countdown');
+                            display = document.querySelector('#countdown');
                         startTimer(fiveMinutes, display);
 
                         processExecution();
@@ -1169,10 +1190,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     };
                     // construit la requete xml POST
                     _rqtWPS = buildPostRequest(dictInputs, _getStations);
-                    console.log("Voici la requête WPS envoyée : " + _rqtWPS);
+                    console.log(_rqtWPS);
                     // execute le process
-                    _refreshTime = 2000;
-                    _timeOut = 5000;
+                    _refreshTime = 3000;
+                    _timeOut = 100000;
                     processExecution();
                     _processing = true;
                 } else {
@@ -1230,7 +1251,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 _stationsSelectedByUser = layer_select_geometries.map(function (feature) {
                     return feature.values_.name;
                 });
-                console.log(_stationsSelectedByUser);
+
                 //enleve l'interaction permettant de créer le polygone
                 mviewer.getMap().removeInteraction(_drawPolygon);
             });
@@ -1263,11 +1284,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _rqtWPS = buildPostRequest(dictInputs, _identifierGetMeasuredFlow);
                     // defini des valeurs globales dans le cas d'une reexecution
                     // si le process posse en file d'attente et execute le process
-                    _refreshTime = 25000;
-                    _timeOut = 22000;
+                    _refreshTime = 5000;
+                    _timeOut = 100000;
 
                     var fiveMinutes = 60 * 1.15,
-                    display = document.querySelector('#countdown');
+                        display = document.querySelector('#countdown');
                     startTimer(fiveMinutes, display);
 
                     processExecution();
@@ -1309,7 +1330,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             if (launchProcess) {
                                 // construit la requete xml POST
                                 _rqtWPS = buildPostRequest(dictInputs, _identifier);
-                                console.log("Voici la requête WPS envoyée : " + _rqtWPS);
+                                console.log(_rqtWPS);
                                 // supprime les resultats du precedent process
                                 if ($("#graphFlowSimulated").children().first()) {
                                     $("#graphFlowSimulated").children().first().remove();
@@ -1319,12 +1340,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 // defini des valeurs globales dans le cas d'une reexecution
                                 // si le process posse en file d'attente et execute le process
                                 _refreshTime = 5000;
-                                _timeOut = 8000;
+                                _timeOut = 100000;
 
                                 var fiveMinutes = 60 * 1.15,
-                                display = document.querySelector('#countdown');
+                                    display = document.querySelector('#countdown');
                                 startTimer(fiveMinutes, display);
-
                                 processExecution();
                                 _processing = true;
 
