@@ -45,6 +45,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _updating;
     var _countdown;
     var _nameColor = [];
+    var _traces = [];
+    var _layout;
     var _timeoutCount = 0;
     var _colors = ["red", "SaddleBrown", "DarkOrange", "LightSeaGreen", "purple"];
     var _processing = false;
@@ -453,7 +455,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // et permet son telechargement
         setOutFiles(xDatas, yDatas);
 
-        var trace = [{
+        _traces = [{
             name: "Débit simulé",
             x: xDatas,
             y: yDatas,
@@ -463,7 +465,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         }];
 
-        var layout = {
+        _layout = {
             xaxis: {
                 title: 'Date',
             },
@@ -479,24 +481,33 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         };
 
-        Plotly.newPlot($("#graphFlowSimulated")[0], trace, layout, {
-            responsive: true,
-            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d", "autoScale2d"],
+        Plotly.newPlot($("#graphFlowSimulated")[0], _traces, _layout, {
+            responsive: false,
+            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
+            scrollZoom: true
+        });
+        
+        // duplication des graphiques et utilisation de la classe hidden (visibility) car
+        // plotly.relayout pose soucis, impossible de depasser 450px de height et impossible
+        // de revenir a l'etat d'avant
+        Plotly.newPlot($("#graphFlowSimulatedExtend")[0], _traces, _layout, {
+            responsive: false,
+            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
             scrollZoom: true
         });
     }
 
     function plotMeasuredFlow(datas) {
+        // ameliorer pour ne faire qu'un passage dans le fichier de resultat
         var datasJson = JSON.parse(datas);
         var names = [];
         var trace;
         for (var i = 0; i < datasJson.length; i++) {
-            names = names.concat(datasJson[i].station); //["station"]);
-            //names = names.concat(datasJson[i]["code_hydro"]);
+            names = names.concat(datasJson[i].station);
         }
         // obtient les identifants uniques
         names = Array.from(new Set(names));
-
+        
         for (i = 0; i < names.length; i++) {
             var xDatas = [];
             var yDatas = [];
@@ -508,24 +519,36 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 }
             }
             for (j = 0; j < _nameColor.length; j++) {
-                var colorTrace;
                 if (names[i] === _nameColor[j].key) {
-                    colorTrace = _nameColor[j].value;
-                }
-
-                trace = [{
-                    name: names[i],
-                    x: xDatas,
-                    y: yDatas,
-                    type: "line",
-                    line: {
-                        color: colorTrace
-                    }
-                }];
+                    trace = {
+                        name: names[i],
+                        x: xDatas,
+                        y: yDatas,
+                        type: "line",
+                        line: {
+                            color: _nameColor[j].value
+                        }
+                    };
+                    _traces.push(trace);
+                } 
             }
-
-            Plotly.plot($("#graphFlowSimulated")[0], trace);
         }
+        // utilisation de newplot car plot et addtraces dupliquent la legende
+        // sur le second graphique
+        Plotly.newPlot($("#graphFlowSimulated")[0], _traces, _layout, {
+            responsive: false,
+            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
+            scrollZoom: true
+        });
+        
+        // duplication des graphiques et utilisation de la classe hidden (visibility) car
+        // plotly.relayout pose soucis, impossible de depasser 450px de height et impossible
+        // de revenir a l'etat d'avant
+        Plotly.newPlot($("#graphFlowSimulatedExtend")[0], _traces, _layout, {
+            responsive: false,
+            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
+            scrollZoom: true
+        });
     }
 
     function plotStationAvailable(features) {
@@ -1091,8 +1114,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
                             // defini des valeurs globales dans le cas d'une reexecution
                             // si le process posse en file d'attente et execute le process
-                            _refreshTime = 3000;
-                            _timeOut = 5000;
+                            _refreshTime = 5000;
+                            _timeOut = 100000;
 
                             var fiveMinutes = 60 * 1,
                                 display = document.querySelector('#countdown');
@@ -1103,6 +1126,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             // supprime les resultats du precedent process
                             if ($("#graphFlowSimulated").children().first()) {
                                 $("#graphFlowSimulated").children().first().remove();
+                                $("#graphFlowSimulatedExtend").children().first().remove();
                                 $("#divPopup1").children().remove();
                                 $("#divPopup2").children().first().remove();
                             }
@@ -1146,7 +1170,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         console.log(_rqtWPS);
                         // defini des valeurs globales dans le cas d'une reexecution
                         // si le process posse en file d'attente et execute le process
-                        _refreshTime = 3000;
+                        _refreshTime = 5000;
                         _timeOut = 100000;
 
                         var fiveMinutes = 60 * 1.15,
@@ -1160,6 +1184,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         // supprime les resultats du precedent process
                         if ($("#graphFlowSimulated").children().first()) {
                             $("#graphFlowSimulated").children().first().remove();
+                            $("#graphFlowSimulatedExtend").children().first().remove();
                             $("#divPopup1").children().remove();
                             $("#divPopup2").children().first().remove();
                         }
@@ -1334,12 +1359,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 // supprime les resultats du precedent process
                                 if ($("#graphFlowSimulated").children().first()) {
                                     $("#graphFlowSimulated").children().first().remove();
+                                    $("#graphFlowSimulatedExtend").children().first().remove();
                                     $("#divPopup1").children().remove();
                                     $("#divPopup2").children().first().remove();
                                 }
                                 // defini des valeurs globales dans le cas d'une reexecution
                                 // si le process posse en file d'attente et execute le process
-                                _refreshTime = 5000;
+                                _refreshTime = 7000;
                                 _timeOut = 100000;
 
                                 var fiveMinutes = 60 * 1.15,

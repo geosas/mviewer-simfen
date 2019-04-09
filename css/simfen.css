@@ -607,15 +607,21 @@ button.btn.btn-default.navbar-btn.mv-navbar-btn:focus{
     font-family:'Glyphicons Halflings';
 }
 
-#bottom-panel.active {
-    height: 550px !important;
+#bottom-panel.active.extend {
+    height: 850px;
     opacity: 1;
 }
 
 #graphFlowSimulated {
-    height: 500px;
+    height: 300px;
     width:1240px;
     padding-left: 410px;
+}
+
+#graphFlowSimulatedExtend {
+    height: 800px;
+    width: 1670px;
+    position: relative;
 }
 
 #processingBar{
@@ -636,4 +642,19 @@ button.btn.btn-default.navbar-btn.mv-navbar-btn:focus{
   width: 400px;
   color: white;
   font-size:18px;
+}
+
+#bottom-panel-btn-extend {
+    margin-left: 50px;
+    margin-top: -17px;
+    width: 40px;
+    text-align: center;
+    line-height: 1.7em;
+    border-radius: 30px;
+    font-size: 15px;
+    position: absolute;
+}
+
+.hidden {
+    visibility: hidden;
 }

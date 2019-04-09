@@ -53,6 +53,23 @@ mviewer.customControls.initSimfen = (function () {
             // Supprime le bouton de recherche car pas besoin
             $("#searchtool").remove();
 
+            // Desactive la suppression du marker lorsque le bottom panel est ferme
+            //$(".mv-close.fas.fa-chevron-down").off("click");
+
+            // Rajoute la class extend au bouton active du bottom-panel pour pouvoir supprimer la classe extend
+            // quand le panneau est ferme. Sinon, seul la classe active est fermee et il n'est pas possible d'ouvrir le panneau
+            // en lancant un traitement
+            $(".mv-close.fas.fa-chevron-down").on("click", function(){
+                $('#bottom-panel').removeClass('extend');
+                $('#toolsBoxPopup').removeClass('hidden');
+                $('#graphFlowSimulated').removeClass('hidden');
+                $('#graphFlowSimulatedExtend').addClass('hidden');
+                $('#bottom-panel-btn-extend').addClass('fa-angle-double-up ');
+                $('#bottom-panel-btn-extend').removeClass('fa-angle-double-down');
+                //$('.mv-close').addClass('fa-chevron-down');
+                //$('.mv-close').removeClass('fa-angle-double-down');
+            });
+
             // Configure la fenetre de resultat
             $(".popup-content").append(["<div id='toolsBoxPopup'>",
             "<span id='countdown'>00:00</span>",
@@ -68,9 +85,19 @@ mviewer.customControls.initSimfen = (function () {
                 "<div id='divPopup3'></div>",
                 "</div>",
                 "<div id='graphFlowSimulated' class='profile-addon panel-graph'></div>",
+                "<div id='graphFlowSimulatedExtend' class='profile-addon panel-graph hidden'></div>",
                 "</div>"
             ].join(""));
             
+            // bouton pour etendre le bottom panel. Pour ne pas rentrer en conflit avec le mviewer
+            // lors du onclick, il ne faut pas mettre le texte entre "", le mviewer le fait tout seul ??? pourquoi ???
+            $("#bottom-panel-btn").append(["<button id='bottom-panel-btn-extend' title='Etendre le graphique' class='btn btn-default fas fa-angle-double-up' type='button'",
+            "onclick=$('#bottom-panel').toggleClass('extend');$('#graphFlowSimulated').toggleClass('hidden');",
+            "$('#graphFlowSimulatedExtend').toggleClass('hidden');$('#toolsBoxPopup').toggleClass('hidden');",
+            "$('#bottom-panel-btn-extend').toggleClass('fa-angle-double-up');$('#bottom-panel-btn-extend').toggleClass('fa-angle-double-down')>",
+            //"$('.mv-close').toggleClass('fa-chevron-down');$('.mv-close').toggleClass('fa-angle-double-down')>",
+            "</button>"].join(""));
+        
             info.disable();
 
             // commande pour supprimer le layer une fois l'initialisation terminée
