@@ -1,51 +1,3 @@
-<style type="text/css">
-    .tips {
-        border: 1px solid black;
-        text-align: center;
-        vertical-align: middle;
-        font-size: 18px;
-    }
-
-    .tips-number-cell {
-        width: 51px;
-    }
-
-    .tips-number {
-        font-size: 35px;
-    }
-
-    .circle {
-        width: 175px;
-        height: 175px;
-        border-radius: 50%;
-        transform: rotate(-45deg);
-        text-align: center;
-        display: inline-block;
-        margin-left: 20px;
-        margin-top: 30px;
-        border-top-right-radius: 0%;
-        /*border: 5px solid #2E5367;*/
-        position: relative;
-    }
-
-    .water-drop-text {
-        width: 175px;
-        height: 175px;
-        font-size: 16px !important;
-        color: white !important;
-        transform: rotate(45deg);
-        text-align: center !important;
-        vertical-align: middle !important;
-        position: relative;
-        display: inline-block;
-    }
-
-    .number-step {
-        font-size: 40px !important;
-    }
-
-</style>
-
 <!-- <script type="text/javascript">
     // cree les boutons de changement de langue
     $(".modal-header").append("\
@@ -57,7 +9,7 @@
     $.getJSON("/apps/simfen-dev/translate.json", function(data){
         arrLang = data;
     });
-    
+
 
     $(function(){
         $(".translate").click(function(){
@@ -72,28 +24,32 @@
 <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#h_simfen" aria-controls="profile" role="tab" data-toggle="tab" class="lang" key="accueil">Accueil</a></li>
     <li role="presentation"><a href="#h_aide" aria-controls="messages" role="tab" data-toggle="tab" class="lang" key="aides">Mode d'emploi</a></li>
+    <li role="presentation"><a href="#h_modelisation" aria-controls="profile" role="tab" data-toggle="tab" class="lang" key="modelisation">Principes de modélisation hydrologique</a></li>
     <li role="presentation"><a href="#h_reference" aria-controls="profile" role="tab" data-toggle="tab" class="lang" key="references">Références</a></li>
     <li role="presentation"><a href="#h_credits" aria-controls="settings" role="tab" data-toggle="tab" class="lang" key="credits">Crédits</a></li>
+    <li role="presentation"><a href="#h_disclaimer" aria-controls="settings" role="tab" data-toggle="tab" class="lang" key="credits">Clause de non responsabilité</a></li>
 </ul>
 
 <!-- Tab panes -->
 
-
 <div class="tab-content">
-    
+
     <div role="tabpanel" class="tab-pane active" id="h_simfen">
 
-        <h4 class="lang" key="bienvenue">Bienvenue sur le portail cartographique du projet SIMFEN</h4>
+        <h4 class="lang" key="bienvenue">Bienvenue dans l'interface SIMFEN</h4>
 
-        <p class="lang" key="intro">Cette interface a pour objectif de mettre à disposition un Service Interopérable de Modélisation des Flux d'Eau et de Nitrate dans les bassins versants de Bretagne (SIMFEN). Plus précisément, ce service permet de simuler des débits en tout point d'intérêt du réseau hydrographique à partir des débits mesurés sur le territoire, dont voici les étapes de fonctionnement :</p>
-
-        <p align="center" style="font-size: 18px" class="lang" key="introFonctionnement">Fonctionnement de l'outil 'Simulation du débit' : </p>
+        <p class="lang" key="intro">
+            Cette interface a pour objectif de mettre à disposition un Service Interopérable de Modélisation des Flux d'Eau "Naturels"
+            dans les bassins versants de Bretagne (SIMFEN). Ce service permet de simuler des débits d'eau en tout point d'intérêt du réseau hydrographique
+            à partir des débits mesurés sur le territoire, sans prise en compte particulière des influences antrhopiques (prélèvement, rejets, ouvrages...).
+            Les étapes de fonctionnement sont les suivantes :
+        </p>
 
         <div align="center" style="padding-top: 20px;">
             <div class="circle" style="background: linear-gradient(+45deg, #007acc, #007acc 33%, #808080 33%, #808080);">
                 <p class="water-drop-text">
                     <font class="number-step">&#10112;</font>
-                    <br><span class="lang" key="introFonctionnement1">Indiquez la période de simulation</span></p>
+                    <br><span class="lang" key="introFonctionnement1">Indiquez la période de simulation et le pas de temps</span></p>
             </div>
             <div class="circle" style="background: linear-gradient(+45deg, #007acc, #007acc 64%, #808080 64%, #808080);">
                 <p class="water-drop-text">
@@ -105,17 +61,11 @@
                     <font class="number-step">&#10114;</font>
                     <br><span class="lang" key="introFonctionnement3">Lancez la simulation avec </span><span class="glyphicon glyphicon-play-circle"></span></p>
             </div>
-            <!--<div class="progress" style="margin-bottom: 0px !important;text-align: center; width: 700px; background-color: #808080;">
-                <div class="progress-bar progress-bar-striped active" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" role="progressbar" style="background-color: #007ACC; width:40%;">
-                <p style="text-align: center;width: 700px;color: white;">VOICI LE TEXTE QUIL FAIT LIRE POUSE SAVOIR OU EN EST LE TRAITEMENT</p></div>
-            </div>-->
-            
-            <!--<div class="water-drop" style="border-top-right-radius: 0%;">
-                <p class="water-drop-text" style="padding-top: 40px; padding-right: 10px;">Visualisez et téléchargez dans le panneau "Résultat" le flux d'eau simulé</p>
-            </div>-->
         </div>
 
-        <p style="font-size: 14px" class="lang" key="intro2"><br/><b>Pour plus d'informations, veuillez visiter l'onglet "Mode d'emploi".</b></p>
+        <p style="font-size: 14px" class="lang" key="intro2"><br/>
+            <b>Pour plus d'informations, veuillez visiter l'onglet "Mode d'emploi".</b>
+        </p>
 
     </div>
 
@@ -123,27 +73,27 @@
         <h4 class="lang" key="panelOutil1">Simulation du débit :</h4>
         <p>
             <span class="lang" key="panelOutil1Para1">
-                Ce service permet de simuler le débit en tout point du réseau hydrographique breton à partir de mesures de débit. Ces mesures peuvent être
-                obtenues à partir d'un service web, comme celui de
+                Ce service permet de simuler le débit d'eau en tout point du réseau hydrographique breton à partir des observations de
+                débit du réseau de la Banque Hydro. Le modèle hydrologique employé provient de travaux de recherche en modélisation
+                hydrologique décrit dans l’onglet « Principes de modélisation hydrologique ».
             </span>
-                <a href="https://geobretagne.fr/m/?layers=dreal_b%3Ahydrometrie_qmj&title=Bretagne%20-%20hydrom%C3%A9trie">GéoBretagne</a>.
-            <span class="lang" key="panelOutil1Para2">
-                Le modèle hydrologique employé provient des travaux de thèse d'
-            </span>
-            <a href="http://www.theses.fr/2013NSARD072">
-                Alban de Lavenne.
-            </a>
         </p>
 
-        <p class="lang" key="panelOutil1Para4">Ce service utilise 3 paramètres à renseigner impérativement : </p>
+        <p class="lang" key="panelOutil1Para4">
+            Ce service utilise 3 paramètres à renseigner impérativement :
+        </p>
         <ul>
         	<li class="lang" key="panelOutil1Para5">Date de début de la simulation</li>
             <li class="lang" key="panelOutil1Para6">Date de fin de la simulation</li>
-            <li class="lang" key="panelOutil1Para7">Localisation de la station à simuler (<span class="glyphicon glyphicon-flag"></span>). Rq : le calcul d'un bassin de grande taille peut prendre du temps.</li>
+            <li class="lang" key="panelOutil1Para6bis">Pas de temps</li>
+            <li class="lang" key="panelOutil1Para7">Localisation de la station à simuler (<span class="glyphicon glyphicon-flag"></span>).
+            <b>Remarque : le calcul d'un bassin de grande taille peut prendre du temps.</b></li>
         </ul>
-        <p><span class="lang" key="panelOutil1Para8">Pour les utilisateurs ayant une connaissance avancée du milieu où va être simulé le débit,
+        <p>
+            <span class="lang" key="panelOutil1Para8">Pour les utilisateurs ayant une connaissance avancée du milieu où va être simulé le débit,
              il est possible d'influer sur le fonctionnement du modèle par rapport aux paramètres déterminés par défaut.
-             Pour le moment, voici les paramètres pouvant être modifiés </span> <span class="glyphicon glyphicon-wrench"></span> : </p>
+             Pour le moment, voici les paramètres pouvant être modifiés </span> <span class="glyphicon glyphicon-wrench"></span> :
+        </p>
         <ul>
             <li>localiser manuellement le point où simuler le débit à partir de sa coordonnée X,Y en Lambert 93 (EPSG:2154).
                 <b>Remarque : Veuillez respecter la syntaxe indiquée.</b></li>
@@ -152,21 +102,110 @@
             <b>Remarque : Il est possible de selectionner 5 stations au plus.</b></li> -->
             <li>modifier le pas de temps des données simulées.</li>
         </ul>
-        <p> Le process est exécuté avec le bouton <span class="glyphicon glyphicon-play-circle"></span> ouvrant alors le panneau de résultat pouvant être ouvert et fermé avec le bouton <span class="glyphicon glyphicon-stats"></span>. Ce panneau permet de suivre la progression du traitement et télécharger le résultat au format CSV et visualiser celui-ci. Il est également possible de visualiser les débits mesurés qui ont été employés pour cette simulation en cliquant sur le bouton à gauche du graphique. <b>Remarque : il est important de comparer le débit par rapport à la surface du bassin. Il est préférable de comparer la présence des évenements entre les débits mesurés et débit simulé.</b></p>
-        <p>Les bassins sources employés par la simulation sont affichés sur la carte. Pour chaque bassin, sa station de mesure, sa surface (en km2) et son importance dans la simulation (weight) sont indiqués.</p>
-        <p><b>REMARQUE : un seul service peut être exécuté à la fois.</b></p>
+        <p>
+            Le process est exécuté avec le bouton <span class="glyphicon glyphicon-play-circle"></span> ouvrant alors le panneau de résultat pouvant être ouvert
+            et fermé avec le bouton <span class="glyphicon glyphicon-stats"></span>. Ce panneau permet de suivre la progression du traitement et télécharger le
+            résultat au format CSV et visualiser celui-ci. Il est également possible de visualiser les débits mesurés qui ont été employés pour cette simulation
+            en cliquant sur le bouton à gauche du graphique.
+        </p>
+        <p>
+            Les bassins sources employés par la simulation sont affichés sur la carte. Pour chaque bassin, sa station de mesure,
+            sa surface (en km2) et son poids dans la simulation sont indiqués.
+        </p>
+        <p>
+            <b>REMARQUE : une seule requête peut être exécutée à la fois.</b>
+        </p>
+    </div>
+
+    <div role="tabpanel" class="tab-pane" id="h_modelisation">
+        <h4 class="lang" key="panelOutilModelisation">Principes de modélisation hydrologique :</h4>
+        <p>
+            Le Service SIMFEN permet d’activer en région Bretagne, France, une modélisation hydrologique à base géomorphologique développée
+            au fil de recherches conduites depuis 1998 dans différents contextes hydrologiques, et qui s’inscrit dans la problématique générale
+            de la prévision en bassins non-jaugés (PUB – Prediction in Ungauged Basins).
+        </p>
+
+        <h4>Modélisation hydrologique à base géomorphologique</h4>
+        <p>
+            Une fonction de transfert à base géomorphologique permet de décrire le transfert de l’eau à travers le réseau hydrographique
+            dans un bassin versant jaugé ou non-jaugé, quel qu’il soit. L’inversion de la fonction de transfert d’un bassin versant jaugé
+            permet de calculer la chronique de la pluie nette à partir de la chronique de débit observée à l’exutoire. La pluie nette peut
+            être transposée d’un ou plusieurs bassins versants sources d’information vers un bassin versant cible, sur la base de la similarité,
+            si possible dans une configuration d’emboîtement ou de voisinage, afin de simuler la chronique de débit à l’exutoire cible.
+        </p>
+        <p>
+            Schéma à ajouter
+            Plusieurs nuances de l’approche de modélisation sont possibles et quelques choix opérationnels ont été faits pour la
+            version de base du service SIMFEN. La prochaine version offrira des options flexibles dans un mode expert. Un réseau
+            hydrographique de référence est fourni pour la région entière,details. Pour chaque point d’échantillonage du bassin
+            versant, le chemin de l’eau jusqu’à l’exutoire est identifié par géomatique et la longueur hydraulique L de la partie
+            chenalisée de ce chemin au sein du réseau hydrographique est mesurée. La fonction densité de probabilité de la longueur
+            hydraulique fdp(L) est ainsi extraite pour l’e bassin versant considéré dans son ensemble.
+            La fdp du temps de trajet t de l’eau à travers le réseau hydrographique (pdf(t)) peut être déduite de la fdp(L) par
+            application d’une vitesse moyenne d’écoulement à travers le réseau hydrographique. Cette vitesse moyenne a été estimée
+            par analyse d’un ensemble d’événements de crue détectés entre 1990 et 2010 au sein de bassins versants jaugés de la région,
+            et quantification d’une relation régionale robuste exprimée en fonction de la longueur hydraulique moyenne du bassin versant.
+            La fdp(t) peut être considérée comme étant une fonction de transfert FT(t) du type hydrogramme unitaire, ce qui permet de
+            simuler le débit à l’exutoire Q [m3. s−1] grâce à la convolution suivante :
+            Q(t) = S •Pn(t) ∗ FT(t)
+            où t [s] est le temps, S [m²] est la surface du bassin versant et Pn [m] est la pluie nette définie comme étant la hauteur
+            d’eau sortant des versants et entrant dans le réseau hydrographique en moyenne dans le bassin versant.
+        </p>
+
+        <h4>Déconvolution et transposition d’hydrogramme</h4>
+        <p>
+            La pluie nette d’un bassin versant jaugé est estimée par déconvolution de l’hydrogramme observe à l’exutoire.
+            Cette déconvolution est réalisée en inversant la fonction de transfert à base géomorphologique, ce qui permet
+            d’estimer la chronique de pluie nette à partir de la chronique de débit. La pluie nette est alors transposée
+            vers le bassin versant cible, sur la base de la similarité, où il peut être reconvolué avec la fonction de transpert
+            propre à ce bassin versant, pour y simuler l’hydrogramme. Un ou plusieurs bassins versants sources peuvent être pris
+            en compte pour un bassin versant cible considéré. Cette approche permet de ne pas avoir à considerer en detail les processus
+            hétérogènes et fortement non-linéaires internes aux versants, qui déterminent la genèse des écoulements et donc de la pluie nette.
+        </p>
+
+        <h4>Stratégie de transposition</h4>
+        <p>
+            Pour un bassin versant cible, un ou plusieurs bassins versants donneurs sont sélectionnés, selon les règles suivants: détails
+        </p>
     </div>
 
     <div role="tabpanel" class="tab-pane" id="h_reference">
-        <h4>Publications </h4>
-        <p>A. de Lavenne. <i>Modélisation hydrologique à base géomorphologique de bassins versants non jaugés par régionalisation et transposition d'hydrogramme</i>. PhD thesis, 2013. <a href="http://www.theses.fr/2013NSARD072">URL</a>. Sciences de l'environnement. Rennes, Agrocampus-Ouest.</p>
-        <h4>Autres</h4>
-        <p><a href="http://www.opengeospatial.org/standards/wps">Web Processing Service</a></p>
+        <h4>Publications</h4>
+        <p>de Lavenne A., Cudennec C. Assessment of freshwater discharge into a coastal bay through multi-basin ensemble hydrological modelling. Science of the Total Environment, 669, 812-820, https://doi.org/10.1016/j.scitotenv.2019.02.387</p>
+        <p>Ecrepont S., Cudennec C., Anctil F., Jaffrézic A., 2019. PUB in Québec: A robust geomorphology-based deconvolution-reconvolution framework for the spatial transposition of hydrographs. Journal of Hydrology, 570, 378-392, https://doi.org/10.1016/j.jhydrol.2018.12.052</p>
+        <p>Boudhraâ H., Cudennec C., Andrieu H., Slimani M., 2018. Net rainfall estimation by the inversion of a geomorphology-based transfer function and discharge deconvolution. Hydrological Sciences Journal, 63, 2, 285-301, http://dx.doi.org/10.1080/02626667.2018.1425801.</p>
+        <p>de Lavenne A., Skøien J.O., Cudennec C., Curie F., Moatar F., 2016. Transferring measured discharge time-series: large-scale comparison of Top-kriging to geomorphology-based inverse modeling. Water Resources Research, 52, 7, 5555-5576, http://dx.doi.org/10.1002/2016WR018716.</p>
+        <p>Béra R., Squividant H., Le Henaff G., Pichelin P., Ruiz L., Launay J., Vanhouteghem J., Aurousseau P., Cudennec C., 2015. GéoSAS : A modular and interoperable open source spatial data infrastructure for research. In ‘Remote sensing and GIS for hydrology and water resources’, Chen et al. (Ed.), PIAHS, 368, 9-14, https://doi.org/10.5194/piahs-368-9-2015.</p>
+        <p>de Lavenne A., Boudhraâ H., Cudennec C, 2015. Streamflow prediction in ungauged basins through geomorphology-based hydrograph transposition. Hydrology Research, 46,2, 291-302, https://doi.org/10.2166/nh.2013.099.</p>
+        <p>Squividant H., Béra R., Aurousseau P., Cudennec C., 2015. Online watershed boundary delineation: sharing models through spatial data infrastructures. In ‘Remote sensing and GIS for hydrology and water resources’, Chen et al. (Ed.), PIAHS, 268, 144-149, https://doi.org/10.5194/piahs-368-144-2015.</p>
+        <p>Aouissi J., Pouget J.C., Boudhraâ H., Storer G., Cudennec C, 2013. Joint spatial, topological and scaling analysis of river network geomorphometry. Géomorphologie–Relief Processus Environnement, 1, 7-16, https://doi.org/10.4000/geomorphologie.10082.</p>
+        <p>de Lavenne A., 2013. Modélisation hydrologique à base géomorphologique de bassins versants non jaugés par régionalisation et transposition d'hydrogramme. PhD thesis,. URL. Sciences de l'environnement. Rennes, Agrocampus-Ouest.</p>
+        <p>Hrachowitz M., Savenije H.H.G., Blöschl G., McDonnell J.J., Sivapalan M., Pomeroy J.W., Arheimer B., Blume T., Clark M.P., Ehret U., Fenicia F., Freer J.E., Gelfan A., Gupta H.V., Hughes D.A. Hut R.W., Montanari A., Pande S., Tetzlaff D., Troch P.A., Uhlenbrook S., Wagener T., Winsemius H.C., Woods R.A., Zehe, E., Cudennec C., 2013. A decade of Predictions in Ungauged Basins (PUB) – a review. Hydrological Sciences Journal, 58, 6, 1198-1255, https://doi.org/0.1080/02626667.2013.803183.</p>
+        <p>Boudhraâ H., Cudennec C., Slimani M., Andrieu H., 2009. Hydrograph transposition between basins through a geomorphology-based deconvolution-reconvolution approach. In ‘New Approaches to Hydrological Prediction in Data Sparse Regions’, Yilmaz K. et coll. (Ed.), IAHS Publ., 333, 76-83, http://iahs.info/redbooks/333.htm.</p>
+        <p>Cudennec C., 2007. On width function-based unit hydrographs deduced from separately random self-similar river networks and rainfall variability. Hydrological Sciences Journal, 52, 1, 230-237, https://doi.org/10.1623/hysj.52.1.230.</p>
+        <p>Cudennec C., Slimani M., Le Goulven P., 2005. Accounting for sparsely observed rainfall space-time variability in a rainfall-runoff model of a semiarid Tunisian basin. Hydrological Sciences Journal, 50, 4, 617-630,  https://doi.org/10.1623/hysj.2005.50.4.617.</p>
+        <p>Rodriguez F., Cudennec C., Andrieu H., 2005. Application of morphological approaches to determine unit hydrographs of urban catchments. Hydrological Processes, 19, 5, 1021-1035,  https://doi.org/10.1002/hyp.5643.</p>
+        <p>Cudennec C., Fouad Y., Sumarjo Gatot I., Duchesne J., 2004. A geomorphological explanation of the unit hydrograph concept. Hydrological Processes, 18, 4, 603-621,  https://doi.org/10.1002/hyp.1368.</p>
     </div>
+
     <div role="tabpanel" class="tab-pane" id="h_credits">
-        <h4 class="lang" key="panelCredits">Crédits </h4>
-        <p class="lang" key="panelCredits1">Ce projet a été financé par le Conseil Régional de Bretagne, l'Agence de l'eau Loire-Bretagne et l'Agrocampus-Ouest.</p>
-        <p><a href="http://mviewerdoc.readthedocs.io/fr/latest/" target="_blank"><span class="lang" key="panelCredits2">Lien vers la documentation du Mviewer</span></a></p>
-        <p class="lang" key="panelCredits3">Les données sont issues d'une simulation présentant une certitude non quantifiable. En conséquence, les utilisateurs utilisent les données sous leur responsabilité pleine et entière, sans recours possible contre le fournisseur dont la responsabilité ne saurait être engagée du fait d’un dommage résultant directement ou indirectement de l’utilisation de ces données.</p>
+        <h4 class="lang" key="panelCredits">Crédits</h4>
+        <p>La version actuelle du Service SIMFEN date de xx/xx/2019</p>
+        <p>Contributeurs Dallery, Squividant, Launay, de Lavenne, Cudennec de l’UMR SAS ?? </p>
+        <p>Partenaires ?</p>
+        <p class="lang" key="panelCredits1">Le développpement de ce service a été financé par le Conseil Régional de Bretagne,
+            l'Agence de l'eau Loire-Bretagne et AGROCAMPUS OUEST.</p>
+        <p>L'interface du service s'appuie sur le Mviewer développé par GéoBretagne.
+        <a href="http://mviewerdoc.readthedocs.io/fr/latest/" target="_blank"><span class="lang" key="panelCredits2">Lien vers la documentation du Mviewer</span></a>
+        </p>
+    </div>
+    <div role="tabpanel" class="tab-pane" id="h_disclaimer">
+    <h4 class="lang" key="panelDisclaimer">Clause de non responsabilité</h4>
+    <p class="lang" key="panelDisclaimer">
+        Les données sont issues d'une simulation qui présente des incertitudes non quantifiables précisement.
+        En conséquence, les utilisateurs du service interprètent et ré-utilisent les données obtenues sous leur responsabilité
+        pleine et entière, sans recours possible contre le fournisseur dont la responsabilité ne saurait être engagée du fait
+        d’un dommage résultant directement ou indirectement de l’interprétation et l’utilisation de ces données.
+    </p>
     </div>
 </div>

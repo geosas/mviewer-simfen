@@ -72,7 +72,10 @@ mviewer.customControls.initSimfen = (function () {
 
             // Configure la fenetre de resultat
             $(".popup-content").append(["<div id='toolsBoxPopup'>",
+            "<div id='timerKillProcess'>",
             "<span id='countdown'>00:00</span>",
+            "<div id='dismiss' class='hidden fas fa-skull' onclick='mviewer.customControls.waterFlowSimulation.dismiss();'></div>",
+            "</div>",
                 "<div id='processingBar' class='progress'>",
                     "<div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar' style='background-color: #007ACC; width:0%;'>",
                         "<p id='processing-text' class='lang' key='panelResultNoprocess'>",
@@ -88,7 +91,7 @@ mviewer.customControls.initSimfen = (function () {
                 "<div id='graphFlowSimulatedExtend' class='profile-addon panel-graph hidden'></div>",
                 "</div>"
             ].join(""));
-            
+
             // bouton pour etendre le bottom panel. Pour ne pas rentrer en conflit avec le mviewer
             // lors du onclick, il ne faut pas mettre le texte entre "", le mviewer le fait tout seul ??? pourquoi ???
             $("#bottom-panel-btn").append(["<button id='bottom-panel-btn-extend' title='Etendre le graphique' class='btn btn-default fas fa-angle-double-up' type='button'",
@@ -97,7 +100,7 @@ mviewer.customControls.initSimfen = (function () {
             "$('#bottom-panel-btn-extend').toggleClass('fa-angle-double-up');$('#bottom-panel-btn-extend').toggleClass('fa-angle-double-down')>",
             //"$('.mv-close').toggleClass('fa-chevron-down');$('.mv-close').toggleClass('fa-angle-double-down')>",
             "</button>"].join(""));
-        
+
             info.disable();
 
             // commande pour supprimer le layer une fois l'initialisation terminée

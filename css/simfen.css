@@ -658,3 +658,62 @@ button.btn.btn-default.navbar-btn.mv-navbar-btn:focus{
 .hidden {
     visibility: hidden;
 }
+
+#countdown {
+    font-size: 16px;
+}
+
+#dismiss {
+    position: initial;
+    margin-left: 10px;
+    font-size: 16px;
+}
+
+#dismiss:hover {
+    color: rgb(121, 121, 121);
+}
+
+.tips {
+    border: 1px solid black;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 18px;
+}
+
+.tips-number-cell {
+    width: 51px;
+}
+
+.tips-number {
+    font-size: 35px;
+}
+
+.circle {
+    width: 175px;
+    height: 175px;
+    border-radius: 50%;
+    transform: rotate(-45deg);
+    text-align: center;
+    display: inline-block;
+    margin-left: 20px;
+    margin-top: 30px;
+    border-top-right-radius: 0%;
+    /*border: 5px solid #2E5367;*/
+    position: relative;
+}
+
+.water-drop-text {
+    width: 175px;
+    height: 175px;
+    font-size: 16px !important;
+    color: white !important;
+    transform: rotate(45deg);
+    text-align: center !important;
+    vertical-align: middle !important;
+    position: relative;
+    display: inline-block;
+}
+
+.number-step {
+    font-size: 40px !important;
+}

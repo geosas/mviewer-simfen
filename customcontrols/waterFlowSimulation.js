@@ -37,6 +37,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _getStations = "getStationsGeobretagne";
     var _identifierXY = "xyOnNetwork";
     var _identifierGetMeasuredFlow = "getMeasuredFlow";
+    var _identifierDismiss = "dismiss";
+    var _uuid;
     var _storeExecuteResponse = true;
     var _lineage = true;
     var _status = true;
@@ -217,6 +219,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         // arrete l'ecoute du status puisque le process est termine
                         clearInterval(_updating);
                         if (response.Status.ProcessSucceeded) {
+                            // Hide kill process button
+                            $("#dismiss").toggleClass("hidden");
                             // le comptage n'est pas le meme s'il y a plusieurs outputs
                             var outputsTags = Object.keys(response.ProcessOutputs).map(function (itm) {
                                 return response.ProcessOutputs[itm];
@@ -276,6 +280,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     // supprime le bouton
                                     $("#divPopup2").children().first().remove();
                                     _processing = false;
+                                } else if (outputTag.Identifier === "dismiss") {
+                                    // Hide kill process button
+                                    $("#dismiss").toggleClass("hidden");
+                                    _processing = false;
                                 }
                             }
                         }
@@ -302,6 +310,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 var response = $.xml2json(_xhrPost.responseXML);
                 // Recupere l'url de la variable statusLocation
                 var statusLocationURL = response.statusLocation;
+                // Get UUID of process
+                _uuid = statusLocationURL.split("/")[statusLocationURL.split("/").length-1].split(".")[0];
                 // Maj de la barre de progression
                 processingBarUpdate(0, "Initialisation");
 
@@ -486,7 +496,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
             scrollZoom: true
         });
-        
+
         // duplication des graphiques et utilisation de la classe hidden (visibility) car
         // plotly.relayout pose soucis, impossible de depasser 450px de height et impossible
         // de revenir a l'etat d'avant
@@ -500,22 +510,23 @@ mviewer.customControls.waterFlowSimulation = (function () {
     function plotMeasuredFlow(datas) {
         // ameliorer pour ne faire qu'un passage dans le fichier de resultat
         var datasJson = JSON.parse(datas);
+        console.log(datasJson);
         var names = [];
         var trace;
         for (var i = 0; i < datasJson.length; i++) {
-            names = names.concat(datasJson[i].station);
+            names = names.concat(datasJson[i].code_hydro);
         }
         // obtient les identifants uniques
         names = Array.from(new Set(names));
-        
+
         for (i = 0; i < names.length; i++) {
             var xDatas = [];
             var yDatas = [];
             for (var j = 0; j < datasJson.length; j++) {
-                if (names[i] === datasJson[j].station) {
+                if (names[i] === datasJson[j].code_hydro) {
                     xDatas = xDatas.concat(datasJson[j].date);
-                    //yDatas = yDatas.concat(datasJson[j].debit_donnee_validee_m3);
-                    yDatas = yDatas.concat(datasJson[j].qm3s);
+                    yDatas = yDatas.concat(datasJson[j].debit_donnee_validee_m3);
+                    //yDatas = yDatas.concat(datasJson[j].qm3s);
                 }
             }
             for (j = 0; j < _nameColor.length; j++) {
@@ -530,7 +541,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         }
                     };
                     _traces.push(trace);
-                } 
+                }
             }
         }
         // utilisation de newplot car plot et addtraces dupliquent la legende
@@ -540,7 +551,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
             scrollZoom: true
         });
-        
+
         // duplication des graphiques et utilisation de la classe hidden (visibility) car
         // plotly.relayout pose soucis, impossible de depasser 450px de height et impossible
         // de revenir a l'etat d'avant
@@ -761,7 +772,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         var createTextStyleWatershed = function (feature, colorWatershed) {
             if (feature.get('weight') != 0) {
-                label = feature.get('label') + "km2\nweight:" + feature.get('weight');
+                label = feature.get('label') + "km2\npoids:" + feature.get('weight');
             } else {
                 label = feature.get('label') + "km2";
             }
@@ -824,7 +835,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // order features if more than one
         if (features.length > 2) {
             features = features.sort(function (a, b) {
-                return parseFloat(a.idug_basin.area) - parseFloat(b.idug_basin.area);
+                return parseFloat(a.targetW.area) - parseFloat(b.targetW.area);
             });
             features = features.reverse();
         }
@@ -832,22 +843,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
             try {
-                coord = features.idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                nameWatershed = features.idug_basin.station;
-                area = features.idug_basin.area;
-                wghosh = features.idug_basin.weights;
+                coord = features.targetW.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                nameWatershed = features.targetW.station;
+                area = features.targetW.area;
+                wghosh = features.targetW.weights;
                 _nameColor.push({
                     key: nameWatershed,
                     value: _colors[0]
                 });
                 addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
             } catch (error) {
-                multiPolygons = features.idug_basin.geometryProperty.MultiPolygon.polygonMember;
+                multiPolygons = features.targetW.geometryProperty.MultiPolygon.polygonMember;
                 for (i = 0; i < multiPolygons.length; i++) {
                     coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                    nameWatershed = features.idug_basin.station;
-                    area = features.idug_basin.area;
-                    wghosh = features.idug_basin.weights;
+                    nameWatershed = features.targetW.station;
+                    area = features.targetW.area;
+                    wghosh = features.targetW.weights;
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[0]
@@ -859,22 +870,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // s'il y en a plusieurs
             for (var j = 0; j < features.length; j++) {
                 try {
-                    coord = features[j].idug_basin.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                    nameWatershed = features[j].idug_basin.station;
-                    area = features[j].idug_basin.area;
-                    wghosh = features[j].idug_basin.weights;
+                    coord = features[j].targetW.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                    nameWatershed = features[j].targetW.station;
+                    area = features[j].targetW.area;
+                    wghosh = features[j].targetW.weights;
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[j]
                     });
                     addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
                 } catch (error) {
-                    polygonsWatershed = features[j].idug_basin.geometryProperty.MultiPolygon.polygonMember;
+                    polygonsWatershed = features[j].targetW.geometryProperty.MultiPolygon.polygonMember;
                     for (i = 0; i < polygonsWatershed.length; i++) {
                         coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                        nameWatershed = features[j].idug_basin.station;
-                        area = features[j].idug_basin.area;
-                        wghosh = features[j].idug_basin.weights;
+                        nameWatershed = features[j].targetW.station;
+                        area = features[j].targetW.area;
+                        wghosh = features[j].targetW.weights;
                         _nameColor.push({
                             key: nameWatershed,
                             value: _colors[j]
@@ -1063,12 +1074,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }, 1000);
     }
 
-    function refreshTime(start, end, deltaT) {
-        // Fonction pour determiner le temps de refraichissement optimal
-        // pour recuperer le fichier de sortie en entier
-
-    }
-
     return {
         /*
          * Public
@@ -1091,6 +1096,31 @@ mviewer.customControls.waterFlowSimulation = (function () {
             mviewer.getMap().addControl(mousePositionControl);
         },
 
+        dismiss: function() {
+            // dismiss button disappear
+            $("#dismiss").toggleClass("hidden");
+
+            // list of inputs
+            var dictInputs = {
+                uuid: _uuid
+            };
+
+            // Build wps request
+            _rqtWPS = buildPostRequest(dictInputs, _identifierDismiss);
+
+            // set time processing
+            _refreshTime = 1000;
+            _timeOut = 10000;
+
+            // Execute process
+            // var _processing already set true
+            // Stop process refresh
+            _xhrGet.abort();
+            clearInterval(_updating);
+            clearInterval(_countdown);
+            processExecution();
+        },
+
         getXY: function () {
             if (_processing === false) {
                 if (!_draw) {
@@ -1105,6 +1135,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                         // si le point clique dans la zone n'est pas dans le projet, ne lance pas le service
                         if (insideProjectArea(String(_xy).split(',')[0], String(_xy).split(',')[1]) === true) {
+                            // dismiss button appear
+                            $("#dismiss").toggleClass("hidden");
                             // defini les parametres x,y du service
                             var dictInputs = {
                                 X: String(_xy).split(',')[0],
@@ -1160,6 +1192,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         inputCoordinate = inputCoordinate.replace(",", ".").replace(";", ",");
                     }
                     if (insideProjectArea(String(inputCoordinate).split(',')[0], String(inputCoordinate).split(',')[1]) === true) {
+                        // dismiss button appear
+                        $("#dismiss").toggleClass("hidden");
                         // defini les parametres x,y du service
                         var dictInputs = {
                             X: String(inputCoordinate).split(',')[0],
@@ -1293,6 +1327,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 // Verifier que le graphique existe pour pouvoir ajouter des
                 // courbes dedans
                 if ($("#btnMeasuredFlow")) {
+                    // dismiss button appear
+                    $("#dismiss").toggleClass("hidden");
+
                     // Identifie les stations qui ont ete utilisees
                     // pour indiquer la liste de stations a employer
                     listStations = "";
@@ -1353,6 +1390,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             launchProcess = timeProcessAlert(dictInputs.Start, dictInputs.End, dictInputs.DeltaT);
 
                             if (launchProcess) {
+                                // dismiss button appear
+                                $("#dismiss").toggleClass("hidden");
+
                                 // construit la requete xml POST
                                 _rqtWPS = buildPostRequest(dictInputs, _identifier);
                                 console.log(_rqtWPS);
