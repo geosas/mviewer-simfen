@@ -34,7 +34,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _version = "1.0.0";
     var _request = "Execute";
     var _identifier = "waterFlowSimulation";
-    var _getStations = "getStationsGeobretagne";
+    var _getStations = "getStationsAvailable";
     var _identifierXY = "xyOnNetwork";
     var _identifierGetMeasuredFlow = "getMeasuredFlow";
     var _identifierDismiss = "dismiss";
@@ -53,6 +53,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _colors = ["red", "SaddleBrown", "DarkOrange", "LightSeaGreen", "purple"];
     var _processing = false;
     var _stationsSelectedByUser;
+    var _select;
 
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
@@ -346,6 +347,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
         return xmlDoc;
     }
 
+    function deleteLayers(layers){
+        // suppression des layers
+        var layersToRemove = [];
+        _map.getLayers().forEach(function (layer) {
+            for (var i = 0; i < layers.length; i++) {
+                if (layer.get('name') != undefined && layer.get('name') === layers[i]) {
+                    layersToRemove.push(layer);
+                }
+            }
+        });
+        var len = layersToRemove.length;
+        for (var i = 0; i < len; i++) {
+            _map.removeLayer(layersToRemove[i]);
+        }
+    }
+
     function setOutMetadata() {
         listStations = "";
         for (var i = 0; i < _nameColor.length; i++) {
@@ -510,7 +527,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
     function plotMeasuredFlow(datas) {
         // ameliorer pour ne faire qu'un passage dans le fichier de resultat
         var datasJson = JSON.parse(datas);
-        console.log(datasJson);
         var names = [];
         var trace;
         for (var i = 0; i < datasJson.length; i++) {
@@ -598,18 +614,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
             });
         };
 
-        // supprime la precedente couche de station si elle existe
-        var layersToRemove = [];
-        _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
-                layersToRemove.push(layer);
-            }
-        });
-        var len = layersToRemove.length;
-        for (var i = 0; i < len; i++) {
-            _map.removeLayer(layersToRemove[i]);
-        }
-
         // initialise la source de donnees qui va contenir les entites
         var stationSource = new ol.source.Vector({});
 
@@ -687,24 +691,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
             watershedsSource.addFeature(feature);
         }
 
-        // supprime la precedente couche de bv si elle existe
-        var layersToRemove = [];
-        _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && ((layer.get('name') === 'Watersheds') || (layer.get('name') === 'StationsSelected'))) {
-                layersToRemove.push(layer);
-            }
-        });
-        var len = layersToRemove.length;
-        for (var i = 0; i < len; i++) {
-            _map.removeLayer(layersToRemove[i]);
-        }
-
         // initialise la source de donnees qui va contenir les entites
         var watershedsSource = new ol.source.Vector({});
 
         // cree le vecteur qui va contenir les bassins versants
         var _watershedsLayer = new ol.layer.Vector({
-            name: "Watersheds",
+            name: "TargetWatershed",
             source: watershedsSource,
             style: styleFunction
         });
@@ -807,18 +799,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
             });
             // ajoute la feature a la source
             watershedsSource.addFeature(feature);
-        }
-
-        // supprime la precedente couche de bv si elle existe
-        var layersToRemove = [];
-        _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'Watersheds')) {
-                layersToRemove.push(layer);
-            }
-        });
-        var len = layersToRemove.length;
-        for (var i = 0; i < len; i++) {
-            _map.removeLayer(layersToRemove[i]);
         }
 
         // initialise la source de donnees qui va contenir les entites
@@ -964,18 +944,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 })
             });
         };
-
-        // supprime la precedente couche de station si elle existe
-        var layersToRemove = [];
-        _map.getLayers().forEach(function (layer) {
-            if (layer.get('name') != undefined && (layer.get('name') === 'StationsSelected')) {
-                layersToRemove.push(layer);
-            }
-        });
-        var len = layersToRemove.length;
-        for (var i = 0; i < len; i++) {
-            _map.removeLayer(layersToRemove[i]);
-        }
 
         // initialise la source de donnees qui va contenir les entites
         var stationSource = new ol.source.Vector({});
@@ -1137,6 +1105,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         if (insideProjectArea(String(_xy).split(',')[0], String(_xy).split(',')[1]) === true) {
                             // dismiss button appear
                             $("#dismiss").toggleClass("hidden");
+
                             // defini les parametres x,y du service
                             var dictInputs = {
                                 X: String(_xy).split(',')[0],
@@ -1149,9 +1118,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             _refreshTime = 5000;
                             _timeOut = 100000;
 
-                            var fiveMinutes = 60 * 1,
+                            var timerCountdown = 60 * 1,
                                 display = document.querySelector('#countdown');
-                            startTimer(fiveMinutes, display);
+                            startTimer(timerCountdown, display);
+                            // supprimer les couches
+                            deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected", "TargetWatershed"]);
                             processExecution();
                             _processing = true;
 
@@ -1207,14 +1178,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         _refreshTime = 5000;
                         _timeOut = 100000;
 
-                        var fiveMinutes = 60 * 1.15,
+                        var timerCountdown = 60 * 1.15,
                             display = document.querySelector('#countdown');
-                        startTimer(fiveMinutes, display);
-
+                        startTimer(timerCountdown, display);
+                        // supprimer les couches
+                        deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected", "TargetWatershed"]);
                         processExecution();
                         _processing = true;
                         //clear le champ
                         $("#XYWaterFlowSimulation").val("");
+
                         // supprime les resultats du precedent process
                         if ($("#graphFlowSimulated").children().first()) {
                             $("#graphFlowSimulated").children().first().remove();
@@ -1240,12 +1213,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
         showAvailableStations: function () {
             if (_processing === false) {
                 if (_xy) {
+                    // dismiss button appear
+                    $("#dismiss").toggleClass("hidden");
+
                     var dictInputs = {
                         X: String(_xy).split(',')[0],
                         Y: String(_xy).split(',')[1],
                         Start: $("#dateStartWaterFlowSimulation").val(),
-                        End: $("#dateEndWaterFlowSimulation").val(),
-                        Distance: 50000
+                        End: $("#dateEndWaterFlowSimulation").val()
                     };
                     // construit la requete xml POST
                     _rqtWPS = buildPostRequest(dictInputs, _getStations);
@@ -1253,6 +1228,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     // execute le process
                     _refreshTime = 3000;
                     _timeOut = 100000;
+                    var timerCountdown = 60 * 1,
+                        display = document.querySelector('#countdown');
+                    startTimer(timerCountdown, display);
                     processExecution();
                     _processing = true;
                 } else {
@@ -1264,62 +1242,70 @@ mviewer.customControls.waterFlowSimulation = (function () {
         },
 
         selectAvailableStations: function () {
-            //cree la variable select
-            var select;
-            //defini un parser de geometry pour faire l'intersection via la bibliotheque jsts
-            var parser = new jsts.io.OL3Parser();
-            //defini le vecteur qui va correspondre au polygone dessiné pour seelctionner les exutoires
-            var polygonSelection = new ol.layer.Vector({
-                id: 'polygonSelection',
-                source: new ol.source.Vector()
-            });
-            //cree l'interaction de dessin du polygone
-            _drawPolygon = new ol.interaction.Draw({
-                source: polygonSelection.getSource(),
-                type: 'Polygon'
-            });
-            //ajoute l'interaction
-            mviewer.getMap().addInteraction(_drawPolygon);
+            if (!_drawPolygon) {
+                //cree la variable select
+                var select;
+                //defini un parser de geometry pour faire l'intersection via la bibliotheque jsts
+                var parser = new jsts.io.OL3Parser();
+                //defini le vecteur qui va correspondre au polygone dessiné pour seelctionner les exutoires
+                var polygonSelection = new ol.layer.Vector({
+                    id: 'polygonSelection',
+                    source: new ol.source.Vector()
+                });
+                //cree l'interaction de dessin du polygone
+                _drawPolygon = new ol.interaction.Draw({
+                    source: polygonSelection.getSource(),
+                    type: 'Polygon'
+                });
 
-            //recupere chaque elements de la couche stationsavailable qui sont dans le polygone
-            _map.getLayers().forEach(function (layer) {
-                if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
-                    _stationLayer = layer;
-                }
-            });
+                //ajoute l'interaction
+                mviewer.getMap().addInteraction(_drawPolygon);
 
-            //a la fin du pol
-            _drawPolygon.on('drawend', function (event) {
-                //recupere la geometrie de la feature creee
-                var featureDraw = event.feature.getGeometry();
-                var jsts_geom_select = parser.read(featureDraw);
-
-                var layer_select_geometries = _stationLayer.getSource().getFeatures().filter(function (el) {
-                    if (jsts_geom_select.contains(parser.read(el.getGeometry()))) {
-                        return true;
+                //recupere chaque elements de la couche stationsavailable qui sont dans le polygone
+                _map.getLayers().forEach(function (layer) {
+                    if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
+                        _stationLayer = layer;
                     }
                 });
-                //nettoye les selections
-                polygonSelection.getSource().clear();
-                select.getFeatures().clear();
 
-                //selectionne visuellement les exutoires
-                select.getFeatures().extend(layer_select_geometries);
+                //a la fin du pol
+                _drawPolygon.on('drawend', function (event) {
+                    //recupere la geometrie de la feature creee
+                    var featureDraw = event.feature.getGeometry();
+                    var jsts_geom_select = parser.read(featureDraw);
 
-                //recupere l'id des entites intersectees et le stocke pour effectuer le traitement
-                _stationsSelectedByUser = layer_select_geometries.map(function (feature) {
-                    return feature.values_.name;
+                    var layer_select_geometries = _stationLayer.getSource().getFeatures().filter(function (el) {
+                        if (jsts_geom_select.contains(parser.read(el.getGeometry()))) {
+                            return true;
+                        }
+                    });
+
+                    //nettoye les selections
+                    polygonSelection.getSource().clear();
+                    select.getFeatures().clear();
+
+                    //selectionne visuellement les exutoires
+                    select.getFeatures().extend(layer_select_geometries);
+
+                    //recupere l'id des entites intersectees et le stocke pour effectuer le traitement
+                    _stationsSelectedByUser = layer_select_geometries.map(function (feature) {
+                        return feature.values_.name;
+                    });
+
+                    //enleve l'interaction permettant de créer le polygone
+                    mviewer.getMap().removeInteraction(_drawPolygon);
+                    _drawPolygon= "";
+                    _select = select;
                 });
 
-                //enleve l'interaction permettant de créer le polygone
-                mviewer.getMap().removeInteraction(_drawPolygon);
-            });
-
-            // Crée l'interaction de selection des exutoires
-            select = new ol.interaction.Select({
-                layers: [_stationLayer]
-            });
-            _map.addInteraction(select);
+                // Crée l'interaction de selection des exutoires
+                select = new ol.interaction.Select({
+                    layers: [_stationLayer]
+                });
+                _map.addInteraction(select);
+            } else {
+                alert("Vous avez déjà activé l'outil, veuillez dessiner un polygone autour des stations que vous voulez sélectionner");
+            }
         },
 
         getMeasuredFlow: function () {
@@ -1349,9 +1335,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _refreshTime = 5000;
                     _timeOut = 100000;
 
-                    var fiveMinutes = 60 * 1.15,
+                    var timerCountdown = 60 * 1.15,
                         display = document.querySelector('#countdown');
-                    startTimer(fiveMinutes, display);
+                    startTimer(timerCountdown, display);
 
                     processExecution();
                     _processing = true;
@@ -1376,7 +1362,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         }
                         if (_stationsSelectedByUser.length > 5) {
                             alert("Veuillez sélectionner 5 stations au plus.");
+                            if (_select){
+                                _select.getFeatures().clear();
+                            }
                         } else {
+                            if (_select){
+                                _select.getFeatures().clear();
+                            }
+
                             var dictInputs = {
                                 X: String(_xy).split(',')[0],
                                 Y: String(_xy).split(',')[1],
@@ -1408,19 +1401,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 _refreshTime = 7000;
                                 _timeOut = 100000;
 
-                                var fiveMinutes = 60 * 1.15,
+                                var timerCountdown = 60 * 1.15,
                                     display = document.querySelector('#countdown');
-                                startTimer(fiveMinutes, display);
+                                startTimer(timerCountdown, display);
+                                // supprimer les couches
+                                deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected"]);
                                 processExecution();
                                 _processing = true;
 
                                 //supprime les stations selectionnees et la couche de stations à choisir
                                 _stationsSelectedByUser = "None";
-                                _map.getLayers().forEach(function (layer) {
-                                    if (layer.get("name") === "StationsAvailable") {
-                                        _map.removeLayer(layer);
-                                    }
-                                });
 
                                 // affiche le panneau de resultat
                                 if ($("#bottom-panel").hasClass("")) {

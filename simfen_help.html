@@ -80,7 +80,7 @@
         </p>
 
         <p class="lang" key="panelOutil1Para4">
-            Ce service utilise 3 paramètres à renseigner impérativement :
+            Ce service utilise 4 paramètres à renseigner impérativement :
         </p>
         <ul>
         	<li class="lang" key="panelOutil1Para5">Date de début de la simulation</li>
@@ -95,15 +95,20 @@
              Pour le moment, voici les paramètres pouvant être modifiés </span> <span class="glyphicon glyphicon-wrench"></span> :
         </p>
         <ul>
-            <li>localiser manuellement le point où simuler le débit à partir de sa coordonnée X,Y en Lambert 93 (EPSG:2154).
-                <b>Remarque : Veuillez respecter la syntaxe indiquée.</b></li>
-            <!-- <li>choisir manuellement les stations à employer en utilisant <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+            <li>
+                Nommer les fichiers de résultat.
+            </li>
+            <li>
+                localiser manuellement le point où simuler le débit à partir de sa coordonnée X,Y en Lambert 93 (EPSG:2154).
+                <b>Remarque : Veuillez respecter la syntaxe indiquée.</b>
+            </li>
+            <li>
+                choisir manuellement les stations à employer en utilisant <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
                 pour les faire apparaître et <span class="glyphicon glyphicon-unchecked" aria-hidden="true"></span> pour dessiner un polygon afin de les selectionner.
-            <b>Remarque : Il est possible de selectionner 5 stations au plus.</b></li> -->
-            <li>modifier le pas de temps des données simulées.</li>
+            <b>Remarque : Il est possible de selectionner 5 stations au plus.</b></li>
         </ul>
         <p>
-            Le process est exécuté avec le bouton <span class="glyphicon glyphicon-play-circle"></span> ouvrant alors le panneau de résultat pouvant être ouvert
+            La simulation est exécutée avec le bouton <span class="glyphicon glyphicon-play-circle"></span> ouvrant alors le panneau de résultat pouvant être ouvert
             et fermé avec le bouton <span class="glyphicon glyphicon-stats"></span>. Ce panneau permet de suivre la progression du traitement et télécharger le
             résultat au format CSV et visualiser celui-ci. Il est également possible de visualiser les débits mesurés qui ont été employés pour cette simulation
             en cliquant sur le bouton à gauche du graphique.
@@ -124,7 +129,6 @@
             au fil de recherches conduites depuis 1998 dans différents contextes hydrologiques, et qui s’inscrit dans la problématique générale
             de la prévision en bassins non-jaugés (PUB – Prediction in Ungauged Basins).
         </p>
-
         <h4>Modélisation hydrologique à base géomorphologique</h4>
         <p>
             Une fonction de transfert à base géomorphologique permet de décrire le transfert de l’eau à travers le réseau hydrographique
@@ -133,14 +137,20 @@
             être transposée d’un ou plusieurs bassins versants sources d’information vers un bassin versant cible, sur la base de la similarité,
             si possible dans une configuration d’emboîtement ou de voisinage, afin de simuler la chronique de débit à l’exutoire cible.
         </p>
+        <figure style="text-align:center;">
+            <img src="/apps/simfen-dev/img/inv_conv.png"
+                    alt="Inversion transposition shema"
+                    height="60%" width="60%">
+            <figcaption>Principe d'inversion / transposition</figcaption>
+        </figure>
+        </br>
         <p>
-            Schéma à ajouter
             Plusieurs nuances de l’approche de modélisation sont possibles et quelques choix opérationnels ont été faits pour la
             version de base du service SIMFEN. La prochaine version offrira des options flexibles dans un mode expert. Un réseau
-            hydrographique de référence est fourni pour la région entière,details. Pour chaque point d’échantillonage du bassin
+            hydrographique de référence est fourni pour la région entière. Pour chaque point d’échantillonnage du bassin
             versant, le chemin de l’eau jusqu’à l’exutoire est identifié par géomatique et la longueur hydraulique L de la partie
             chenalisée de ce chemin au sein du réseau hydrographique est mesurée. La fonction densité de probabilité de la longueur
-            hydraulique fdp(L) est ainsi extraite pour l’e bassin versant considéré dans son ensemble.
+            hydraulique fdp(L) est ainsi extraite pour le bassin versant considéré dans son ensemble.
             La fdp du temps de trajet t de l’eau à travers le réseau hydrographique (pdf(t)) peut être déduite de la fdp(L) par
             application d’une vitesse moyenne d’écoulement à travers le réseau hydrographique. Cette vitesse moyenne a été estimée
             par analyse d’un ensemble d’événements de crue détectés entre 1990 et 2010 au sein de bassins versants jaugés de la région,
@@ -151,48 +161,61 @@
             où t [s] est le temps, S [m²] est la surface du bassin versant et Pn [m] est la pluie nette définie comme étant la hauteur
             d’eau sortant des versants et entrant dans le réseau hydrographique en moyenne dans le bassin versant.
         </p>
-
         <h4>Déconvolution et transposition d’hydrogramme</h4>
         <p>
-            La pluie nette d’un bassin versant jaugé est estimée par déconvolution de l’hydrogramme observe à l’exutoire.
+            La pluie nette d’un bassin versant jaugé est estimée par déconvolution de l’hydrogramme observé à l’exutoire.
             Cette déconvolution est réalisée en inversant la fonction de transfert à base géomorphologique, ce qui permet
             d’estimer la chronique de pluie nette à partir de la chronique de débit. La pluie nette est alors transposée
-            vers le bassin versant cible, sur la base de la similarité, où il peut être reconvolué avec la fonction de transpert
+            vers le bassin versant cible, sur la base de la similarité, où il peut être reconvolué avec la fonction de transfert
             propre à ce bassin versant, pour y simuler l’hydrogramme. Un ou plusieurs bassins versants sources peuvent être pris
-            en compte pour un bassin versant cible considéré. Cette approche permet de ne pas avoir à considerer en detail les processus
+            en compte pour un bassin versant cible considéré. Cette approche permet de ne pas avoir à considérer en détail les processus
             hétérogènes et fortement non-linéaires internes aux versants, qui déterminent la genèse des écoulements et donc de la pluie nette.
         </p>
-
         <h4>Stratégie de transposition</h4>
         <p>
-            Pour un bassin versant cible, un ou plusieurs bassins versants donneurs sont sélectionnés, selon les règles suivants: détails
+            Pour un bassin versant cible, un ou plusieurs bassins versants donneurs sont sélectionnés, selon les règles suivants:
+            <ul>
+                <li>
+                    Recherche de toutes les stations dans un rayon de 50 kilomètres;
+                </li>
+                <li>
+                    Calcul la <a href="https://geosciences.univ-tours.fr/images/media/20160905172824-delavenne_et_al_wrr_2016.pdf" target="_blank">distance de Ghosh</a> de tous les bassins versants donneurs par rapport au bassin cible;
+                </li>
+                <li>
+                    Détermine les 5 bassins les plus proche du bassin cible d'après la distance de Ghosh;
+                </li>
+                <li>
+                    Parmi ces bassins, calcule l'écart type entre chaque bassin, de manière graduelle, pour ne conserver que ceux qui ont une différence faible. De ce fait,
+                    si les 5 bassins ont ces distances : 1000, 2000, 3000, 10000, 11000, alors, seuls les trois premiers bassins seront conservés, car semblables en termes de distances.
+                </li>
+            </ul>
         </p>
     </div>
 
     <div role="tabpanel" class="tab-pane" id="h_reference">
         <h4>Publications</h4>
+        <p>Aouissi J., Pouget J.C., Boudhraâ H., Storer G., Cudennec C, 2013. Joint spatial, topological and scaling analysis of river network geomorphometry. Géomorphologie–Relief Processus Environnement, 1, 7-16, https://doi.org/10.4000/geomorphologie.10082.</p>
+        <p>Béra R., Squividant H., Le Henaff G., Pichelin P., Ruiz L., Launay J., Vanhouteghem J., Aurousseau P., Cudennec C., 2015. GéoSAS : A modular and interoperable open source spatial data infrastructure for research. In ‘Remote sensing and GIS for hydrology and water resources’, Chen et al. (Ed.), PIAHS, 368, 9-14, https://doi.org/10.5194/piahs-368-9-2015.</p>
+        <p>Boudhraâ H., Cudennec C., Slimani M., Andrieu H., 2009. Hydrograph transposition between basins through a geomorphology-based deconvolution-reconvolution approach. In ‘New Approaches to Hydrological Prediction in Data Sparse Regions’, Yilmaz K. et coll. (Ed.), IAHS Publ., 333, 76-83, http://iahs.info/redbooks/333.htm.</p>
+        <p>Boudhraâ H., Cudennec C., Andrieu H., Slimani M., 2018. Net rainfall estimation by the inversion of a geomorphology-based transfer function and discharge deconvolution. Hydrological Sciences Journal, 63, 2, 285-301, http://dx.doi.org/10.1080/02626667.2018.1425801.</p>
+        <p>Cudennec C., Fouad Y., Sumarjo Gatot I., Duchesne J., 2004. A geomorphological explanation of the unit hydrograph concept. Hydrological Processes, 18, 4, 603-621,  https://doi.org/10.1002/hyp.1368.</p>
+        <p>Cudennec C., Slimani M., Le Goulven P., 2005. Accounting for sparsely observed rainfall space-time variability in a rainfall-runoff model of a semiarid Tunisian basin. Hydrological Sciences Journal, 50, 4, 617-630,  https://doi.org/10.1623/hysj.2005.50.4.617.</p>
+        <p>Cudennec C., 2007. On width function-based unit hydrographs deduced from separately random self-similar river networks and rainfall variability. Hydrological Sciences Journal, 52, 1, 230-237, https://doi.org/10.1623/hysj.52.1.230.</p>
+        <p>Hrachowitz M., Savenije H.H.G., Blöschl G., McDonnell J.J., Sivapalan M., Pomeroy J.W., Arheimer B., Blume T., Clark M.P., Ehret U., Fenicia F., Freer J.E., Gelfan A., Gupta H.V., Hughes D.A. Hut R.W., Montanari A., Pande S., Tetzlaff D., Troch P.A., Uhlenbrook S., Wagener T., Winsemius H.C., Woods R.A., Zehe, E., Cudennec C., 2013. A decade of Predictions in Ungauged Basins (PUB) – a review. Hydrological Sciences Journal, 58, 6, 1198-1255, https://doi.org/0.1080/02626667.2013.803183.</p>
+        <p>de Lavenne A., 2013. Modélisation hydrologique à base géomorphologique de bassins versants non jaugés par régionalisation et transposition d'hydrogramme. PhD thesis,. URL. Sciences de l'environnement. Rennes, Agrocampus-Ouest.</p>
+        <p>de Lavenne A., Boudhraâ H., Cudennec C, 2015. Streamflow prediction in ungauged basins through geomorphology-based hydrograph transposition. Hydrology Research, 46,2, 291-302, https://doi.org/10.2166/nh.2013.099.</p>
+        <p>de Lavenne A., Skøien J.O., Cudennec C., Curie F., Moatar F., 2016. Transferring measured discharge time-series: large-scale comparison of Top-kriging to geomorphology-based inverse modeling. Water Resources Research, 52, 7, 5555-5576, http://dx.doi.org/10.1002/2016WR018716.</p>
         <p>de Lavenne A., Cudennec C. Assessment of freshwater discharge into a coastal bay through multi-basin ensemble hydrological modelling. Science of the Total Environment, 669, 812-820, https://doi.org/10.1016/j.scitotenv.2019.02.387</p>
         <p>Ecrepont S., Cudennec C., Anctil F., Jaffrézic A., 2019. PUB in Québec: A robust geomorphology-based deconvolution-reconvolution framework for the spatial transposition of hydrographs. Journal of Hydrology, 570, 378-392, https://doi.org/10.1016/j.jhydrol.2018.12.052</p>
-        <p>Boudhraâ H., Cudennec C., Andrieu H., Slimani M., 2018. Net rainfall estimation by the inversion of a geomorphology-based transfer function and discharge deconvolution. Hydrological Sciences Journal, 63, 2, 285-301, http://dx.doi.org/10.1080/02626667.2018.1425801.</p>
-        <p>de Lavenne A., Skøien J.O., Cudennec C., Curie F., Moatar F., 2016. Transferring measured discharge time-series: large-scale comparison of Top-kriging to geomorphology-based inverse modeling. Water Resources Research, 52, 7, 5555-5576, http://dx.doi.org/10.1002/2016WR018716.</p>
-        <p>Béra R., Squividant H., Le Henaff G., Pichelin P., Ruiz L., Launay J., Vanhouteghem J., Aurousseau P., Cudennec C., 2015. GéoSAS : A modular and interoperable open source spatial data infrastructure for research. In ‘Remote sensing and GIS for hydrology and water resources’, Chen et al. (Ed.), PIAHS, 368, 9-14, https://doi.org/10.5194/piahs-368-9-2015.</p>
-        <p>de Lavenne A., Boudhraâ H., Cudennec C, 2015. Streamflow prediction in ungauged basins through geomorphology-based hydrograph transposition. Hydrology Research, 46,2, 291-302, https://doi.org/10.2166/nh.2013.099.</p>
-        <p>Squividant H., Béra R., Aurousseau P., Cudennec C., 2015. Online watershed boundary delineation: sharing models through spatial data infrastructures. In ‘Remote sensing and GIS for hydrology and water resources’, Chen et al. (Ed.), PIAHS, 268, 144-149, https://doi.org/10.5194/piahs-368-144-2015.</p>
-        <p>Aouissi J., Pouget J.C., Boudhraâ H., Storer G., Cudennec C, 2013. Joint spatial, topological and scaling analysis of river network geomorphometry. Géomorphologie–Relief Processus Environnement, 1, 7-16, https://doi.org/10.4000/geomorphologie.10082.</p>
-        <p>de Lavenne A., 2013. Modélisation hydrologique à base géomorphologique de bassins versants non jaugés par régionalisation et transposition d'hydrogramme. PhD thesis,. URL. Sciences de l'environnement. Rennes, Agrocampus-Ouest.</p>
-        <p>Hrachowitz M., Savenije H.H.G., Blöschl G., McDonnell J.J., Sivapalan M., Pomeroy J.W., Arheimer B., Blume T., Clark M.P., Ehret U., Fenicia F., Freer J.E., Gelfan A., Gupta H.V., Hughes D.A. Hut R.W., Montanari A., Pande S., Tetzlaff D., Troch P.A., Uhlenbrook S., Wagener T., Winsemius H.C., Woods R.A., Zehe, E., Cudennec C., 2013. A decade of Predictions in Ungauged Basins (PUB) – a review. Hydrological Sciences Journal, 58, 6, 1198-1255, https://doi.org/0.1080/02626667.2013.803183.</p>
-        <p>Boudhraâ H., Cudennec C., Slimani M., Andrieu H., 2009. Hydrograph transposition between basins through a geomorphology-based deconvolution-reconvolution approach. In ‘New Approaches to Hydrological Prediction in Data Sparse Regions’, Yilmaz K. et coll. (Ed.), IAHS Publ., 333, 76-83, http://iahs.info/redbooks/333.htm.</p>
-        <p>Cudennec C., 2007. On width function-based unit hydrographs deduced from separately random self-similar river networks and rainfall variability. Hydrological Sciences Journal, 52, 1, 230-237, https://doi.org/10.1623/hysj.52.1.230.</p>
-        <p>Cudennec C., Slimani M., Le Goulven P., 2005. Accounting for sparsely observed rainfall space-time variability in a rainfall-runoff model of a semiarid Tunisian basin. Hydrological Sciences Journal, 50, 4, 617-630,  https://doi.org/10.1623/hysj.2005.50.4.617.</p>
         <p>Rodriguez F., Cudennec C., Andrieu H., 2005. Application of morphological approaches to determine unit hydrographs of urban catchments. Hydrological Processes, 19, 5, 1021-1035,  https://doi.org/10.1002/hyp.5643.</p>
-        <p>Cudennec C., Fouad Y., Sumarjo Gatot I., Duchesne J., 2004. A geomorphological explanation of the unit hydrograph concept. Hydrological Processes, 18, 4, 603-621,  https://doi.org/10.1002/hyp.1368.</p>
+        <p>Squividant H., Béra R., Aurousseau P., Cudennec C., 2015. Online watershed boundary delineation: sharing models through spatial data infrastructures. In ‘Remote sensing and GIS for hydrology and water resources’, Chen et al. (Ed.), PIAHS, 268, 144-149, https://doi.org/10.5194/piahs-368-144-2015.</p>
     </div>
 
     <div role="tabpanel" class="tab-pane" id="h_credits">
         <h4 class="lang" key="panelCredits">Crédits</h4>
-        <p>La version actuelle du Service SIMFEN date de xx/xx/2019</p>
-        <p>Contributeurs Dallery, Squividant, Launay, de Lavenne, Cudennec de l’UMR SAS ?? </p>
-        <p>Partenaires ?</p>
+        <p>La version actuelle du Service SIMFEN date de 19/04/2019</p>
+        <p>Contributeurs Dallery, Squividant, Launay, de Lavenne, Cudennec de l’UMR SAS</p>
+        <!-- <p>Partenaires ?</p> -->
         <p class="lang" key="panelCredits1">Le développpement de ce service a été financé par le Conseil Régional de Bretagne,
             l'Agence de l'eau Loire-Bretagne et AGROCAMPUS OUEST.</p>
         <p>L'interface du service s'appuie sur le Mviewer développé par GéoBretagne.
@@ -202,8 +225,8 @@
     <div role="tabpanel" class="tab-pane" id="h_disclaimer">
     <h4 class="lang" key="panelDisclaimer">Clause de non responsabilité</h4>
     <p class="lang" key="panelDisclaimer">
-        Les données sont issues d'une simulation qui présente des incertitudes non quantifiables précisement.
-        En conséquence, les utilisateurs du service interprètent et ré-utilisent les données obtenues sous leur responsabilité
+        Les données sont issues d'une simulation qui présente des incertitudes non quantifiables précisément.
+        En conséquence, les utilisateurs du service interprètent et réutilisent les données obtenues sous leur responsabilité
         pleine et entière, sans recours possible contre le fournisseur dont la responsabilité ne saurait être engagée du fait
         d’un dommage résultant directement ou indirectement de l’interprétation et l’utilisation de ces données.
     </p>

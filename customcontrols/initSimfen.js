@@ -74,7 +74,7 @@ mviewer.customControls.initSimfen = (function () {
             $(".popup-content").append(["<div id='toolsBoxPopup'>",
             "<div id='timerKillProcess'>",
             "<span id='countdown'>00:00</span>",
-            "<div id='dismiss' class='hidden fas fa-skull' onclick='mviewer.customControls.waterFlowSimulation.dismiss();'></div>",
+            "<div id='dismiss' class='hidden fas fa-times' onclick='mviewer.customControls.waterFlowSimulation.dismiss();'></div>",
             "</div>",
                 "<div id='processingBar' class='progress'>",
                     "<div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar' style='background-color: #007ACC; width:0%;'>",
