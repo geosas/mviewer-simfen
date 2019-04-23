@@ -158,8 +158,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
             processingBarUpdate(5, "File d'attente : veuillez patienter");
 
         } else if (response.Status.ProcessStarted) {
-            var percent = response.Status.ProcessStarted.percentCompleted;
-            processingBarUpdate(percent, response.Status.ProcessStarted);
+            console.log(response.Status.ProcessStarted);
+            if (response.Status.ProcessStarted == "WFS server error"){
+                processingBarUpdate(100, "Erreur serveur WFS, relancez le calcul");
+                clearInterval(_updating);
+                clearInterval(_countdown);
+                $("#dismiss").toggleClass("hidden");
+                $("#countdown")[0].textContent = "00:00";
+                _processing = false;
+            } else {
+                var percent = response.Status.ProcessStarted.percentCompleted;
+                processingBarUpdate(percent, response.Status.ProcessStarted);
+            }
 
         } else if (response.Status.ProcessSucceeded) {
             processingBarUpdate(100, "Terminé");
