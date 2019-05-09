@@ -270,7 +270,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append(["<div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>",
                                         "<button class='btn btn-default' type='button'",
                                         "onclick='mviewer.customControls.waterFlowSimulation.getMeasuredFlow();'>",
-                                        "Cliquez pour visualiser les débits mesurés employés</button></div>"
+                                        "Afficher les débits mesurés employés</button></div>"
                                     ].join(""));
                                     _processing = false;
 
