@@ -13,7 +13,9 @@
         showhelp="true"
         coordinates="false"
         measuretools="false"
-        togglealllayersfromtheme="false">
+        togglealllayersfromtheme="false"
+        translate="Français,English"
+        translatefile="&path;/translate/translate.json">
     </application>
     <mapoptions maxzoom="18" projection="EPSG:3857" center="-333217,6138202" zoom="9" />
     <olscompletion type="ban" url="https://api-adresse.data.gouv.fr/search/" attribution="" />
