@@ -77,7 +77,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
         } else if (window.XMLHttpRequest) {
             xhr = new XMLHttpRequest();
         } else {
-            alert("Erreur initialisation XMLHttpRequests");
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                alert("Error initialisation XMLHttpRequests");
+            } else {
+                alert("Erreur initialisation XMLHttpRequests");
+            }
         }
         return xhr;
     }
@@ -155,12 +160,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // Met a jour le texte dans la barre de progression selon le document de reponse du wps
         // et arrete l'actualisation du process s'il est termine ou failed
         if (response.Status.ProcessAccepted) {
-            processingBarUpdate(5, "File d'attente : veuillez patienter");
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                processingBarUpdate(5, "Waiting queue : please wait");
+            } else {
+                processingBarUpdate(5, "File d'attente : veuillez patienter");
+            }
 
         } else if (response.Status.ProcessStarted) {
             console.log(response.Status.ProcessStarted);
             if (response.Status.ProcessStarted == "WFS server error"){
-                processingBarUpdate(100, "Erreur serveur WFS, relancez le calcul");
+                // translate
+                if ($(".dropdown-toggle").text() == "English") {
+                    processingBarUpdate(100, "WFS server error, restart the treatment");
+                } else {
+                    processingBarUpdate(100, "Erreur serveur WFS, relancez le calcul");
+                }
                 clearInterval(_updating);
                 clearInterval(_countdown);
                 $("#dismiss").toggleClass("hidden");
@@ -172,7 +187,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
 
         } else if (response.Status.ProcessSucceeded) {
-            processingBarUpdate(100, "Terminé");
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                processingBarUpdate(100, "Finished");
+            } else {
+                processingBarUpdate(100, "Terminé");
+            }
             clearInterval(_countdown);
             $("#countdown")[0].textContent = "00:00";
 
@@ -184,7 +204,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
             $("#countdown")[0].textContent = "00:00";
 
         } else {
-            processingBarUpdate(0, "Erreur, actualisez la page");
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                processingBarUpdate(0, "Error, refresh the page");
+            } else {
+                processingBarUpdate(0, "Erreur, actualisez la page");
+            }
             clearInterval(_updating);
             clearInterval(_countdown);
             $("#countdown")[0].textContent = "00:00";
@@ -210,7 +235,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     clearInterval(_updating);
                     clearInterval(_countdown);
                     $("#countdown")[0].textContent = "00:00";
-                    processingBarUpdate(0, "Le serveur ne répond pas, relancez le traitement");
+                    // translate
+                    if ($(".dropdown-toggle").text() == "English") {
+                        processingBarUpdate(0, "The server is not responding, restart the treatment");
+                    } else {
+                        processingBarUpdate(0, "Le serveur ne répond pas, relancez le traitement");
+                    }
                     _timeoutCount = 0;
                     _processing = false;
                 }
@@ -254,7 +284,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 if (outputTag.Identifier === "XY") {
                                     _xy = outputTag.Data.LiteralData.split(" ");
                                     if (Number(_xy[0]) == 0 && Number(_xy[1]) == 0) {
-                                        alert("La coordonnée indiquée possède une altitude de 0, aucune simulation possible. Veuillez indiquer un point plus en amont");
+                                        // translate
+                                        if ($(".dropdown-toggle").text() == "English") {
+                                            alert("The indicated coordinate has an altitude of 0, no simulation possible. Please indicate a point further upstream");
+                                        } else {
+                                            alert("La coordonnée indiquée possède une altitude de 0, aucune simulation possible. Veuillez indiquer un point plus en amont");
+                                        }
                                     } else {
                                         mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
                                     }
@@ -266,11 +301,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                                 } else if (outputTag.Identifier === "SimulatedFlow") {
                                     plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
+                                    // translate
+                                    var text;
+                                    if ($(".dropdown-toggle").text() == "English") {
+                                        text = "View measured flows used";
+                                    } else {
+                                        text = "Afficher les débits mesurés employés";
+                                    }
                                     // ajoute le bouton pour afficher les debits mesures employes
                                     $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append(["<div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>",
                                         "<button class='btn btn-default' type='button'",
                                         "onclick='mviewer.customControls.waterFlowSimulation.getMeasuredFlow();'>",
-                                        "Afficher les débits mesurés employés</button></div>"
+                                        String.format("{0}</button></div>",text)
                                     ].join(""));
                                     _processing = false;
 
@@ -306,7 +348,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
         } else {
             clearInterval(_updating);
             clearInterval(_countdown);
-            console.log("Fin du traitement");
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                console.log("End of treatment");
+            } else {
+                console.log("Fin du traitement");
+            }
             _processing = false;
         }
     }
@@ -380,22 +427,43 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
         listStations = listStations.substring(0, listStations.length - 1);
 
-        var str = "x;y;start;end;stations;timestep;inBasin;rh" + "\r\n";
+        // translate
+        if ($(".dropdown-toggle").text() == "English") {
+            var str = "x;y;start;end;stations;timestep;hydrographic network" + "\r\n";
+        } else {
+            var str = "x;y;debut;fin;stations;pas de temps;réseau hydrographique" + "\r\n";
+        }
         var period;
         if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 1440) {
-            period = "journalier";
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                period = "daily";
+            } else {
+                period = "journalier";
+            }
         } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 60) {
-            period = "horaire";
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                period = "hourly";
+            } else {
+                period = "horaire";
+            }
         }
-        str += String.format("{0};{1};{2};{3};{4};{5};{6};{7}",
+        // translate
+        var hydroNetwork
+        if ($(".dropdown-toggle").text() == "English") {
+            hydroNetwork = "modeled hydrographic network thresholded at 25 ha (DEM 50m)";
+        } else {
+            hydroNetwork = "réseau hydrographique modélisé seuillé à 25ha (MNT 50m)";
+        }
+        str += String.format("{0};{1};{2};{3};{4};{5};{6}",
             _xy[0],
             _xy[1],
             $("#dateStartWaterFlowSimulation").val(),
             $("#dateEndWaterFlowSimulation").val(),
             listStations,
             period,
-            $("#inBasinWaterFlowSimulation").is(":checked"),
-            "reseau hydrogrpahique modelise 25ha (MNT 50m)");
+            hydroNetwork);
         // cree le csv
         var blob = new Blob([str], {
             type: "text/csv"
@@ -414,9 +482,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
         if ($("#identifiantSimulation").val()) {
             metaFile.setAttribute("download", String.format("{0}_metadonnees.csv", $("#identifiantSimulation").val()));
         } else {
-            metaFile.setAttribute("download", "metadonnees_simulation.csv");
+            metaFile.setAttribute("download", "metadonnee_simulation.csv");
         }
-        metaFile.appendChild(document.createTextNode("Métadonnée de simulation "));
+        // translate
+        var text;
+        if ($(".dropdown-toggle").text() == "English") {
+            text = "Metadata of simulation ";
+        } else {
+            text = "Métadonnée de simulation ";
+        }
+        metaFile.appendChild(document.createTextNode(text));
         $("#divPopup1").append(metaFile);
         $("#linkMetadata").append(glyphiconSave);
     }
@@ -453,7 +528,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
         } else {
             dlFile.setAttribute("download", "output_simulation.csv");
         }
-        dlFile.appendChild(document.createTextNode("Débits simulés "));
+        // translate
+        var text;
+        if ($(".dropdown-toggle").text() == "English") {
+            text = "Water flow simulated ";
+        } else {
+            text = "Débits simulés ";
+        }
+        dlFile.appendChild(document.createTextNode(text));
         $("#divPopup1").append(dlFile);
         $("#linkDownloadFlow").append(glyphiconSave);
 
@@ -474,7 +556,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
         } else {
             licenceFile.setAttribute("download", "licence_simulation.txt");
         }
-        licenceFile.appendChild(document.createTextNode("Licence "));
+        // translate
+        if ($(".dropdown-toggle").text() == "English") {
+            text = "Disclaimer ";
+        } else {
+            text = "Licence d'utilisation ";
+        }
+        licenceFile.appendChild(document.createTextNode(text));
         $("#divPopup1").append(licenceFile);
         $("#linkLicence").append(glyphiconSave2);
 
@@ -492,8 +580,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // et permet son telechargement
         setOutFiles(xDatas, yDatas);
 
+        // translate
+        var text;
+        if ($(".dropdown-toggle").text() == "English") {
+            text = "Water flow simulated ";
+        } else {
+            text = "Débits simulés ";
+        }
+
         _traces = [{
-            name: "Débit simulé",
+            name: text,
             x: xDatas,
             y: yDatas,
             type: 'line',
@@ -669,7 +765,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
 
         var styleWatershed = function (feature) {
-            label = "Bassin cible"; //feature.get('label') + "km2";
+            // translate
+            var text;
+            if ($(".dropdown-toggle").text() == "English") {
+                label = "Target basin";
+            } else {
+                label = "Bassin cible";
+            }
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
@@ -774,7 +876,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         var createTextStyleWatershed = function (feature, colorWatershed) {
             if (feature.get('weight') != 0) {
-                label = feature.get('label') + "km2\npoids:" + feature.get('weight');
+                // translate
+                if ($(".dropdown-toggle").text() == "English") {
+                    label = feature.get('label') + "km2\nweight:" + feature.get('weight');
+                } else {
+                    label = feature.get('label') + "km2\npoids:" + feature.get('weight');
+                }
             } else {
                 label = feature.get('label') + "km2";
             }
@@ -1003,7 +1110,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
         period = (new Date(end) - new Date(start)) / 86400000;
         // si l'interval de temps = horaire et plus d'un an
         if (deltaT == 60 && period > 3650) {
-            launchProcess = confirm("Le traitement va ralentir votre navigateur, veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                launchProcess = confirm("The treatment will slow down your browser, please do not stop the script if it offers, would you like to continue ?");
+            } else {
+                launchProcess = confirm("Le traitement va ralentir votre navigateur, veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
+            }
             if (launchProcess) {
                 return true;
             } else {
@@ -1150,16 +1262,31 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             }
                             _draw = "";
                         } else {
-                            alert("Veuillez cliquer dans la zone du projet SIMFEN.");
+                            // translate
+                            if ($(".dropdown-toggle").text() == "English") {
+                                alert("Please click in the SIMFEN project area");
+                            } else {
+                                alert("Veuillez cliquer dans la zone du projet SIMFEN");
+                            }
                             mviewer.getMap().addInteraction(_draw);
                         }
                     });
                     mviewer.getMap().addInteraction(_draw);
                 } else {
-                    alert("Vous avez déjà activé l'outil, veuillez cliquer sur la carte.");
+                    // translate
+                    if ($(".dropdown-toggle").text() == "English") {
+                        alert("You have already activated the tool, please click on the map");
+                    } else {
+                        alert("Vous avez déjà activé l'outil, veuillez cliquer sur la carte");
+                    }
                 }
             } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
+                // translate
+                if ($(".dropdown-toggle").text() == "English") {
+                    alert("Please wait until the end of the process before running a new one");
+                } else {
+                    alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau");
+                }
             }
         },
 
@@ -1244,10 +1371,20 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     processExecution();
                     _processing = true;
                 } else {
-                    alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
+                    // translate
+                    if ($(".dropdown-toggle").text() == "English") {
+                        alert("Please click on the flag to define the outlet to simulate");
+                    } else {
+                        alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
+                    }
                 }
             } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
+                // translate
+                if ($(".dropdown-toggle").text() == "English") {
+                    alert("Please wait until the end of the process before running a new one");
+                } else {
+                    alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau");
+                }
             }
         },
 
@@ -1314,7 +1451,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 });
                 _map.addInteraction(select);
             } else {
-                alert("Vous avez déjà activé l'outil, veuillez dessiner un polygone autour des stations que vous voulez sélectionner");
+                // translate
+                if ($(".dropdown-toggle").text() == "English") {
+                    alert("You have already activated the tool, please draw a polygon around the stations you want to select");
+                } else {
+                    alert("Vous avez déjà activé l'outil, veuillez dessiner un polygone autour des stations que vous voulez sélectionner");
+                }
             }
         },
 
@@ -1352,26 +1494,51 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     processExecution();
                     _processing = true;
                 } else {
-                    alert("Veuillez simuler le débit avant d'appuyer sur ce bouton");
+                    // translate
+                    if ($(".dropdown-toggle").text() == "English") {
+                        alert("Please simulate the flow before pressing this button");
+                    } else {
+                        alert("Veuillez simuler le débit avant d'appuyer sur ce bouton");
+                    }
                 }
             } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
+                // translate
+                if ($(".dropdown-toggle").text() == "English") {
+                    alert("Please wait until the end of the process before running a new one");
+                } else {
+                    alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau");
+                }
             }
         },
 
         waterFlowSimulation: function () {
             if (_processing === false) {
                 if ($("#dateStartWaterFlowSimulation").val() < $("#dateStartWaterFlowSimulation").attr("min")) {
-                    alert("Veuillez indiquer une date supérieure au " + $("#dateStartWaterFlowSimulation").attr("min"));
+                    // translate
+                    if ($(".dropdown-toggle").text() == "English") {
+                        alert("Please, enter a date greater than " + $("#dateStartWaterFlowSimulation").attr("min"));
+                    } else {
+                        alert("Veuillez indiquer une date supérieure au " + $("#dateStartWaterFlowSimulation").attr("min"));
+                    }
                 } else if ($("#dateEndWaterFlowSimulation").val() > $("#dateEndWaterFlowSimulation").attr("max")) {
-                    alert("Veuillez indiquer une date inférieure au " + $("#dateStartWaterFlowSimulation").attr("max"));
+                    // translate
+                    if ($(".dropdown-toggle").text() == "English") {
+                        alert("Please, enter a date lower than " + $("#dateStartWaterFlowSimulation").attr("max"));
+                    } else {
+                        alert("Veuillez indiquer une date inférieure au " + $("#dateStartWaterFlowSimulation").attr("max"));
+                    }
                 } else {
                     if (_xy) {
                         if (typeof _stationsSelectedByUser === 'undefined' || _stationsSelectedByUser.length === 0) {
                             _stationsSelectedByUser = "None";
                         }
                         if (_stationsSelectedByUser.length > 5) {
-                            alert("Veuillez sélectionner 5 stations au plus.");
+                            // translate
+                            if ($(".dropdown-toggle").text() == "English") {
+                                alert("Please select 5 stations at most");
+                            } else {
+                                alert("Veuillez sélectionner 5 stations au plus");
+                            }
                             if (_select){
                                 _select.getFeatures().clear();
                             }
@@ -1430,11 +1597,21 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         }
 
                     } else {
-                        alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
+                        // translate
+                        if ($(".dropdown-toggle").text() == "English") {
+                            alert("Please click on the flag to define the outlet to simulate");
+                        } else {
+                            alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
+                        }
                     }
                 }
             } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
+                // translate
+                if ($(".dropdown-toggle").text() == "English") {
+                    alert("Please wait until the end of the process before running a new one");
+                } else {
+                    alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau");
+                }
             }
         }
     };

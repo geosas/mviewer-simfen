@@ -5,30 +5,30 @@
         <table style="border-collapse:separate; border-spacing:3px;">
             <tr>
                 <td>
-                    <label class="lang" key="dateDebut">Début&nbsp;&nbsp;</label>
+                    <label class="lang" key-lang="dateDebut">Début&nbsp;&nbsp;</label>
                     <input type="date" id="dateStartWaterFlowSimulation" name="dateStartWaterFlowSimulation" min="2018-10-01"
                         max="2019-01-09" value="2018-10-01">
                 </td>
             </tr>
             <tr>
                 <td>
-                    <label class="lang" key="dateFin">Fin&nbsp;&nbsp;&nbsp;</label>
+                    <label class="lang" key-lang="dateFin">Fin&nbsp;&nbsp;&nbsp;</label>
                     <input type="date" id="dateEndWaterFlowSimulation" name="dateEndWaterFlowSimulation" min="2018-10-02"
                         max="2019-01-10" value="2019-01-10">
                 </td>
             </tr>
             <tr>
                     <td>
-                        <label class="lang" key="waterFlowSimulationDeltaT">Pas de temps des débits simulés :</label>
+                        <label class="lang" key-lang="waterFlowSimulationDeltaT">Pas de temps des débits simulés :</label>
                     </td>
                 </tr>
                 <tr>
                     <td>
                         <input type="radio" id="journalierWaterFlowSimulation" name="deltaTWaterFlowSimulation"
-                            value=1440 checked="checked"><span class="lang" key="waterFlowSimulationDeltaT1">
+                            value=1440 checked="checked"><span class="lang" key-lang="waterFlowSimulationDeltaT1">
                             Journalier</span>
                         <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=60><span
-                            class="lang" key="waterFlowSimulationDeltaT2"> Horaire</span>
+                            class="lang" key-lang="waterFlowSimulationDeltaT2"> Horaire</span>
                         <!--<input type="radio" id="minute" name="deltaT" value=1>-->
                     </td>
                 </tr>
@@ -41,13 +41,13 @@
                 <table style="border-collapse:separate; border-spacing:3px;">
                     <tr>
                         <td>
-                            <label class="lang" key="identifiantSimulation">Identifiant :</label>
+                            <label class="lang" key-lang="identifiantSimulation">Nom :</label>
                             <input type="text" id="identifiantSimulation" name="identifiantSimulation" placeholder="output_simulation">
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <label class="lang" key="setCoordText">Coordonnées X,Y (Lambert 93) :</label>
+                            <label class="lang" key-lang="setCoordText">Coordonnées X,Y (Lambert 93) :</label>
                             <input type="text" id="XYWaterFlowSimulation" name="XYWaterFlowSimulation" placeholder="273618.23,6786198.45">
                             <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.getXYFromCoordinate();">
                                 <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
@@ -56,18 +56,18 @@
                     </tr>
                     <!-- <tr>
                         <td>
-                            <label class="lang" key="onlyStationsOnWatershed">N'utiliser que les stations en aval de
+                            <label class="lang" key-lang="onlyStationsOnWatershed">N'utiliser que les stations en aval de
                                 l'exutoire cible ?</label>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <input type="checkbox" id="inBasinWaterFlowSimulation"><span class="lang" key="oui"> Oui</span>
+                            <input type="checkbox" id="inBasinWaterFlowSimulation"><span class="lang" key-lang="oui"> Oui</span>
                         </td>
                     </tr> -->
                     <tr>
                         <td>
-                            <label class="lang" key="waterFlowSimulationStationsAvailable">Afficher les stations
+                            <label class="lang" key-lang="waterFlowSimulationStationsAvailable">Afficher les stations
                                 disponibles pour selectionner celles-ci manuellement :</label>
                             <button title="Afficher les stations disponibles" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.showAvailableStations();">
                                 <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>

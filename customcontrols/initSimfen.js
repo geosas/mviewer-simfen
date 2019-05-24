@@ -60,7 +60,7 @@ mviewer.customControls.initSimfen = (function () {
                     "<div id='progression' class='progress-bar progress-bar-striped active' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' role='progressbar' style='background-color: #007ACC; width:0%;'>",
                     "</div>",
                     "<p id='processing-text' class='lang' key-lang='panelResultNoprocess'>",
-                            "Aucun processus en cours",
+                            "",
                         "</p>",
                 "</div>",
                 "<div id='divPopup1'></div>",
