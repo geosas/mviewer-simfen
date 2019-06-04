@@ -38,6 +38,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _identifierXY = "xyOnNetwork";
     var _identifierGetMeasuredFlow = "getMeasuredFlow";
     var _identifierDismiss = "dismiss";
+    var _identifierGetPeriod = "getPeriod";
     var _uuid;
     var _storeExecuteResponse = true;
     var _lineage = true;
