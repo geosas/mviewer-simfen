@@ -1,13 +1,13 @@
 
-# Bienvenue sur l'Addon du MViewer pour le projet SIMFEN
+# Bienvenue sur l'interface web du service web du projet SIMFEN
 
-Dans le cadre de l'Appel à Manifestation d'Intérêt pour l'acquisition et le partage de connaissances dans le domaine de la gestion intégrée de l'eau, l'Agrocampus-Ouest a déposé un projet de Service Interopérable de Modélisation des Flux d'Eau et de Nutriments dans les bassins versants de Bretagne (SIMFEN). Ce projet s'effectue en partenariat avec l'IRSTEA Antony, GéoBretagne, le pôle métier "EAU" de GéoBretagne et l'Observatoire de l'Eau en Bretagne.
+Dans le cadre de l'Appel à Manifestation d'Intérêt pour l'acquisition et le partage de connaissances dans le domaine de la gestion intégrée de l'eau, l'Agrocampus-Ouest a déposé un projet de Service Interopérable de Modélisation des Flux d'Eau 'Naturels' (SIMFEN) dans les bassins versants de Bretagne. Ce projet s'effectue en partenariat avec l'IRSTEA Antony, GéoBretagne, le pôle métier "EAU" de GéoBretagne et l'Observatoire de l'Eau en Bretagne.
 
-Ce projet emploie les travaux de thèse d'Alban de Lavenne concernant la modélisation de flux d'eau et ceux de Stéphane Ecrepont pour la modélisation de flux de nutriments (à venir). Ces modèles vont être intégrés dans un service web (OGC WPS) permettant à toute personne d'obtenir des informations en tout point du réseau hydrographique Breton, même sans compétences informatiques et hydrologiques. Les outils disponibles sur ce service web permettront aux gestionnaires des bassins versants, en particulier, de mieux connaître leur territoire.
+Ce projet emploie les travaux de thèse d'Alban de Lavenne concernant la modélisation de flux d'eau. Ce modèle va être intégré dans un service web (OGC WPS) permettant à toute personne d'obtenir une simulation des flux d'eau en tout point du réseau hydrographique Breton, même sans compétences informatiques et hydrologiques. Les outils disponibles sur ce service web permettront aux gestionnaires des bassins versants, en particulier, de mieux connaître leur territoire.
 
 Pour une utilisation simplifiée de ces outils, une application web a été développée sous forme d'add-on pour le [MViewer](https://github.com/geobretagne/mviewer). Cette forge github contient cet add-on exclusivement, l'ensemble des scripts du service OGC WPS (PyWPS, modélisation, etc...) se trouvent sur une autre forge.
 
-Voici le lien permettant d'accéder à cet add-on : [Portail web SIMFEN](http://geowww.agrocampus-ouest.fr/mviewer/?config=/apps/simfen/simfen.xml)
+Voici le lien permettant d'accéder à cet add-on : [Portail web SIMFEN](http://bit.do/simfen)
 
 ## Navigateurs compatibles
 
@@ -16,19 +16,20 @@ Voici le lien permettant d'accéder à cet add-on : [Portail web SIMFEN](http://
 - Microsoft Edge
 - Internet Explorer
 
-## Documentation
+## Panneau documentation
 
 L'interface web dispose d'une documentation ([__simfen_help.xml__](simfen_help.xml)) accessible directement dans le navigateur. Celle-ci dispose de plusieurs onglets :
-- Accueil : Première chose que l'utilisateur voit lorsqu'il arrive sur l'application web. Corresponds à une présentation succincte du portail cartographique du projet SIMFEN et le fonctionnement de l'outil principal de cette application qui est la "Simulation du débit".
-- Aides : Cet onglet contient la description de chacun des services disponibles sur l'interface web (résultat(s) et fonctionnement).
-- Références : Cette application web repose sur une valorisation scientifique de travaux de thèses, sur des outils ayant fait l'objet de publications scientifiques, d'outils préexistants. De plus, l'ensemble du projet SIMFEN fait l'objet d'une valorisation scientifique, en matière de développement hydro-informatique, qui est également référencée dans cet onglet.
-- Crédits : Les financeurs, partenaires et collègues ayant permis et participé à l'élaboration de ce projet sont cités dans cet onglet. La documentation du MViewer est également référencée dans cet onglet.
+- Accueil : Présentation succincte de l'interface web du projet SIMFEN et le fonctionnement de l'outil principal de cette application qui est la "Simulation du débit".
+- Mode d'emploi : Cet onglet contient la description de chacun des services disponibles sur l'interface web (résultat(s) et fonctionnement).
+- Principes de modélisation hydrologique : Description du modèle hydrologique permettant de simuler le débit.
+- Références : Ensemble de références à propos de la modélisation hydrologique et les services web.
+- Crédits : Les financeurs, partenaires et collègues ayant permis et participé à l'élaboration de ce projet sont cités dans cet onglet.
+- Clause de non responsabilité : Informations à propos de l'utilisation des données qui sont des estimations.
 
 ## Outils nécessaires
 
 Cette application web est un add-on pour le MViewer, il est donc nécessaire de télécharger cet outil pour pouvoir l'utiliser.
-
-Le serveur WPS repose sur PyWPS 4.0.0, cela est important puisque la réponse du process dépend de la version. En version 4.2.0, les Tags XML et les complexOutputs sont dans des fichiers indépendants, les scripts seront donc à adapter.
+Le serveur WPS repose sur PyWPS 4.2.1.
 
 ## Fichier d'initialisation [__initSimfen.js__](customcontrols/initSimfen.js)
 

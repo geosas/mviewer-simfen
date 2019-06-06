@@ -3,24 +3,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
      * Private
      */
 
-    // $.getScript("module.js", function(){
-    //     alert("Script loaded but not necessarily executed.");
-    // });
-
-    // var rawFile = new XMLHttpRequest();
-    // rawFile.open("GET", "config.json", false);
-    // rawFile.onreadystatechange = function ()
-    // {
-    //     if(rawFile.readyState === 4)
-    //     {
-    //         if(rawFile.status === 200 || rawFile.status == 0)
-    //         {
-    //             var allText = $.xml2json(rawFile.responseXML);
-    //             alert(allText.url);
-    //         }
-    //     }
-    // }
-    // rawFile.send(null);
     var _draw; // global so we can remove it later
     var _drawPolygon;
     var _stationLayer;
@@ -338,6 +320,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     // Hide kill process button
                                     $("#dismiss").toggleClass("hidden");
                                     _processing = false;
+                                } else if (outputTag.Identifier === "datesAvailable") {
+                                    setPeriodSimulation(outputTag.Data.LiteralData);
+                                    _processing = false;
                                 }
                             }
                         }
@@ -357,6 +342,24 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
             _processing = false;
         }
+    }
+
+    function setPeriodSimulation(dates){
+        // Supprime des caracteres superflus
+        dates = dates.replace(/[()' ]/g,"");
+
+        // Cree les variables contenant les dates min et max dans la table inversion
+        dateMinSim = dates.split(",")[0];
+        dateMaxSim = dates.split(",")[1];
+
+        // Defini les dates de simulation possibles
+        $("#dateStartWaterFlowSimulation").attr("min", dateMinSim);
+        $("#dateStartWaterFlowSimulation").attr("max", dateMaxSim);
+        $("#dateStartWaterFlowSimulation").attr("value",dateMinSim);
+
+        $("#dateEndWaterFlowSimulation").attr("min", dateMinSim);
+        $("#dateEndWaterFlowSimulation").attr("max", dateMaxSim);
+        $("#dateEndWaterFlowSimulation").attr("value",dateMaxSim);
     }
 
     function processExecution() {
@@ -1185,6 +1188,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 undefinedHTML: 'EPSG : 2154'
             });
             mviewer.getMap().addControl(mousePositionControl);
+
+            //// Get period process
+            // Build wps request
+            _rqtWPS = buildPostRequest({}, _identifierGetPeriod);
+            // set time processing
+            _refreshTime = 1000;
+            _timeOut = 10000;
+            $("#dismiss").toggleClass("hidden");
+            processExecution();
+            _processing = true;
         },
 
         dismiss: function() {
@@ -1514,6 +1527,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         waterFlowSimulation: function () {
             if (_processing === false) {
+                // controle les dates
                 if ($("#dateStartWaterFlowSimulation").val() < $("#dateStartWaterFlowSimulation").attr("min")) {
                     // translate
                     if ($(".dropdown-toggle").text() == "English") {
@@ -1527,6 +1541,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         alert("Please, enter a date lower than " + $("#dateStartWaterFlowSimulation").attr("max"));
                     } else {
                         alert("Veuillez indiquer une date inférieure au " + $("#dateStartWaterFlowSimulation").attr("max"));
+                    }
+                } else if ($("#dateStartWaterFlowSimulation").val() == $("#dateEndWaterFlowSimulation").val()) {
+                    // translate
+                    if ($(".dropdown-toggle").text() == "English") {
+                        alert("Please, indicate different dates");
+                    } else {
+                        alert("Veuillez indiquer des dates différentes");
                     }
                 } else {
                     if (_xy) {
