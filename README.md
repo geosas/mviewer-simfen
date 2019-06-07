@@ -1,338 +1,97 @@
 
-# Bienvenue sur l'interface web du service web du projet SIMFEN
+# Interface web du projet SIMFEN
 
-Dans le cadre de l'Appel à Manifestation d'Intérêt pour l'acquisition et le partage de connaissances dans le domaine de la gestion intégrée de l'eau, l'Agrocampus-Ouest a déposé un projet de Service Interopérable de Modélisation des Flux d'Eau 'Naturels' (SIMFEN) dans les bassins versants de Bretagne. Ce projet s'effectue en partenariat avec l'IRSTEA Antony, GéoBretagne, le pôle métier "EAU" de GéoBretagne et l'Observatoire de l'Eau en Bretagne.
+## Description
 
-Ce projet emploie les travaux de thèse d'Alban de Lavenne concernant la modélisation de flux d'eau. Ce modèle va être intégré dans un service web (OGC WPS) permettant à toute personne d'obtenir une simulation des flux d'eau en tout point du réseau hydrographique Breton, même sans compétences informatiques et hydrologiques. Les outils disponibles sur ce service web permettront aux gestionnaires des bassins versants, en particulier, de mieux connaître leur territoire.
+Dans le cadre de l'Appel à Manifestation d'Intérêt pour l'acquisition et le partage de connaissances dans le domaine de la gestion intégrée de l'eau, l'Agrocampus Ouest a déposé un projet de Service Interopérable de Modélisation des Flux d'Eau 'Naturels' (SIMFEN) dans les bassins versants de Bretagne. Ce projet s'effectue en partenariat avec l'IRSTEA Antony, GéoBretagne, le pôle métier "EAU" de GéoBretagne et l'Observatoire de l'Eau en Bretagne.
 
-Pour une utilisation simplifiée de ces outils, une application web a été développée sous forme d'add-on pour le [MViewer](https://github.com/geobretagne/mviewer). Cette forge github contient cet add-on exclusivement, l'ensemble des scripts du service OGC WPS (PyWPS, modélisation, etc...) se trouvent sur une autre forge.
+Pour permettre de simuler ces flux d'eau facilement, une interface web a été produite en prenant comme base le visualiseur [MViewer](https://github.com/geobretagne/mviewer) de GéoBretagne. Un add-on pour indiquer, envoyer, récupérer, visualiser et télécharger les simulations a été développée et intégré à ce visualiseur. L'ensemble des étapes pour alimenter et exécuter le service web à partir de l'interface web ont été développées pour être les plus intuitives possible pour permettre à tous et à toutes d'effectuer des simulations de flux d'eau sans compétences informatiques et hydrologiques.
 
-Voici le lien permettant d'accéder à cet add-on : [Portail web SIMFEN](http://bit.do/simfen)
+Ainsi, cette interface est composée :
 
-## Navigateurs compatibles
+- d'une liste de couches / fonctions
+- d'une carte
+- d'un panneau de renseignements
+- d'un panneau de résultats
 
-- Firefox
-- Chrome
-- Microsoft Edge
-- Internet Explorer
+Cette forge github contient cet add-on exclusivement, l'ensemble des scripts du service OGC WPS (PyWPS, modélisation, etc...) se trouvent sur une forge privée.
 
-## Panneau documentation
+Voici le lien permettant d'accéder à cette interface web : [Portail web SIMFEN](http://bit.do/simfen)
 
-L'interface web dispose d'une documentation ([__simfen_help.xml__](simfen_help.xml)) accessible directement dans le navigateur. Celle-ci dispose de plusieurs onglets :
-- Accueil : Présentation succincte de l'interface web du projet SIMFEN et le fonctionnement de l'outil principal de cette application qui est la "Simulation du débit".
-- Mode d'emploi : Cet onglet contient la description de chacun des services disponibles sur l'interface web (résultat(s) et fonctionnement).
-- Principes de modélisation hydrologique : Description du modèle hydrologique permettant de simuler le débit.
-- Références : Ensemble de références à propos de la modélisation hydrologique et les services web.
-- Crédits : Les financeurs, partenaires et collègues ayant permis et participé à l'élaboration de ce projet sont cités dans cet onglet.
-- Clause de non responsabilité : Informations à propos de l'utilisation des données qui sont des estimations.
+Un wiki contenant plus d'informations à propos de ce projet (interface, service WPS, procédure d'installation, etc...) est disponible.
 
-## Outils nécessaires
+# Sommaire
 
-Cette application web est un add-on pour le MViewer, il est donc nécessaire de télécharger cet outil pour pouvoir l'utiliser.
-Le serveur WPS repose sur PyWPS 4.2.1.
+* [Description](#description)
+* [Installation](#installation)
+* [Utilisation](#utilisation)
+* [Crédits](#crédits)
+* [Licence](#licence)
+* [Todo](#todo)
 
-## Fichier d'initialisation [__initSimfen.js__](customcontrols/initSimfen.js)
+# Installation
 
-Les différents outils produits pour l'add-on SIMFEN utilise certaines fonctions, outils et balises qui peuvent être considérées comme générique dans le terme de ce projet. Au départ, ceux-ci étaient intégrés dans chacun des outils. Cependant, il a été décidé de simplifier les outils aux fonctions propres à l'outil, et non pas les fonctions permettant de modifier l'interface par défaut du MViewer, mais aussi concernant l'initialisation des balises d'affichages (div des graphiques, initialisation de la barre de progression, etc...). Une couche a donc été créée dans cet objectif, tout en limitant sa visibilité étant donné que ce n'est pas un outil en lui même. Etant donné son objectif d'initialisation, elle s'auto-supprime juste après.
+Pour installer l'add-on connecté au service web SIMFEN, il est nécessaire de disposer des éléments suivants :
 
-## Organisation d'un outil : exemple de la "Simulation d'un débit"
+- **le service web SIMFEN actif et accessible**
+- un MViewer
+- l'add-on
+- un serveur web
 
-Dans le MViewer, chaque outil correspond à une couche. Une couche est référencée dans le fichier [__simfen.xml__](simfen.xml) par la balise "layer" (il est possible de faire un group). Une couche n'est pas nécessairement un objet spatial, comme un vecteur ou un raster, mais peut être un formulaire. Cette couche nécessite de créer un fichier JavaScript dans le répertoire "customlayers" ([__calcModel.js__](customlayers/calcModel.js)) afin de créer cet objet. Ensuite, il faut créer deux fichiers dans le répertoire "customcontrols" :
-- un fichier HTML qui va contenir le formulaire du modèle ([__calcModel.html__](customcontrols/calcModel.html)).
-- un fichier JavaScript qui va contenir l'ensemble des fonctions concernant la collecte et l'envoie des données vers le web service, le suivi de la modélisation, l'acquisition, l'affichage et la mise à disposition du résultat ([__calcModel.js__](customcontrols/calcModel.js)).
+Ensuite, il faut suivre la démarche suivante :
 
-Cette méthode est à reproduire pour chaque nouvel outil que l'on souhaite rendre disponible au sein de cette application web. En dupliquant ces scripts, il est possible de conserver une partie des fonctions qui sont génériques pour certaines.
+1. Placer le MViewer sur le serveur web et rendre celui-ci accessible via internet.
+2. En termes de bonnes pratiques, créer un dossier "apps" dans le même dossier où est placé le MViewer, puis créer un dossier dans celui-ci et placer l'add-on dedans. Ainsi, pour accéder au fichier simfen.xml contenant la configuration du MViewer pour cet add-on, l'url sera la suivante : ```http://serveur.fr/mviewer/?config=/apps/simfen/simfen.xml```. Sinon, placez directement les fichiers de l'add-on dans les dossiers ayant les mêmes noms du dossier MViewer.
+3. Dans le fichier [__simfen_help.xml__](simfen_help.xml) remplacez le path situé à la ligne 3 ```<!ENTITY path "/apps/simfen">``` par celui que vous avez défini selon le nom de vos répertoires. Cela permet d'indiquer au MViewer, situé dans un autre répertoire, où trouver les fichiers indiqués. Sinon, il cherchera à la racine de celui-ci directement (ce qui n'est pas gênant si vous n'avez pas créé le dossier "apps").
+4. Dans le fichier [__waterFlowSimulation.js__](customcontrols/waterFlowSimulation.js) remplacez la valeur du service web vers lequel vous souhaitez pointer à la ligne 14 : ```var _urlWPS = "http://wps.geosas.fr/simfen?";```.
 
-## Fonctions génériques pour un outil WPS :
+De là, il ne vous reste plus qu'à vous connecter à l'interface web à partir de votre navigateur.
 
-Voici les étapes composant l'exécution d'un process disponible sur le web service à partir de l'add-ons SIMFEN du MViewer :
-1. Collecte des données (formulaire, interaction avec la carte, etc...),
-2. Création d'une requête POST d'après ces données,
-3. Envoie de la requête au web service,
-4. Suivi de l'exécution du process de manière asynchrone (il est possible de le faire de manière synchrone si les temps de calcul sont très courts),
-5. Collecte des résultats,
-6. Utilisation des résultats (création d'un fichier, affichage dans un graphique, etc...).
+# Utilisation
 
-Ainsi, les fonctions employées jusqu'à l'étape 5 peuvent être réemployées sans avoir besoin de modifier les scripts de manière importante. La fonction de chaque étape va être présentée pour indiquer les parties variables et invariables, de même que le fonctionnement.
+Voici une démonstration de la simulation d'un débit en mode automatique, c'est à dire réaliser ces étapes :
 
-### Collecte des données :
+- indiquer la période et le pas de temps de la simulation
+- indiquer l'endroit où simuler le débit
+- lancer la simulation du débit
 
-La collecte des données s'effectue selon la manière que vous avez décidée, donc il est nécessaire d'adapter celle-ci. La variable dictInputs possède donc en key l'Identifier de l'input et en value, la valeur à assigner à celui-ci. Cette variable est donc à adapter :
+L'utilisateur obtient alors une liste de fichier à télécharger dont un avec les débits simulés et un graphique représentant cette simulation. Il est possible d'afficher les débits mesurés aux stations qui ont été employées pour alimenter la modèle pour vérifier la simulation (ex : des valeurs extrêmes qui peuvent trouver leur cause via une station de mesure ayant eu un fort orage).
 
-```JavaScript
-// avec du Jquery
-var dictInputs = {
-    // à partir d'une variable collectée via le script
-    X: String(_xy).split(',')[0],
-    Y: String(_xy).split(',')[1],
-    // dans une balise HTML input via du JQuery
-    Start: $("#dateStart").val(),
-    End: $("#dateEnd").val(),
-    // la valeur correspondant à la case cochée
-    DeltaT: $("input[name='deltaT']:checked").val(),
-    // si une case est cochée
-    InBasin: $("#inBasin").is(":checked"),
-    ListStations: listStations
-};
+![demo](img/simfen.gif)
 
-// sans JQuery
-var checkBox = document.getElementsByName("deltaT");
-    for(var i=0; checkBox[i]; ++i){
-        if(checkBox[i].checked){
-            checkedValue = checkBox[i].value;
-            break;
-        } 
-    }
-var dictInputs = {
-    // à partir d'une variable collectée via le script
-    X: String(_xy).split(',')[0],
-    Y: String(_xy).split(',')[1],
-    // dans une balise HTML input via du Javascript
-    Start: document.getElementById("dateStart").value,
-    End: document.getElementById("dateEnd").value,
-    // la valeur correspondant à la case cochée
-    DeltaT: checkedValue,
-    // si une case est cochée
-    InBasin: document.getElementById("inBasin").checked,
-    ListStations: listStations
-};
-```
-Il est nécessaire de conserver la forme de cette variable (dictionnaire) pour la fonction permettant de générer la requête POST.
+Voici une démonstration de la simulation d'un débit en mode avancé où l'utilisateur va indiquer quelles stations employer, c'est-à-dire réaliser ces étapes :
 
-### Création de la requête POST :
+- indiquer la période et le pas de temps de la simulation
+- nommer la simulation (pour nommer les fichiers à télécharger)
+- indiquer l'endroit où simuler le débit
+- afficher les stations disponibles à proximité
+- sélectionner les stations à employer (au plus 5)
+- lancer la simulation du débit
 
-La requête envoyée au WPS est en POST, cela permet d'effectuer des requêtes plus complexes, dans le sens où il est possible d'intégrer des accents et espaces, ce qui n'est pas possible en GET. Dans l'exemple ci-dessous, la requête possède également 3 paramètres qui n'ont rien à voir avec le process exécuté :
-- lineage : permets de retourner dans le document de sortie les paramètres et valeurs qui ont été renseignés,
-- status : pour retourner le statut de la requête et suivre celui-ci,
-- storeExecuteResponse : génère un document XML qui va être mis à jour au fur et à mesure de l'avancement du process. Ce document permet de réaliser une exécution asynchrone avec l'objectif de suivre celui-ci via son URL pour savoir quand celui-ci est terminé et que l'on peut récupérer le résultat.
+L'utilisateur obtient alors une liste de fichier à télécharger dont un avec les débits simulés et un graphique représentant cette simulation. Il est possible d'afficher les débits mesurés aux stations qui ont été employées pour alimenter la modèle pour vérifier la simulation (ex : des valeurs extrèmes qui peuvent trouver leur cause via une station de mesure ayant eu un fort orage).
 
-Voici la fonction qui peut être employée de façon générique :
+![demo_avancee](img/simfen_avance.gif)
 
-```JavaScript
-var _service = "WPS";
-var _version = "1.0.0";
-var _request = "Execute";
-var _identifier = "calcModel";
-var _storeExecuteResponse = true;
-var _lineage = true;
-var _status = true;
+# Crédits
 
-// Permet d'utiliser l'équivalent de .format{0} dans js (source :stack overflow)
-if (!String.format) {
-    String.format = function (format) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        return format.replace(/{(\d+)}/g, function (match, number) {
-            return typeof args[number] != 'undefined' ?
-                args[number] :
-                match;
-        });
-    };
-}
+Add-on développé par [Donatien Dallery](http://dalleryd.fr) pour le [MViewer](http://github.com/geobretagne/mviewer) dans le cadre du projet SIMFEN.
 
-function buildPostRequest(dictInputs, identifier) {
-        _xmlRequest = String.format('<?xml version="1.0" encoding="UTF-8"?>\
-            <wps:{0} xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="{1}" service="{2}" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsAll.xsd">\
-            <ows:Identifier>{3}</ows:Identifier>\
-            <wps:DataInputs>\
-            ', _request, _version, _service, identifier);
+# Licence
 
-        var dataIdentifiers = Object.keys(dictInputs);
-        var dataInputs = Object.keys(dictInputs).map(function(itm){return dictInputs[itm];});
+GNU General Public License v3.0
 
-        for (var i = 0; i < dataIdentifiers.length; i++) {
-            inputXml = String.format('\
-            <wps:Input>\
-            <ows:Identifier>{0}</ows:Identifier>\
-            <wps:Data>\
-            <wps:LiteralData>{1}</wps:LiteralData>\
-            </wps:Data>\
-            </wps:Input>', dataIdentifiers[i], dataInputs[i]);
-            _xmlRequest += inputXml;
-        }
+[![Creative Commons License](https://licensebuttons.net/l/by-sa/3.0/88x31.png)](https://creativecommons.org/licenses/by-sa/4.0/)
 
-        _xmlRequest += String.format('\
-              </wps:DataInputs>\
-               <wps:ResponseForm>\
-                <wps:ResponseDocument storeExecuteResponse="{0}" lineage="{1}" status="{2}">\
-                </wps:ResponseDocument>\
-               </wps:ResponseForm>\
-              </wps:{3}>', _storeExecuteResponse, _lineage, _status, _request);
-
-        return _xmlRequest;
-    }
-```
-
-Une fois la requête POST générée, il ne reste plus qu'à l'envoyer sur le serveur WPS afin que celui-ci l'exécute.
-
-### Exécution et initialisation du suivi d'une requête WPS :
-
-L'exécution et le suivi d'une requête WPS s'effectue avec la bibliothèque XMLHttpRequest (ou XDomainRequest sur Internet Explorer). Cette bibliothèque permet également de récupérer le statut de celle-ci (mais pas du process WPS qui nécessite un développement spécifique) et d'arrêter une requête dans le cas où le navigateur ne répond plus (timeout). Pour exécuter cette requête, il peut être nécessaire de passer par un proxy si le serveur WPS n'est pas sur le même domaine que le serveur qui envoie la requête (cross-domain). Enfin, l'objectif de cette requête POST est de lancer l'exécution du process souhaité et de récupérer l'URL du document généré par le WPS pour suivre le process et obtenir le résultat de celui-ci.
-
-```javascript
-// Cree la variable xmlrequest
-function getXDomainRequest() {
-    var xhr = null;
-    // sous Internet Explorer
-    if (window.XDomainRequest) {
-        xhr = new XDomainRequest();
-        // autres navigateurs
-    } else if (window.XMLHttpRequest) {
-        xhr = new XMLHttpRequest();
-    } else {
-        alert("Erreur initialisation XMLHttpRequests");
-    }
-    return xhr;
-}
-
-// Permet de gérer les requêtes cross-domain
-function ajaxURL(url) {
-    // relative path
-    if (url.indexOf('http') !== 0) {
-        return url;
-    }
-    // same domain
-    else if (url.indexOf(location.protocol + '//' + location.host) === 0) {
-        return url;
-    } else {
-        return '/proxy/?url=' + encodeURIComponent(url);
-    }
-}
-
-var _urlWPS = "http://wps.geosas.fr/simfen?";
-var _updating;
-
-// Execute la requete Post
-function processCalcModel(rqtWPS) {
-    _xhrPost = getXDomainRequest();
-    _xhrPost.open("POST", ajaxURL(_urlWPS), true);
-    // si le navigateur ne réussit pas à exécuter la requête dans un certain délai, arrête celle-ci.
-    _xhrPost.timeout = 5000;
-    // ajoute un événement pour savoir si la requête a bien été envoyée et exécutée
-    _xhrPost.addEventListener('readystatechange', function () {
-        if (_xhrPost.readyState === XMLHttpRequest.DONE && _xhrPost.status === 200) {
-            // Recupere le XML de la reponse et le converti en json
-            var response = $.xml2json(_xhrPost.responseXML);
-            // Recupere l'url de la variable statusLocation correspondant à l'adresse de ce document
-            var statusLocationURL = response.statusLocation;
-            // Lancement du suivi du process en regardant toutes les 30s l'évolution de ce document.
-            // La fonction updateProcess contient une partie générique correspondant à la requête XMLHttpRequests
-            // pour se connecter à ce document et une partie spécifique correspondant à la gestion du résultat et
-            // à l'identification du résultat. Cette fonction nécessite à minima l'url du document.
-            _updating = setInterval(function () {
-                updateProcess(statusLocationURL);
-            }, 30000);
-        }
-    });
-    _xhrPost.send(rqtWPS);
-}
-```
-
-Si vous ne souhaitez pas employer la bibliothèque JQuery (nécessaire pour transformer le XML en Json), il faut alors sélectionner les Tags du XML et utiliser les getAttribute, childNodes, children, nodeName, etc... pour naviguer dans le document et récupérer les informations. Cependant, Microsoft EDGE ne parvient pas à identifier les Tags se situant avant les ":", faisant que "wps:Status" sera lu comme étant "Status", rendant incompatible le script avec les navigateurs qui ont besoin du préfixe "wps:". Voici quelques exemples :
-
-```javascript
-var response = _xhrPost.responseXML;
-var statusLocationURL = response.getElementsByTagName('wps:ExecuteResponse')[0].getAttribute("statusLocation");
-var status = response.getElementsByTagName('wps:Status')[0].childNodes[1].nodeName;
-```
-
-### Suivi d'un process WPS et traitement du résultat :
-
-Cette dernière fonction est générique dans le suivi et spécifique dans le traitement du résultat. Seule la partie générique va être présentée.
-
-```javascript
-function updateProcess(url) {
-    _xhrGet = getXDomainRequest();
-    _xhrGet.open("GET", ajaxURL(url), true);
-    _xhrGet.timeout = 22000;
-    // si trop de timeout, arrete l'actualisation
-    _xhrGet.ontimeout = function () {
-        _timeoutCount += 1;
-        if (_timeoutCount === 4) {
-            clearInterval(_updating);
-            processingBarUpdate(0, "Le serveur ne répond pas, actualisez le navigateur");
-            _timeoutCount = 0;
-        }
-    }
-    _xhrGet.addEventListener('readystatechange', function () {
-        if (_xhrGet.readyState === XMLHttpRequest.DONE && _xhrGet.status === 200) {
-            // Converti le XML en JSON pour pouvoir interagir avec les tags
-            // depuis n'importe quel navigateur (EDGE ne comprend pas les tags wps: et autres)
-            // tres important de le faire et ça evite de faire des getElements...)
-            var response = $.xml2json(_xhrGet.responseXML);
-            console.log("La requete a pris : " + request_time);
-            if (!(response.Status.ProcessAccepted) && !(response.Status.ProcessStarted)) {
-                // arrete l'ecoute du statut puisque le process est termine
-                clearInterval(_updating);
-                // si le processus terminé est un succès, récupère et traite le résultat
-                if (response.Status.ProcessSucceeded) {
-                    // DÉVELOPPEMENT SPÉCIFIQUE
-                }
-            }
-        }
-    });
-    _xhrGet.send();
-}
-```
-
-Cette fonction est appelée autant de fois que nécessaire jusqu'à obtenir le résultat (ou une erreur). Une fois le process terminé, la variable visant à suivre l'évolution du process est arrêtée (clearInterval). Ce fonctionnement est rendu possible grâce au paramètre "storeExecuteResponse" du WPS rendant possible un développement asynchrone.
-
-Ainsi, la généricité de cet add-ons se situe dans :
-- la création de la requête POST,
-- l'envoi de la requête,
-- le suivi du process.
-
-Évidemment, ces fonctions peuvent être adaptées pour rajouter des étapes intermédiaires (cf. les scripts présents dans customcontrols).
-
-## Remarques :
-
-Voici quelques remarques pour développer votre propre add-ons :
-
-- Évitez de commencer des lignes de code avec des [  ] car Internet Explorer ne sait pas gérer cela :
-
-```JavaScript
-// ne fonctionne pas sous Internet Explorer
-var dictInputs = {
-    [_datainputs.split("/")[0]]: [coord.split(',')[0]],
-    [_datainputs.split("/")[1]]: [coord.split(',')[1]]
-};
-// fonctionne sous Internet Explorer
-var dictInputs = {
-    X: String(_xy).split(',')[0],
-    Y: String(_xy).split(',')[1]
-};
-```
-
-- Si vous souhaitez empêcher des requêtes GetFeatureInfo lorsque l'on clique sur la carte, il faut ajouter dans le fichier .js dans la fonction init cette ligne de texte : info.disable(); Par contre, il n'est pas possible de combiner le placement d'un exutoire et une requête GetFeatureInfo compte tenu du fonctionnement du mviewer. De ce fait, il faut programmer à nouveau le GetFeatureInfo pour une utilisation conjointe.
-
-- Exemple pour afficher une couche WMS pour l'utiliser avec un GetFeatureInfo :
-```
-<layer id="nomLayer" name="Exutoires baie de Saint Brieuc" visible="true" tiled="false"                    
-    queryable="true" fields="" aliases=""
-    infoformat="application/vnd.ogc.gml" featurecount="10"                      
-    style="point"               
-    opacity="1"                     
-    url="http://geowww.agrocampus-ouest.fr/geoserver/storeName/wms">
-</layer>
-```
-
-## Conclusion :
-
-L'utilisation du MViewer pour développer des outils connectés à un service WPS est parfaite.
-
-__TODO :__
-
-Ajout d'outils et fonctions spécifiques au projet SIMFEN.
-
-***
-##### Powered by
+# Powered by
 
 <a href="http://www.agrocampus-ouest.fr"><img src="http://geoinfo.agrocampus-ouest.fr/illustrations/logo_agrocampusouest.jpg" width="150px"></a>
 
-***
-[![Creative Commons License](https://licensebuttons.net/l/by-sa/3.0/88x31.png)](https://creativecommons.org/licenses/by-sa/4.0/)
+# TODO
+
+- Countdown variable selon la fonction employée (nécessite des tests pour déterminer la f(x) = ax + b selon la surface du bassin cible et la période de simulation);
+- Ajouter un voyant/message indiquant si le service web est fonctionnel ou non (serveur de calcul down/maintenance);
+- Développer la fonction permettant de simuler les débits rentrant dans une baie (sélection de tous les exutoires à la baie, simulation pour chacun des points, somme des débits simulés). Ce traitement peut être très rapide étant donné que les exutoires à la baie seraient précalculés/défini et donc, leurs bassins versants déjà produits. Concernant la simulation des débits, la convolution pour chacun de ces points peut être précalculée à la manière des inversions pour les stations sources. Cependant, les stations sources pour chacun de ces exutoires seraient définies automatiquement, ne laissant pas la possibilité aux utilisateurs de définir les stations sources à employer pour chacun des exutoires de la baie. De ce fait, une utilisation automatique et rapide pourrait être faite directement via l'interface avec des débits simulés précalculé et stocké de la même manière que les inversions. Et si l'utilisateur veut définir lui-même les stations sources, alors il utilise la fonction "simulation du débit" pour chacun des exutoires cibles et somme lui-même les débits entrant dans la baie.
+- Information à propos de la place dans la file d'attente de l'utilisateur (nécessite de faire une fonction pour interroger la base de données contenant la table pywps_stored_requests pour déterminer la place de l'utilisateur, le nombre de requêtes en attentes et suivre l'évolution de cette file). Cette file peut se faire de deux façons : la première un process qui va récupérer l'uuid du process de l'utilisateur, le chercher dans la table pywps_stored_requests, regarder sa date de mise en attente, comparer avec toutes les autres et mettre à jour cela toutes les n secondes et l'indiquer à l'utilisateur. La seconde méthode est de modifier PyWPS directement en ajoutant un attribut "queuePlace" dans l'enregistrement dans la table pywps_stored_requests et mettre à jour cette place au fur et à mesure des entrées/libérations. De cette manière, cet ajout peut être partagé avec la communauté PyWPS, voir créer une fonction par défaut à la façon de response_update() qui serait mise à jour lors d'un état ProcessStarted queuePlace="place" pour basculer ensuite sur un ProcessAccepted percentCompleted="%".
+- Développer une interface administrateur pour les fonctions permettant d'interagir avec la base de données (vider les tables, forcer une inversion ou la supprimer), générer un bassin versant source, etc...
 
 [//]: # (These are referenced links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen.)
-
-
-   [Python 2]: <https://www.python.org/downloads/release>
-   [Geoserver]: <http://geoserver.org/>
