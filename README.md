@@ -68,8 +68,6 @@ Voici une démonstration de la simulation d'un débit en mode avancé où l'util
 - sélectionner les stations à employer (au plus 5)
 - lancer la simulation du débit
 
-L'utilisateur obtient alors une liste de fichier à télécharger dont un avec les débits simulés et un graphique représentant cette simulation. Il est possible d'afficher les débits mesurés aux stations qui ont été employées pour alimenter la modèle pour vérifier la simulation (ex : des valeurs extrèmes qui peuvent trouver leur cause via une station de mesure ayant eu un fort orage).
-
 ![demo_avancee](img/simfen_avance.gif)
 
 # Crédits
