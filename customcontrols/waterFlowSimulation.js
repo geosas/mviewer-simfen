@@ -394,19 +394,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
         _xhrPost.send(_rqtWPS);
     }
 
-    function StringToXMLDom(string) {
-        var xmlDoc = null;
-        if (window.DOMParser) {
-            var parser = new DOMParser();
-            xmlDoc = parser.parseFromString(string, "text/xml");
-        } else // Internet Explorer
-        {
-            xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-            xmlDoc.async = "false";
-            xmlDoc.loadXML(string);
-        }
-        return xmlDoc;
-    }
+    // function StringToXMLDom(string) {
+    //     var xmlDoc = null;
+    //     if (window.DOMParser) {
+    //         var parser = new DOMParser();
+    //         xmlDoc = parser.parseFromString(string, "text/xml");
+    //     } else // Internet Explorer
+    //     {
+    //         xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+    //         xmlDoc.async = "false";
+    //         xmlDoc.loadXML(string);
+    //     }
+    //     return xmlDoc;
+    // }
 
     function deleteLayers(layers){
         // suppression des layers
@@ -454,7 +454,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         }
         // translate
-        var hydroNetwork
+        var hydroNetwork;
         if ($(".dropdown-toggle").text() == "English") {
             hydroNetwork = "modeled hydrographic network thresholded at 25 ha (DEM 50m)";
         } else {
@@ -498,6 +498,109 @@ mviewer.customControls.waterFlowSimulation = (function () {
         metaFile.appendChild(document.createTextNode(text));
         $("#divPopup1").append(metaFile);
         $("#linkMetadata").append(glyphiconSave);
+    }
+
+    function setOutputFile(datasx, datasy){
+        // Fonction pour generer le document de reponse contenant
+        // la licence, les metadonnees de calcul et la simulation
+
+        // Header of csvfile = Licence in panelDisclaimer
+        var outFile = $("[key-lang='panelDisclaimer']").text() + "\r\n";
+
+        // Append calculation metadata
+        listStations = "";
+        for (var i = 0; i < _nameColor.length; i++) {
+            listStations += _nameColor[i].key + ",";
+        }
+        listStations = listStations.substring(0, listStations.length - 1);
+
+        var metadonneesCalcul;
+        // translate
+        if ($(".dropdown-toggle").text() == "English") {
+            metadonneesCalcul = "x;y;start;end;stations;timestep;hydrographic-network" + "\r\n";
+        } else {
+            metadonneesCalcul = "x;y;debut;fin;stations;pas-de-temps;réseau-hydrographique" + "\r\n";
+        }
+        var period;
+        if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 1440) {
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                period = "daily";
+            } else {
+                period = "journalier";
+            }
+        } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 60) {
+            // translate
+            if ($(".dropdown-toggle").text() == "English") {
+                period = "hourly";
+            } else {
+                period = "horaire";
+            }
+        }
+        // translate
+        var hydroNetwork;
+        if ($(".dropdown-toggle").text() == "English") {
+            hydroNetwork = "Réseau hydrographique étendu";//"modeled hydrographic network thresholded at 25 ha (DEM 50m)";
+        } else {
+            hydroNetwork = "Réseau hydrographique étendu";//"réseau hydrographique modélisé seuillé à 25ha (MNT 50m)";
+        }
+        metadonneesCalcul += String.format("{0};{1};{2};{3};{4};{5};{6}" ,
+            _xy[0],
+            _xy[1],
+            $("#dateStartWaterFlowSimulation").val(),
+            $("#dateEndWaterFlowSimulation").val(),
+            listStations,
+            period,
+            hydroNetwork) + "\r\n";
+
+        // Ajoute les metadonnées au fichier de sortie
+        outFile += metadonneesCalcul;
+
+        // Produit la sortie des debits simules
+        var outputSimulation;
+        outputSimulation = "date;runoff(m3/s)" + "\r\n";
+
+        // construit chaque ligne du csv selon les donnees
+        for (var i = 0; i < datasx.length; i++) {
+            var line = '';
+            line += datasx[i] + ";" + datasy[i];
+            outputSimulation += line + '\r\n';
+        }
+
+        // Ajoute les debits simules au fichier de sortie
+        outFile += outputSimulation;
+
+        // cree le csv
+        var blob = new Blob([outFile], {
+            type: "text/csv"
+        });
+        var url = URL.createObjectURL(blob);
+
+        // cree l'url de telechargement et lie le fichier blob a celui-ci
+        // et l'ajoute dans le tableau de bord
+        var glyphiconSave = document.createElement("span");
+        glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
+
+        var dlFile = document.createElement("a");
+        dlFile.setAttribute("id", "linkDownloadFlow");
+        dlFile.setAttribute("href", url);
+        dlFile.setAttribute("target", "_blank");
+        dlFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
+        if ($("#identifiantSimulation").val()) {
+            dlFile.setAttribute("download", String.format("{0}_debit.csv", $("#identifiantSimulation").val()));
+        } else {
+            dlFile.setAttribute("download", "output_simulation.csv");
+        }
+        // translate
+        var text;
+        if ($(".dropdown-toggle").text() == "English") {
+            text = "Water flow simulated ";
+        } else {
+            text = "Débits simulés ";
+        }
+        dlFile.appendChild(document.createTextNode(text));
+        $("#divPopup1").append(dlFile);
+        $("#linkDownloadFlow").append(glyphiconSave);
     }
 
     function setOutFiles(datasx, datasy) {
@@ -582,7 +685,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         // cree un fichier contenant les donnees au format csv
         // et permet son telechargement
-        setOutFiles(xDatas, yDatas);
+        // genere plusieurs fichiers (debit, metadonnees, licence)
+        //setOutFiles(xDatas, yDatas);
+        // genere un seul fichier de sortie
+        setOutputFile(xDatas, yDatas);
 
         // translate
         var text;
@@ -1154,7 +1260,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var timer = duration,
             minutes, seconds;
         _countdown = setInterval(function () {
-            minutes = parseInt(timer / 60, 10)
+            minutes = parseInt(timer / 60, 10);
             seconds = parseInt(timer % 60, 10);
 
             minutes = minutes < 10 ? "0" + minutes : minutes;
