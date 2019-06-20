@@ -926,15 +926,15 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
             try {
-                coord = features.targetW.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                nameWatershed = features.targetW.station;
+                coord = features.bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                nameWatershed = features.bv.station;
                 area = 0;
                 addWatershed(coord, nameWatershed, watershedsSource, area);
             } catch (error) {
-                multiPolygons = features.targetW.geometryProperty.MultiPolygon.polygonMember;
+                multiPolygons = features.bv.geometryProperty.MultiPolygon.polygonMember;
                 for (i = 0; i < multiPolygons.length; i++) {
                     coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                    nameWatershed = features.targetW.station;
+                    nameWatershed = features.bv.station;
                     area = 0;
                     addWatershed(coord, nameWatershed, watershedsSource, area);
                 }
@@ -943,15 +943,15 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // s'il y en a plusieurs
             for (var j = 0; j < features.length; j++) {
                 try {
-                    coord = features[j].targetW.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                    nameWatershed = features[j].targetW.station;
+                    coord = features[j].bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                    nameWatershed = features[j].bv.station;
                     area = 0;
                     addWatershed(coord, nameWatershed, watershedsSource, area);
                 } catch (error) {
-                    polygonsWatershed = features[j].targetW.geometryProperty.MultiPolygon.polygonMember;
+                    polygonsWatershed = features[j].bv.geometryProperty.MultiPolygon.polygonMember;
                     for (i = 0; i < polygonsWatershed.length; i++) {
                         coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                        nameWatershed = features[j].targetW.station;
+                        nameWatershed = features[j].bv.station;
                         area = 0;
                         addWatershed(coord, nameWatershed, watershedsSource, area);
                     }
@@ -1042,7 +1042,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // order features if more than one
         if (features.length > 2) {
             features = features.sort(function (a, b) {
-                return parseFloat(a.targetW.area) - parseFloat(b.targetW.area);
+                return parseFloat(a.bv.area) - parseFloat(b.bv.area);
             });
             features = features.reverse();
         }
@@ -1050,22 +1050,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
             try {
-                coord = features.targetW.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                nameWatershed = features.targetW.station;
-                area = features.targetW.area;
-                wghosh = features.targetW.weights;
+                coord = features.bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                nameWatershed = features.bv.station;
+                area = features.bv.area;
+                wghosh = features.bv.weights;
                 _nameColor.push({
                     key: nameWatershed,
                     value: _colors[0]
                 });
                 addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
             } catch (error) {
-                multiPolygons = features.targetW.geometryProperty.MultiPolygon.polygonMember;
+                multiPolygons = features.bv.geometryProperty.MultiPolygon.polygonMember;
                 for (i = 0; i < multiPolygons.length; i++) {
                     coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                    nameWatershed = features.targetW.station;
-                    area = features.targetW.area;
-                    wghosh = features.targetW.weights;
+                    nameWatershed = features.bv.station;
+                    area = features.bv.area;
+                    wghosh = features.bv.weights;
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[0]
@@ -1077,22 +1077,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // s'il y en a plusieurs
             for (var j = 0; j < features.length; j++) {
                 try {
-                    coord = features[j].targetW.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                    nameWatershed = features[j].targetW.station;
-                    area = features[j].targetW.area;
-                    wghosh = features[j].targetW.weights;
+                    coord = features[j].bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
+                    nameWatershed = features[j].bv.station;
+                    area = features[j].bv.area;
+                    wghosh = features[j].bv.weights;
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[j]
                     });
                     addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
                 } catch (error) {
-                    polygonsWatershed = features[j].targetW.geometryProperty.MultiPolygon.polygonMember;
+                    polygonsWatershed = features[j].bv.geometryProperty.MultiPolygon.polygonMember;
                     for (i = 0; i < polygonsWatershed.length; i++) {
                         coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
-                        nameWatershed = features[j].targetW.station;
-                        area = features[j].targetW.area;
-                        wghosh = features[j].targetW.weights;
+                        nameWatershed = features[j].bv.station;
+                        area = features[j].bv.area;
+                        wghosh = features[j].bv.weights;
                         _nameColor.push({
                             key: nameWatershed,
                             value: _colors[j]
@@ -1357,10 +1357,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             _rqtWPS = buildPostRequest(dictInputs, _identifierXY);
                             // defini des valeurs globales dans le cas d'une reexecution
                             // si le process posse en file d'attente et execute le process
-                            _refreshTime = 5000;
+                            _refreshTime = 2000;
                             _timeOut = 100000;
 
-                            var timerCountdown = 60 * 1,
+                            var timerCountdown = 5,
                                 display = document.querySelector('#countdown');
                             startTimer(timerCountdown, display);
                             // supprimer les couches
@@ -1432,10 +1432,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         console.log(_rqtWPS);
                         // defini des valeurs globales dans le cas d'une reexecution
                         // si le process posse en file d'attente et execute le process
-                        _refreshTime = 5000;
+                        _refreshTime = 2000;
                         _timeOut = 100000;
 
-                        var timerCountdown = 60 * 1.15,
+                        var timerCountdown = 5,
                             display = document.querySelector('#countdown');
                         startTimer(timerCountdown, display);
                         // supprimer les couches
@@ -1703,10 +1703,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 }
                                 // defini des valeurs globales dans le cas d'une reexecution
                                 // si le process posse en file d'attente et execute le process
-                                _refreshTime = 7000;
+                                _refreshTime = 3000;
                                 _timeOut = 100000;
 
-                                var timerCountdown = 60 * 1.15,
+                                var timerCountdown = 15,
                                     display = document.querySelector('#countdown');
                                 startTimer(timerCountdown, display);
                                 // supprimer les couches
