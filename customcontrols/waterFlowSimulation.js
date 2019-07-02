@@ -1706,7 +1706,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 _refreshTime = 3000;
                                 _timeOut = 100000;
 
-                                var timerCountdown = 15,
+                                var timerCountdown = 22,
                                     display = document.querySelector('#countdown');
                                 startTimer(timerCountdown, display);
                                 // supprimer les couches
