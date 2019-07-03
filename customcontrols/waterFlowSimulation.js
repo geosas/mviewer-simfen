@@ -88,7 +88,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
     function insideProjectArea(X, Y) {
         // si le point cliqué est dans la zone du projet, permet son execution
-        if (X < 87000 || X > 412000 || Y < 6658714 || Y > 6902794) {
+        if (X < 120000 || X > 417000 || Y < 6658714 || Y > 6902794) {
             return false;
         } else {
             return true;
