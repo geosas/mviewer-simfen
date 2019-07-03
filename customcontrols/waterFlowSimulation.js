@@ -37,6 +37,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _processing = false;
     var _stationsSelectedByUser;
     var _select;
+    var _timerCountdown;
+    var _display;
 
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
@@ -151,7 +153,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
 
         } else if (response.Status.ProcessStarted) {
-            console.log(response.Status.ProcessStarted);
+            if ($("#countdown")[0].textContent == "00:00"){
+                startTimer(_timerCountdown, _display);
+            }
+            //console.log(response.Status.ProcessStarted);
             if (response.Status.ProcessStarted == "WFS server error"){
                 // translate
                 if ($(".dropdown-toggle").text() == "English") {
@@ -603,77 +608,77 @@ mviewer.customControls.waterFlowSimulation = (function () {
         $("#linkDownloadFlow").append(glyphiconSave);
     }
 
-    function setOutFiles(datasx, datasy) {
-        // header of csvfile
-        var str = "date;runoff(m3/s)" + "\r\n";
+    // function setOutFiles(datasx, datasy) {
+    //     // header of csvfile
+    //     var str = "date;runoff(m3/s)" + "\r\n";
 
-        // construit chaque ligne du csv selon les donnees
-        for (var i = 0; i < datasx.length; i++) {
-            var line = '';
-            line += datasx[i] + ";" + datasy[i];
-            str += line + '\r\n';
-        }
+    //     // construit chaque ligne du csv selon les donnees
+    //     for (var i = 0; i < datasx.length; i++) {
+    //         var line = '';
+    //         line += datasx[i] + ";" + datasy[i];
+    //         str += line + '\r\n';
+    //     }
 
-        // cree le csv
-        var blob = new Blob([str], {
-            type: "text/csv"
-        });
-        var url = URL.createObjectURL(blob);
+    //     // cree le csv
+    //     var blob = new Blob([str], {
+    //         type: "text/csv"
+    //     });
+    //     var url = URL.createObjectURL(blob);
 
-        // cree l'url de telechargement et lie le fichier blob a celui-ci
-        // et l'ajoute dans le tableau de bord
-        var glyphiconSave = document.createElement("span");
-        glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
+    //     // cree l'url de telechargement et lie le fichier blob a celui-ci
+    //     // et l'ajoute dans le tableau de bord
+    //     var glyphiconSave = document.createElement("span");
+    //     glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
 
-        var dlFile = document.createElement("a");
-        dlFile.setAttribute("id", "linkDownloadFlow");
-        dlFile.setAttribute("href", url);
-        dlFile.setAttribute("target", "_blank");
-        dlFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
-        if ($("#identifiantSimulation").val()) {
-            dlFile.setAttribute("download", String.format("{0}_debit.csv", $("#identifiantSimulation").val()));
-        } else {
-            dlFile.setAttribute("download", "output_simulation.csv");
-        }
-        // translate
-        var text;
-        if ($(".dropdown-toggle").text() == "English") {
-            text = "Water flow simulated ";
-        } else {
-            text = "Débits simulés ";
-        }
-        dlFile.appendChild(document.createTextNode(text));
-        $("#divPopup1").append(dlFile);
-        $("#linkDownloadFlow").append(glyphiconSave);
+    //     var dlFile = document.createElement("a");
+    //     dlFile.setAttribute("id", "linkDownloadFlow");
+    //     dlFile.setAttribute("href", url);
+    //     dlFile.setAttribute("target", "_blank");
+    //     dlFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
+    //     if ($("#identifiantSimulation").val()) {
+    //         dlFile.setAttribute("download", String.format("{0}_debit.csv", $("#identifiantSimulation").val()));
+    //     } else {
+    //         dlFile.setAttribute("download", "output_simulation.csv");
+    //     }
+    //     // translate
+    //     var text;
+    //     if ($(".dropdown-toggle").text() == "English") {
+    //         text = "Water flow simulated ";
+    //     } else {
+    //         text = "Débits simulés ";
+    //     }
+    //     dlFile.appendChild(document.createTextNode(text));
+    //     $("#divPopup1").append(dlFile);
+    //     $("#linkDownloadFlow").append(glyphiconSave);
 
-        setOutMetadata();
+    //     setOutMetadata();
 
-        // duplication obligatoire, impossible d'ajouter la meme icone
-        // 2 fois, la suivante remplace l'ancienne, a creuser
-        var glyphiconSave2 = document.createElement("span");
-        glyphiconSave2.setAttribute("class", "glyphicon glyphicon-save");
+    //     // duplication obligatoire, impossible d'ajouter la meme icone
+    //     // 2 fois, la suivante remplace l'ancienne, a creuser
+    //     var glyphiconSave2 = document.createElement("span");
+    //     glyphiconSave2.setAttribute("class", "glyphicon glyphicon-save");
 
-        var licenceFile = document.createElement("a");
-        licenceFile.setAttribute("id", "linkLicence");
-        licenceFile.setAttribute("target", "_blank");
-        licenceFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
-        licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
-        if ($("#identifiantSimulation").val()) {
-            licenceFile.setAttribute("download", String.format("{0}_licence.txt", $("#identifiantSimulation").val()));
-        } else {
-            licenceFile.setAttribute("download", "licence_simulation.txt");
-        }
-        // translate
-        if ($(".dropdown-toggle").text() == "English") {
-            text = "Disclaimer ";
-        } else {
-            text = "Licence d'utilisation ";
-        }
-        licenceFile.appendChild(document.createTextNode(text));
-        $("#divPopup1").append(licenceFile);
-        $("#linkLicence").append(glyphiconSave2);
+    //     var licenceFile = document.createElement("a");
+    //     licenceFile.setAttribute("id", "linkLicence");
+    //     licenceFile.setAttribute("target", "_blank");
+    //     licenceFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
+    //     licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
+    //     if ($("#identifiantSimulation").val()) {
+    //         licenceFile.setAttribute("download", String.format("{0}_licence.txt", $("#identifiantSimulation").val()));
+    //     } else {
+    //         licenceFile.setAttribute("download", "licence_simulation.txt");
+    //     }
+    //     // translate
+    //     if ($(".dropdown-toggle").text() == "English") {
+    //         text = "Disclaimer ";
+    //     } else {
+    //         text = "Licence d'utilisation ";
+    //     }
+    //     licenceFile.appendChild(document.createTextNode(text));
+    //     $("#divPopup1").append(licenceFile);
+    //     $("#linkLicence").append(glyphiconSave2);
 
-    }
+    // }
 
     function plotDatas(points) {
         var xDatas = [];
@@ -1105,10 +1110,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_watershedsLayer);
 
+        var highlightStyle = new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: [255,255,0,0.6],
+                width: 2
+            }),
+            fill: new ol.style.Fill({
+                color: [255,255,0,0.2]
+            }),
+            zIndex: 1
+        });
+
         // pour mettre en surbrillance les bv
         hoverBV = new ol.interaction.Select({
             condition: ol.events.condition.pointerMove,
-            layers: [_watershedsLayer]
+            layers: [_watershedsLayer],
+            style: highlightStyle
         });
         _map.addInteraction(hoverBV);
     }
@@ -1269,6 +1286,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
             display.textContent = minutes + ":" + seconds;
 
             if (--timer < 0) {
+                // translate
+                if ($(".dropdown-toggle").text() == "English") {
+                    $("#countdown").text("Please wait...");
+                } else {
+                    $("#countdown").text("Veuillez patienter...");
+                }
                 clearInterval(_countdown);
             }
         }, 1000);
@@ -1359,10 +1382,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             // si le process posse en file d'attente et execute le process
                             _refreshTime = 2000;
                             _timeOut = 100000;
-
-                            var timerCountdown = 5,
-                                display = document.querySelector('#countdown');
-                            startTimer(timerCountdown, display);
+                            _timerCountdown = 2;
+                            _display = document.querySelector('#countdown');
                             // supprimer les couches
                             deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected", "TargetWatershed"]);
                             processExecution();
@@ -1381,6 +1402,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 $("#bottom-panel").toggleClass("active");
                             }
                             _draw = "";
+                            $(".btn").blur();
                         } else {
                             // translate
                             if ($(".dropdown-toggle").text() == "English") {
@@ -1435,9 +1457,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         _refreshTime = 2000;
                         _timeOut = 100000;
 
-                        var timerCountdown = 5,
-                            display = document.querySelector('#countdown');
-                        startTimer(timerCountdown, display);
+                        _timerCountdown = 2;
+                        _display = document.querySelector('#countdown');
                         // supprimer les couches
                         deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected", "TargetWatershed"]);
                         processExecution();
@@ -1456,6 +1477,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         if ($("#bottom-panel").hasClass("")) {
                             $("#bottom-panel").toggleClass("active");
                         }
+                        $(".btn").blur();
                     } else {
                         alert("Veuillez indiquer une coordonnée dans la zone du projet SIMFEN.");
                     }
@@ -1483,13 +1505,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _rqtWPS = buildPostRequest(dictInputs, _getStations);
                     console.log(_rqtWPS);
                     // execute le process
-                    _refreshTime = 3000;
+                    _refreshTime = 2000;
                     _timeOut = 100000;
-                    var timerCountdown = 60 * 1,
-                        display = document.querySelector('#countdown');
-                    startTimer(timerCountdown, display);
+                    _timerCountdown = 2;
+                    _display = document.querySelector('#countdown');
                     processExecution();
                     _processing = true;
+                    $(".btn").blur();
                 } else {
                     // translate
                     if ($(".dropdown-toggle").text() == "English") {
@@ -1570,6 +1592,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     layers: [_stationLayer]
                 });
                 _map.addInteraction(select);
+                $(".btn").blur();
             } else {
                 // translate
                 if ($(".dropdown-toggle").text() == "English") {
@@ -1604,15 +1627,15 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _rqtWPS = buildPostRequest(dictInputs, _identifierGetMeasuredFlow);
                     // defini des valeurs globales dans le cas d'une reexecution
                     // si le process posse en file d'attente et execute le process
-                    _refreshTime = 5000;
+                    _refreshTime = 2000;
                     _timeOut = 100000;
 
-                    var timerCountdown = 60 * 1.15,
-                        display = document.querySelector('#countdown');
-                    startTimer(timerCountdown, display);
+                    _timerCountdown = 2;
+                    _display = document.querySelector('#countdown');
 
                     processExecution();
                     _processing = true;
+                    $(".btn").blur();
                 } else {
                     // translate
                     if ($(".dropdown-toggle").text() == "English") {
@@ -1706,9 +1729,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 _refreshTime = 3000;
                                 _timeOut = 100000;
 
-                                var timerCountdown = 22,
-                                    display = document.querySelector('#countdown');
-                                startTimer(timerCountdown, display);
+                                _timerCountdown = 20;
+                                _display = document.querySelector('#countdown');
                                 // supprimer les couches
                                 deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected"]);
                                 processExecution();
@@ -1721,6 +1743,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 if ($("#bottom-panel").hasClass("")) {
                                     $("#bottom-panel").toggleClass("active");
                                 }
+                                $(".btn").blur();
                             }
                         }
 

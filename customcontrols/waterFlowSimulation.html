@@ -81,7 +81,7 @@
             </div>
         </div>
         <button title="Options avancées" class="btn btn-default" type="button" data-toggle="collapse" data-target="#waterFlowSimulationOptions"
-            aria-expanded="false">
+            aria-expanded="false" onclick="$(this).trigger('blur');">
             <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
         </button>
         <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.getXY();">
