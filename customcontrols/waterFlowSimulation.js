@@ -1112,11 +1112,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         var highlightStyle = new ol.style.Style({
             stroke: new ol.style.Stroke({
-                color: [255,255,0,0.6],
+                color: [46,83,103,0.6],
                 width: 2
             }),
             fill: new ol.style.Fill({
-                color: [255,255,0,0.2]
+                color: [46,83,103,0.2]
             }),
             zIndex: 1
         });
