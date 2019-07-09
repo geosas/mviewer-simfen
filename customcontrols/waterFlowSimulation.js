@@ -11,7 +11,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _xhrGet;
     var _xmlRequest;
     var _rqtWPS;
-    var _urlWPS = "http://wps.geosas.fr/simfen-dev?";
+    var _urlWPS = "http://wps.geosas.fr/simfen?";
     var _service = "WPS";
     var _version = "1.0.0";
     var _request = "Execute";
