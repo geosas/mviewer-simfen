@@ -11,7 +11,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _xhrGet;
     var _xmlRequest;
     var _rqtWPS;
-    var _urlWPS = "http://wps.geosas.fr/simfen?";
+    var _urlWPS = "http://wps.geosas.fr/simfen-dev?";
     var _service = "WPS";
     var _version = "1.0.0";
     var _request = "Execute";
@@ -429,81 +429,81 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
     }
 
-    function setOutMetadata() {
-        listStations = "";
-        for (var i = 0; i < _nameColor.length; i++) {
-            listStations += _nameColor[i].key + ",";
-        }
-        listStations = listStations.substring(0, listStations.length - 1);
+    // function setOutMetadata() {
+    //     listStations = "";
+    //     for (var i = 0; i < _nameColor.length; i++) {
+    //         listStations += _nameColor[i].key + ",";
+    //     }
+    //     listStations = listStations.substring(0, listStations.length - 1);
 
-        // translate
-        if ($(".dropdown-toggle").text() == "English") {
-            var str = "x;y;start;end;stations;timestep;hydrographic network" + "\r\n";
-        } else {
-            var str = "x;y;debut;fin;stations;pas de temps;réseau hydrographique" + "\r\n";
-        }
-        var period;
-        if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 1440) {
-            // translate
-            if ($(".dropdown-toggle").text() == "English") {
-                period = "daily";
-            } else {
-                period = "journalier";
-            }
-        } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 60) {
-            // translate
-            if ($(".dropdown-toggle").text() == "English") {
-                period = "hourly";
-            } else {
-                period = "horaire";
-            }
-        }
-        // translate
-        var hydroNetwork;
-        if ($(".dropdown-toggle").text() == "English") {
-            hydroNetwork = "modeled hydrographic network thresholded at 25 ha (DEM 50m)";
-        } else {
-            hydroNetwork = "réseau hydrographique modélisé seuillé à 25ha (MNT 50m)";
-        }
-        str += String.format("{0};{1};{2};{3};{4};{5};{6}",
-            _xy[0],
-            _xy[1],
-            $("#dateStartWaterFlowSimulation").val(),
-            $("#dateEndWaterFlowSimulation").val(),
-            listStations,
-            period,
-            hydroNetwork);
-        // cree le csv
-        var blob = new Blob([str], {
-            type: "text/csv"
-        });
-        var url = URL.createObjectURL(blob);
+    //     // translate
+    //     if ($(".dropdown-toggle").text() == "English") {
+    //         var str = "x;y;start;end;stations;timestep;hydrographic network" + "\r\n";
+    //     } else {
+    //         var str = "x;y;debut;fin;stations;pas de temps;réseau hydrographique" + "\r\n";
+    //     }
+    //     var period;
+    //     if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 1440) {
+    //         // translate
+    //         if ($(".dropdown-toggle").text() == "English") {
+    //             period = "daily";
+    //         } else {
+    //             period = "journalier";
+    //         }
+    //     } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 60) {
+    //         // translate
+    //         if ($(".dropdown-toggle").text() == "English") {
+    //             period = "hourly";
+    //         } else {
+    //             period = "horaire";
+    //         }
+    //     }
+    //     // translate
+    //     var hydroNetwork;
+    //     if ($(".dropdown-toggle").text() == "English") {
+    //         hydroNetwork = "modeled hydrographic network thresholded at 25 ha (DEM 50m)";
+    //     } else {
+    //         hydroNetwork = "réseau hydrographique modélisé seuillé à 25ha (MNT 50m)";
+    //     }
+    //     str += String.format("{0};{1};{2};{3};{4};{5};{6}",
+    //         _xy[0],
+    //         _xy[1],
+    //         $("#dateStartWaterFlowSimulation").val(),
+    //         $("#dateEndWaterFlowSimulation").val(),
+    //         listStations,
+    //         period,
+    //         hydroNetwork);
+    //     // cree le csv
+    //     var blob = new Blob([str], {
+    //         type: "text/csv"
+    //     });
+    //     var url = URL.createObjectURL(blob);
 
-        // logo telechargement
-        var glyphiconSave = document.createElement("span");
-        glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
+    //     // logo telechargement
+    //     var glyphiconSave = document.createElement("span");
+    //     glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
 
-        var metaFile = document.createElement("a");
-        metaFile.setAttribute("id", "linkMetadata");
-        metaFile.setAttribute("target", "_blank");
-        metaFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
-        metaFile.setAttribute("href", url);
-        if ($("#identifiantSimulation").val()) {
-            metaFile.setAttribute("download", String.format("{0}_metadonnees.csv", $("#identifiantSimulation").val()));
-        } else {
-            metaFile.setAttribute("download", "metadonnee_simulation.csv");
-        }
-        // translate
-        var text;
-        if ($(".dropdown-toggle").text() == "English") {
-            text = "Metadata of simulation ";
-        } else {
-            text = "Métadonnée de simulation ";
-        }
-        metaFile.appendChild(document.createTextNode(text));
-        $("#divPopup1").append(metaFile);
-        $("#linkMetadata").append(glyphiconSave);
-    }
+    //     var metaFile = document.createElement("a");
+    //     metaFile.setAttribute("id", "linkMetadata");
+    //     metaFile.setAttribute("target", "_blank");
+    //     metaFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
+    //     metaFile.setAttribute("href", url);
+    //     if ($("#identifiantSimulation").val()) {
+    //         metaFile.setAttribute("download", String.format("{0}_metadonnees.csv", $("#identifiantSimulation").val()));
+    //     } else {
+    //         metaFile.setAttribute("download", "metadonnee_simulation.csv");
+    //     }
+    //     // translate
+    //     var text;
+    //     if ($(".dropdown-toggle").text() == "English") {
+    //         text = "Metadata of simulation ";
+    //     } else {
+    //         text = "Métadonnée de simulation ";
+    //     }
+    //     metaFile.appendChild(document.createTextNode(text));
+    //     $("#divPopup1").append(metaFile);
+    //     $("#linkMetadata").append(glyphiconSave);
+    // }
 
     function setOutputFile(datasx, datasy){
         // Fonction pour generer le document de reponse contenant
@@ -806,23 +806,25 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         function pointStyleFunctionSelected(feature) {
             return new ol.style.Style({
-                image: new ol.style.Circle({
+                image: new ol.style.RegularShape({
                     fill: new ol.style.Fill({
-                        color: "green"
+                        color: "OliveDrab"
                     }),
                     stroke: new ol.style.Stroke({
-                        width: 1,
-                        color: "green"
+                        color: 'black',
+                        width: 3
                     }),
-                    radius: 7
-                }),
+                    points: 3,
+                    radius: 15,
+                    angle: 0
+                  }),
                 text: createTextStyle(feature)
             });
         }
 
         var createTextStyle = function (feature) {
             return new ol.style.Text({
-                font: '12px Calibri,sans-serif',
+                font: '14px Calibri,sans-serif',
                 text: feature.get('name'),
                 offsetY: 20,
                 fill: new ol.style.Fill({
@@ -830,7 +832,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 }),
                 stroke: new ol.style.Stroke({
                     color: '#fff',
-                    width: 5
+                    width: 7
                 })
             });
         };
@@ -863,6 +865,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // ajoute la feature a la source
             stationSource.addFeature(featureThing);
         }
+
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_stationLayer);
     }
@@ -1148,16 +1151,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
 
             return new ol.style.Style({
-                image: new ol.style.Circle({
+                image: new ol.style.RegularShape({
                     fill: new ol.style.Fill({
                         color: colorStation
                     }),
                     stroke: new ol.style.Stroke({
-                        width: 1,
-                        color: colorStation
+                        color: 'black',
+                        width: 2
                     }),
-                    radius: 7
-                }),
+                    points: 3,
+                    radius: 10,
+                    angle: 0
+                  }),
                 text: createTextStyle(feature, colorStation)
             });
         }
@@ -1587,9 +1592,25 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _select = select;
                 });
 
+                var highlightStyle = new ol.style.Style({
+                    image: new ol.style.RegularShape({
+                        fill: new ol.style.Fill({
+                            color: "crimson"
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: 'black',
+                            width: 3
+                        }),
+                        points: 3,
+                        radius: 15,
+                        angle: 0,
+                      }),
+                });
+
                 // Crée l'interaction de selection des exutoires
                 select = new ol.interaction.Select({
-                    layers: [_stationLayer]
+                    layers: [_stationLayer],
+                    style: highlightStyle
                 });
                 _map.addInteraction(select);
                 $(".btn").blur();
