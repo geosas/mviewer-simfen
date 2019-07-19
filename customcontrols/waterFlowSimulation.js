@@ -20,7 +20,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _identifierXY = "xyOnNetwork";
     var _identifierGetMeasuredFlow = "getMeasuredFlow";
     var _identifierDismiss = "dismiss";
-    var _identifierGetPeriod = "getPeriod";
+    var _identifierGetInfos = "getInfos";
     var _uuid;
     var _storeExecuteResponse = true;
     var _lineage = true;
@@ -39,6 +39,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _select;
     var _timerCountdown;
     var _display;
+    var _configurationInfos = [];
+    var _initProject = "dreal_b";
 
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
@@ -157,12 +159,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 startTimer(_timerCountdown, _display);
             }
             //console.log(response.Status.ProcessStarted);
-            if (response.Status.ProcessStarted == "WFS server error"){
+            if (response.Status.ProcessStarted == "No station available on the period"){
                 // translate
                 if ($(".dropdown-toggle").text() == "English") {
-                    processingBarUpdate(100, "WFS server error, restart the treatment");
+                    processingBarUpdate(100, "Change the simulation period");
+                    alert("No stations with data at the start and end date are available, please change them and try again");
                 } else {
-                    processingBarUpdate(100, "Erreur serveur WFS, relancez le calcul");
+                    processingBarUpdate(100, "Modifiez la période de simulation");
+                    alert("Aucune station ayant des données à la date de début et de fin n'est disponible, veuillez changer les dates et réessayer");
                 }
                 clearInterval(_updating);
                 clearInterval(_countdown);
@@ -325,8 +329,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     // Hide kill process button
                                     $("#dismiss").toggleClass("hidden");
                                     _processing = false;
-                                } else if (outputTag.Identifier === "datesAvailable") {
-                                    setPeriodSimulation(outputTag.Data.LiteralData);
+                                } else if (outputTag.Identifier === "configInfos") {
+                                    setConfigInfos(outputTag.Data.LiteralData);
                                     _processing = false;
                                 }
                             }
@@ -345,26 +349,46 @@ mviewer.customControls.waterFlowSimulation = (function () {
             } else {
                 console.log("Fin du traitement");
             }
+            $("#countdown")[0].textContent = "00:00";
             _processing = false;
         }
     }
 
-    function setPeriodSimulation(dates){
+    function setConfigInfos(infos){
         // Supprime des caracteres superflus
-        dates = dates.replace(/[()' ]/g,"");
+        infos = infos.replace(/['[\] ]/g,"").split(",");
 
-        // Cree les variables contenant les dates min et max dans la table inversion
-        dateMinSim = dates.split(",")[0];
-        dateMaxSim = dates.split(",")[1];
+        // Itere les projets et divise la longueur par 3
+        //puisque nom project, datemin, datemax
+        for (var i = 0; i < infos.length/3; i++){
+            var project = new Option(infos[i*3], infos[i*3]);
+            _configurationInfos.push({
+                [infos[i*3]] : {
+                    datemin: infos[i*3+1],
+                    datemax: infos[i*3+2]
+                }
+            });
+            $(project).html(infos[i*3].replace(/_/g,' '));
+            $("#selectProjectInversion").append(project);
+        }
+        // init date and selection from default project
+        $("#selectProjectInversion option[value="+_initProject+"]").attr('selected',true);
+        for(var i = 0; i < _configurationInfos.length; i++){
+            if(_configurationInfos[i][_initProject]){
+                // substr a cause du format timestamp(Y-M-d H-M-S)
+                dateMinSim = _configurationInfos[i][_initProject].datemin.substr(10,10);
+                dateMaxSim = _configurationInfos[i][_initProject].datemax.substr(10,10);
+            }
+        }
 
         // Defini les dates de simulation possibles
         $("#dateStartWaterFlowSimulation").attr("min", dateMinSim);
         $("#dateStartWaterFlowSimulation").attr("max", dateMaxSim);
-        $("#dateStartWaterFlowSimulation").attr("value",dateMinSim);
+        $("#dateStartWaterFlowSimulation").val(dateMinSim);
 
         $("#dateEndWaterFlowSimulation").attr("min", dateMinSim);
         $("#dateEndWaterFlowSimulation").attr("max", dateMaxSim);
-        $("#dateEndWaterFlowSimulation").attr("value",dateMaxSim);
+        $("#dateEndWaterFlowSimulation").val(dateMaxSim);
     }
 
     function processExecution() {
@@ -399,20 +423,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
         _xhrPost.send(_rqtWPS);
     }
 
-    // function StringToXMLDom(string) {
-    //     var xmlDoc = null;
-    //     if (window.DOMParser) {
-    //         var parser = new DOMParser();
-    //         xmlDoc = parser.parseFromString(string, "text/xml");
-    //     } else // Internet Explorer
-    //     {
-    //         xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-    //         xmlDoc.async = "false";
-    //         xmlDoc.loadXML(string);
-    //     }
-    //     return xmlDoc;
-    // }
-
     function deleteLayers(layers){
         // suppression des layers
         var layersToRemove = [];
@@ -428,6 +438,78 @@ mviewer.customControls.waterFlowSimulation = (function () {
             _map.removeLayer(layersToRemove[i]);
         }
     }
+
+    // function setOutFiles(datasx, datasy) {
+    //     // header of csvfile
+    //     var str = "date;runoff(m3/s)" + "\r\n";
+
+    //     // construit chaque ligne du csv selon les donnees
+    //     for (var i = 0; i < datasx.length; i++) {
+    //         var line = '';
+    //         line += datasx[i] + ";" + datasy[i];
+    //         str += line + '\r\n';
+    //     }
+
+    //     // cree le csv
+    //     var blob = new Blob([str], {
+    //         type: "text/csv"
+    //     });
+    //     var url = URL.createObjectURL(blob);
+
+    //     // cree l'url de telechargement et lie le fichier blob a celui-ci
+    //     // et l'ajoute dans le tableau de bord
+    //     var glyphiconSave = document.createElement("span");
+    //     glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
+
+    //     var dlFile = document.createElement("a");
+    //     dlFile.setAttribute("id", "linkDownloadFlow");
+    //     dlFile.setAttribute("href", url);
+    //     dlFile.setAttribute("target", "_blank");
+    //     dlFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
+    //     if ($("#identifiantSimulation").val()) {
+    //         dlFile.setAttribute("download", String.format("{0}_debit.csv", $("#identifiantSimulation").val()));
+    //     } else {
+    //         dlFile.setAttribute("download", "output_simulation.csv");
+    //     }
+    //     // translate
+    //     var text;
+    //     if ($(".dropdown-toggle").text() == "English") {
+    //         text = "Water flow simulated ";
+    //     } else {
+    //         text = "Débits simulés ";
+    //     }
+    //     dlFile.appendChild(document.createTextNode(text));
+    //     $("#divPopup1").append(dlFile);
+    //     $("#linkDownloadFlow").append(glyphiconSave);
+
+    //     setOutMetadata();
+
+    //     // duplication obligatoire, impossible d'ajouter la meme icone
+    //     // 2 fois, la suivante remplace l'ancienne, a creuser
+    //     var glyphiconSave2 = document.createElement("span");
+    //     glyphiconSave2.setAttribute("class", "glyphicon glyphicon-save");
+
+    //     var licenceFile = document.createElement("a");
+    //     licenceFile.setAttribute("id", "linkLicence");
+    //     licenceFile.setAttribute("target", "_blank");
+    //     licenceFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
+    //     licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
+    //     if ($("#identifiantSimulation").val()) {
+    //         licenceFile.setAttribute("download", String.format("{0}_licence.txt", $("#identifiantSimulation").val()));
+    //     } else {
+    //         licenceFile.setAttribute("download", "licence_simulation.txt");
+    //     }
+    //     // translate
+    //     if ($(".dropdown-toggle").text() == "English") {
+    //         text = "Disclaimer ";
+    //     } else {
+    //         text = "Licence d'utilisation ";
+    //     }
+    //     licenceFile.appendChild(document.createTextNode(text));
+    //     $("#divPopup1").append(licenceFile);
+    //     $("#linkLicence").append(glyphiconSave2);
+
+    // }
 
     // function setOutMetadata() {
     //     listStations = "";
@@ -608,78 +690,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
         $("#linkDownloadFlow").append(glyphiconSave);
     }
 
-    // function setOutFiles(datasx, datasy) {
-    //     // header of csvfile
-    //     var str = "date;runoff(m3/s)" + "\r\n";
-
-    //     // construit chaque ligne du csv selon les donnees
-    //     for (var i = 0; i < datasx.length; i++) {
-    //         var line = '';
-    //         line += datasx[i] + ";" + datasy[i];
-    //         str += line + '\r\n';
-    //     }
-
-    //     // cree le csv
-    //     var blob = new Blob([str], {
-    //         type: "text/csv"
-    //     });
-    //     var url = URL.createObjectURL(blob);
-
-    //     // cree l'url de telechargement et lie le fichier blob a celui-ci
-    //     // et l'ajoute dans le tableau de bord
-    //     var glyphiconSave = document.createElement("span");
-    //     glyphiconSave.setAttribute("class", "glyphicon glyphicon-save");
-
-    //     var dlFile = document.createElement("a");
-    //     dlFile.setAttribute("id", "linkDownloadFlow");
-    //     dlFile.setAttribute("href", url);
-    //     dlFile.setAttribute("target", "_blank");
-    //     dlFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
-    //     if ($("#identifiantSimulation").val()) {
-    //         dlFile.setAttribute("download", String.format("{0}_debit.csv", $("#identifiantSimulation").val()));
-    //     } else {
-    //         dlFile.setAttribute("download", "output_simulation.csv");
-    //     }
-    //     // translate
-    //     var text;
-    //     if ($(".dropdown-toggle").text() == "English") {
-    //         text = "Water flow simulated ";
-    //     } else {
-    //         text = "Débits simulés ";
-    //     }
-    //     dlFile.appendChild(document.createTextNode(text));
-    //     $("#divPopup1").append(dlFile);
-    //     $("#linkDownloadFlow").append(glyphiconSave);
-
-    //     setOutMetadata();
-
-    //     // duplication obligatoire, impossible d'ajouter la meme icone
-    //     // 2 fois, la suivante remplace l'ancienne, a creuser
-    //     var glyphiconSave2 = document.createElement("span");
-    //     glyphiconSave2.setAttribute("class", "glyphicon glyphicon-save");
-
-    //     var licenceFile = document.createElement("a");
-    //     licenceFile.setAttribute("id", "linkLicence");
-    //     licenceFile.setAttribute("target", "_blank");
-    //     licenceFile.setAttribute("style", "color:#337ab7;font-family:inherit;display:block;font-size:20px;");
-    //     licenceFile.setAttribute("href", "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/licence_simulation.txt");
-    //     if ($("#identifiantSimulation").val()) {
-    //         licenceFile.setAttribute("download", String.format("{0}_licence.txt", $("#identifiantSimulation").val()));
-    //     } else {
-    //         licenceFile.setAttribute("download", "licence_simulation.txt");
-    //     }
-    //     // translate
-    //     if ($(".dropdown-toggle").text() == "English") {
-    //         text = "Disclaimer ";
-    //     } else {
-    //         text = "Licence d'utilisation ";
-    //     }
-    //     licenceFile.appendChild(document.createTextNode(text));
-    //     $("#divPopup1").append(licenceFile);
-    //     $("#linkLicence").append(glyphiconSave2);
-
-    // }
-
     function plotDatas(points) {
         var xDatas = [];
         var yDatas = [];
@@ -751,7 +761,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var names = [];
         var trace;
         for (var i = 0; i < datasJson.length; i++) {
-            names = names.concat(datasJson[i].code_hydro);
+            names = names.concat(datasJson[i].station);
         }
         // obtient les identifants uniques
         names = Array.from(new Set(names));
@@ -760,10 +770,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
             var xDatas = [];
             var yDatas = [];
             for (var j = 0; j < datasJson.length; j++) {
-                if (names[i] === datasJson[j].code_hydro) {
+                if (names[i] === datasJson[j].station) {
                     xDatas = xDatas.concat(datasJson[j].date);
-                    yDatas = yDatas.concat(datasJson[j].debit_donnee_validee_m3);
-                    //yDatas = yDatas.concat(datasJson[j].qm3s);
+                    yDatas = yDatas.concat(datasJson[j].measuredFlow);
                 }
             }
             for (j = 0; j < _nameColor.length; j++) {
@@ -851,8 +860,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // pour chaque entite
         for (var j = 0; j < features.length; j++) {
             // recupere sa coordonnees et son nom
-            coord = features[j].hydrometrie_qmj_historique.geometryProperty.Point.coordinates.split(",");
-            nameStation = features[j].hydrometrie_qmj_historique.code_hydro;
+            // passer par une base de donnees permet de normaliser le nom de la couche, qu'importe les services
+            coord = features[j].sql_statement.geometryProperty.Point.coordinates.split(",");
+            nameStation = features[j].sql_statement.station;
             arrStations.push(nameStation);
 
             // cree le point en veillant a changer la projection
@@ -1208,7 +1218,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
             coord = features.stations.geometryProperty.Point.coordinates.split(",");
-            nameStation = features.stations.code_hydro;
+            nameStation = features.stations.station;
             arrStations.push(nameStation);
             _nameColor.push({
                 key: nameStation,
@@ -1221,7 +1231,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             for (var j = 0; j < features.length; j++) {
                 // recupere sa coordonnees et son nom
                 coord = features[j].stations.geometryProperty.Point.coordinates.split(",");
-                nameStation = features[j].stations.code_hydro;
+                nameStation = features[j].stations.station;
                 arrStations.push(nameStation);
                 _nameColor.push({
                     key: nameStation,
@@ -1322,16 +1332,36 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 undefinedHTML: 'EPSG : 2154'
             });
             mviewer.getMap().addControl(mousePositionControl);
-
-            //// Get period process
             // Build wps request
-            _rqtWPS = buildPostRequest({}, _identifierGetPeriod);
+            _rqtWPS = buildPostRequest({}, _identifierGetInfos);
+            _timerCountdown = 2;
+            _display = document.querySelector('#countdown');
             // set time processing
             _refreshTime = 1000;
             _timeOut = 10000;
+            // dismiss button disappear
             $("#dismiss").toggleClass("hidden");
             processExecution();
             _processing = true;
+        },
+
+        setPeriodSimulation: function(project){
+            for(var i = 0; i < _configurationInfos.length; i++){
+                if(_configurationInfos[i][project]){
+                    // substr a cause du format timestamp(Y-M-d H-M-S)
+                    dateMinSim = _configurationInfos[i][project].datemin.substr(10,10);
+                    dateMaxSim = _configurationInfos[i][project].datemax.substr(10,10);
+                }
+            }
+
+            // Defini les dates de simulation possibles
+            $("#dateStartWaterFlowSimulation").attr("min", dateMinSim);
+            $("#dateStartWaterFlowSimulation").attr("max", dateMaxSim);
+            $("#dateStartWaterFlowSimulation").val(dateMinSim);
+
+            $("#dateEndWaterFlowSimulation").attr("min", dateMinSim);
+            $("#dateEndWaterFlowSimulation").attr("max", dateMaxSim);
+            $("#dateEndWaterFlowSimulation").val(dateMaxSim);
         },
 
         dismiss: function() {
@@ -1643,7 +1673,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     var dictInputs = {
                         Start: $("#dateStartWaterFlowSimulation").val(),
                         End: $("#dateEndWaterFlowSimulation").val(),
-                        ListStations: listStations
+                        ListStations: listStations,
+                        Project: $("#selectProjectInversion").val()
                     };
                     _rqtWPS = buildPostRequest(dictInputs, _identifierGetMeasuredFlow);
                     // defini des valeurs globales dans le cas d'une reexecution
@@ -1726,7 +1757,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 End: $("#dateEndWaterFlowSimulation").val(),
                                 DeltaT: $("input[name='deltaTWaterFlowSimulation']:checked").val(),
                                 InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
-                                ListStations: _stationsSelectedByUser.toString()
+                                ListStations: _stationsSelectedByUser.toString(),
+                                Project: $("#selectProjectInversion").val()
                             };
                             // popup pour alerter sur le temps de traitement à venir
                             launchProcess = timeProcessAlert(dictInputs.Start, dictInputs.End, dictInputs.DeltaT);
