@@ -368,7 +368,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     datemax: infos[i*3+2]
                 }
             });
-            $(project).html(infos[i*3].replace(/_/g,' '));
+            // pour modifier les textes des options de donnees
+            if (infos[i*3] == "dreal_b") {
+                textOption = "GéoBretagne";
+            } else {
+                textOption = infos[i*3].replace(/_/g,' ');
+            }
+            $(project).html(textOption);
             $("#selectProjectInversion").append(project);
         }
         // init date and selection from default project
@@ -1254,9 +1260,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
         if (deltaT == 60 && period > 3650) {
             // translate
             if ($(".dropdown-toggle").text() == "English") {
-                launchProcess = confirm("The treatment will slow down your browser, please do not stop the script if it offers, would you like to continue ?");
+                launchProcess = confirm("The treatment will slow down your browser and take a long time, please do not stop the script if it offers, would you like to continue ?");
             } else {
-                launchProcess = confirm("Le traitement va ralentir votre navigateur, veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
+                launchProcess = confirm("Le traitement va ralentir votre navigateur et prendre du temps, veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
             }
             if (launchProcess) {
                 return true;
