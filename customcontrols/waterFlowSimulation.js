@@ -1260,9 +1260,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
         if (deltaT == 60 && period > 3650) {
             // translate
             if ($(".dropdown-toggle").text() == "English") {
-                launchProcess = confirm("The treatment will slow down your browser and take a long time, please do not stop the script if it offers, would you like to continue ?");
+                launchProcess = confirm("The treatment will slow down your browser and take a long time (40min), please do not stop the script if it offers or run model over a smaller period would you like to continue ?");
             } else {
-                launchProcess = confirm("Le traitement va ralentir votre navigateur et prendre du temps, veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
+                launchProcess = confirm("Le traitement va ralentir votre navigateur et prendre du temps (40min), veuillez ne pas arrêter le script s'il le propose ou effectuez un traitement sur une période plus courte, souhaitez-vous continuer ?");
             }
             if (launchProcess) {
                 return true;
@@ -1688,7 +1688,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _refreshTime = 2000;
                     _timeOut = 100000;
 
-                    _timerCountdown = 2;
+                    _timerCountdown = 8;
                     _display = document.querySelector('#countdown');
 
                     processExecution();
@@ -1788,7 +1788,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 _refreshTime = 3000;
                                 _timeOut = 100000;
 
-                                _timerCountdown = 20;
+                                periodAvailable = (new Date($("#dateEndWaterFlowSimulation").attr("max")) - new Date($("#dateStartWaterFlowSimulation").attr("min"))) / 86400000;
+                                if (periodAvailable > 3650 && dictInputs.DeltaT == "1440") {
+                                    _timerCountdown = 80;
+                                } else {
+                                    _timerCountdown = 20;
+                                }
                                 _display = document.querySelector('#countdown');
                                 // supprimer les couches
                                 deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected"]);
