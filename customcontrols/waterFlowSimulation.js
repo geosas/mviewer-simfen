@@ -11,7 +11,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _xhrGet;
     var _xmlRequest;
     var _rqtWPS;
-    var _urlWPS = "http://wps.geosas.fr/simfen-dev?";
+    var _urlWPS = "https://wps.geosas.fr/simfen-test?";
     var _service = "WPS";
     var _version = "1.0.0";
     var _request = "Execute";
@@ -33,14 +33,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _traces = [];
     var _layout;
     var _timeoutCount = 0;
-    var _colors = ["red", "SaddleBrown", "DarkOrange", "LightSeaGreen", "purple"];
+    var _colors = ["red", "#8b4513", "#FF8C00", "#20B2AA", "purple"];
     var _processing = false;
     var _stationsSelectedByUser;
     var _select;
     var _timerCountdown;
     var _display;
     var _configurationInfos = [];
-    var _initProject = "dreal_b";
+    var _initProject = "archives_dreal";
 
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
@@ -80,10 +80,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
         if (url.indexOf('http') !== 0) {
             return url;
         }
-        // same domain
-        else if (url.indexOf(location.protocol + '//' + location.host) === 0) {
-            return url;
-        } else {
+        // same domain option déactivée à cause du http et https qui entrainne une blocage
+        //else if (url.indexOf(location.protocol + '//' + location.host) === 0) {
+          //  return url;}
+        else {
             return '/proxy/?url=' + encodeURIComponent(url);
         }
     }
@@ -292,7 +292,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "SimulatedFlow") {
-                                    plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
+                                    //plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
+                                    plotDatas(outputTag.Data.ComplexData);
                                     // translate
                                     var text;
                                     if ($(".dropdown-toggle").text() == "English") {
@@ -697,11 +698,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
     }
 
     function plotDatas(points) {
+        var datasJson = JSON.parse(points);
         var xDatas = [];
         var yDatas = [];
-        for (var i = 0; i < points.length; i++) {
-            xDatas = xDatas.concat(points[i].MeasurementTVP.time);
-            yDatas = yDatas.concat(points[i].MeasurementTVP.value);
+        for (var i = 0; i < datasJson.length; i++) {
+            xDatas.push(datasJson[i][0]);
+            yDatas.push(datasJson[i][1]);
+
+            //si fichier en waterml code si dessous, mais le json est beaucoup plus leger (le navigateur ne plante pas)
+            //push plus rapide que concat (le navigateur ne plante pas)
+            //xDatas.push(datasJson[i].date);
+            //yDatas.push(datasJson[i].debit);
+            //xDatas.push(points[i].MeasurementTVP.time);
+            //yDatas.push(points[i].MeasurementTVP.value);
         }
 
         // cree un fichier contenant les donnees au format csv
@@ -714,19 +723,21 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // translate
         var text;
         if ($(".dropdown-toggle").text() == "English") {
-            text = "Water flow simulated ";
+            text = "Target basin";
         } else {
-            text = "Débits simulés ";
+            text = "Bassin cible";
         }
-
+        //scattergl Implement WebGL for increased speed
         _traces = [{
             name: text,
             x: xDatas,
             y: yDatas,
-            type: 'line',
+            mode:"lines",
+            type: 'scattergl',
             line: {
                 color: 'black'
-            }
+            },
+            connectgaps: 'false'
         }];
 
         _layout = {
@@ -755,50 +766,60 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // plotly.relayout pose soucis, impossible de depasser 450px de height et impossible
         // de revenir a l'etat d'avant
         Plotly.newPlot($("#graphFlowSimulatedExtend")[0], _traces, _layout, {
-            responsive: false,
-            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
-            scrollZoom: true
+          responsive: false,
+          modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
+          scrollZoom: true
         });
     }
 
     function plotMeasuredFlow(datas) {
-        // ameliorer pour ne faire qu'un passage dans le fichier de resultat
-        var datasJson = JSON.parse(datas);
-        var names = [];
-        var trace;
-        for (var i = 0; i < datasJson.length; i++) {
-            names = names.concat(datasJson[i].station);
-        }
-        // obtient les identifants uniques
-        names = Array.from(new Set(names));
 
-        for (i = 0; i < names.length; i++) {
+        var datasJson = JSON.parse(datas);
+        var trace;
+        for (i = 0; i < _nameColor.length; i++) {
             var xDatas = [];
             var yDatas = [];
             for (var j = 0; j < datasJson.length; j++) {
-                if (names[i] === datasJson[j].station) {
-                    xDatas = xDatas.concat(datasJson[j].date);
-                    yDatas = yDatas.concat(datasJson[j].measuredFlow);
+                if (_nameColor[i].key === datasJson[j].station) {
+                    //xDatas = xDatas.concat(datasJson[j].date);
+                    //yDatas = yDatas.concat(datasJson[j].measuredFlow);
+                    xDatas.push(datasJson[j].date);
+                    yDatas.push(datasJson[j].measuredFlow);
+                    //si highcharts conversion en ms de la date
+                    //data_flow.push([new Date((datasJson[j].date)).getTime(),parseFloat(datasJson[j].measuredFlow)])
                 }
             }
-            for (j = 0; j < _nameColor.length; j++) {
-                if (names[i] === _nameColor[j].key) {
-                    trace = {
-                        name: names[i],
-                        x: xDatas,
-                        y: yDatas,
-                        type: "line",
-                        line: {
-                            color: _nameColor[j].value
-                        }
-                    };
-                    _traces.push(trace);
-                }
-            }
+            //scattergl Implement WebGL for increased speed
+            trace = {
+                name: _nameColor[i].key,
+                x: xDatas,
+                y: yDatas,
+                mode:"lines",
+                type: "scattergl",
+                line: {
+                    color: _nameColor[i].value
+                },
+                connectgaps: 'false'
+                };
+        _traces.push(trace);
+        }
+
+
+        // alerte l'utilisateur si le serveur wfs repond mais ne renvoie pas de données pour toutes les stations
+        if (_traces.length < _nameColor.length){
+            if (mviewer.lang.lang == "en") {
+
+            alert("The external data source has a problem, switch to advanced mode and use the bank hydro flow source.");
+          } else {
+
+            alert("La source externe des données à rencontrée un problème , passez en mode avancé et utilisez la source de débit banque hydro.");
+          }
+
         }
         // utilisation de newplot car plot et addtraces dupliquent la legende
         // sur le second graphique
-        Plotly.newPlot($("#graphFlowSimulated")[0], _traces, _layout, {
+        // plotly react est ne pose pas ce probleme et est plus efficient
+        Plotly.react($("#graphFlowSimulated")[0], _traces, _layout, {
             responsive: false,
             modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
             scrollZoom: true
@@ -807,10 +828,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // duplication des graphiques et utilisation de la classe hidden (visibility) car
         // plotly.relayout pose soucis, impossible de depasser 450px de height et impossible
         // de revenir a l'etat d'avant
-        Plotly.newPlot($("#graphFlowSimulatedExtend")[0], _traces, _layout, {
-            responsive: false,
-            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
-            scrollZoom: true
+        Plotly.react($("#graphFlowSimulatedExtend")[0], _traces, _layout, {
+          responsive: false,
+          modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
+          scrollZoom: true
         });
     }
 
@@ -862,13 +883,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
             source: stationSource,
             style: pointStyleFunctionSelected
         });
-
-        // pour chaque entite
-        for (var j = 0; j < features.length; j++) {
+        //si une station source
+        if (features.length == null) {
             // recupere sa coordonnees et son nom
             // passer par une base de donnees permet de normaliser le nom de la couche, qu'importe les services
-            coord = features[j].sql_statement.geometryProperty.Point.coordinates.split(",");
-            nameStation = features[j].sql_statement.station;
+            coord = features.sql_statement.geom.Point.coordinates.split(",");
+            nameStation = features.sql_statement.station;
             arrStations.push(nameStation);
 
             // cree le point en veillant a changer la projection
@@ -881,7 +901,26 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // ajoute la feature a la source
             stationSource.addFeature(featureThing);
         }
+        // pour chaque entite
+        else {
+            for (var j = 0; j < features.length; j++) {
+            // recupere sa coordonnees et son nom
+            // passer par une base de donnees permet de normaliser le nom de la couche, qu'importe les services
+            coord = features[j].sql_statement.geom.Point.coordinates.split(",");
+            nameStation = features[j].sql_statement.station;
+            arrStations.push(nameStation);
 
+            // cree le point en veillant a changer la projection
+            var featureGeom = new ol.geom.Point(ol.proj.transform([coord[0], coord[1]], 'EPSG:2154', 'EPSG:3857'));
+            // cree la feature
+            var featureThing = new ol.Feature({
+                name: nameStation,
+                geometry: featureGeom
+            });
+            // ajoute la feature a la source
+            stationSource.addFeature(featureThing);
+            }
+        }
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_stationLayer);
     }
@@ -1017,7 +1056,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     label = feature.get('label') + "km2\npoids:" + feature.get('weight');
                 }
             } else {
-                label = feature.get('label') + "km2";
+                label = "\n\n\n" + feature.get('label') + "km2";
             }
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
@@ -1099,16 +1138,20 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         } else {
             // s'il y en a plusieurs
+            z=0
             for (var j = 0; j < features.length; j++) {
                 try {
                     coord = features[j].bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features[j].bv.station;
                     area = features[j].bv.area;
                     wghosh = features[j].bv.weights;
-                    _nameColor.push({
-                        key: nameWatershed,
-                        value: _colors[j]
-                    });
+                    if (parseFloat(features[j].bv.weights)!=0){
+                        _nameColor.push({
+                            key: nameWatershed,
+                         value: _colors[j]
+                        });
+                        z++;
+                    }
                     addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
                 } catch (error) {
                     polygonsWatershed = features[j].bv.geometryProperty.MultiPolygon.polygonMember;
@@ -1540,7 +1583,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         X: String(_xy).split(',')[0],
                         Y: String(_xy).split(',')[1],
                         Start: $("#dateStartWaterFlowSimulation").val(),
-                        End: $("#dateEndWaterFlowSimulation").val()
+                        End: $("#dateEndWaterFlowSimulation").val(),
+                        Project: $("#selectProjectInversion").val()
                     };
                     // construit la requete xml POST
                     _rqtWPS = buildPostRequest(dictInputs, _getStations);
@@ -1761,7 +1805,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 Y: String(_xy).split(',')[1],
                                 Start: $("#dateStartWaterFlowSimulation").val(),
                                 End: $("#dateEndWaterFlowSimulation").val(),
-                                DeltaT: $("input[name='deltaTWaterFlowSimulation']:checked").val(),
                                 InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
                                 ListStations: _stationsSelectedByUser.toString(),
                                 Project: $("#selectProjectInversion").val()

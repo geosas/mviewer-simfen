@@ -6,8 +6,8 @@
             <tr>
                 <td>
                     <label class="lang" key-lang="dateDebut">Début&nbsp;&nbsp;</label>
-                    <input type="date" id="dateStartWaterFlowSimulation" name="dateStartWaterFlowSimulation" min=""
-                        max="" value="">
+                    <input type="date" id="dateStartWaterFlowSimulation" name="dateStartWaterFlowSimulation"  min="1984-01-01"
+                    max="" value="1984-01-01">
                 </td>
             </tr>
             <tr>
@@ -27,7 +27,7 @@
                         <input type="radio" id="journalierWaterFlowSimulation" name="deltaTWaterFlowSimulation"
                             value=1440 checked="checked"><span class="lang" key-lang="waterFlowSimulationDeltaT1">
                             Journalier</span>
-                        <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=60><span
+                        <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=60 disabled><span
                             class="lang" key-lang="waterFlowSimulationDeltaT2"> Horaire</span>
                         <!--<input type="radio" id="minute" name="deltaT" value=1>-->
                     </td>
