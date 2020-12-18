@@ -28,7 +28,7 @@ mviewer.customControls.waterFlowSimulationArea = (function () {
     var _xhrGet;
     var _xmlRequest;
     var _rqtWPS;
-    var _urlWPS = "http://wps.geosas.fr/simfen-dev?";
+    var _urlWPS = "http://wps.geosas.fr/simfen-test?";
     var _service = "WPS";
     var _version = "1.0.0";
     var _request = "Execute";
@@ -158,7 +158,7 @@ mviewer.customControls.waterFlowSimulationArea = (function () {
 
         } else if (response.Status.ProcessFailed) {
             // relance la requete etant donne que le process n'a pas de raison de failed,
-            // a part si la requete est passee dans la base sqlite et donc, 
+            // a part si la requete est passee dans la base sqlite et donc,
             // elle n'a pas pu etre recuperee lorsqu'il a ete possible de l'executer
             // supprime l'ancien updating
             clearInterval(_updating);
@@ -607,7 +607,7 @@ mviewer.customControls.waterFlowSimulationArea = (function () {
 
         init: function () {
             // mandatory - code executed when panel is opened
-            $("#legend-waterFlowSimulationArea").hide();
+            $(".list-group-item.mv-layer-details.draggable[data-layerid='waterFlowSimulationArea'] .row.layerdisplay-legend").hide();
             $(".mv-layer-options[data-layerid='waterFlowSimulationArea'] .form-group-opacity").hide();
 
             // Ajoute la possibilite de selectionner les features affichees et de faire une
@@ -621,12 +621,12 @@ mviewer.customControls.waterFlowSimulationArea = (function () {
                         fill: new ol.style.Fill({
                         color: "red",
                         }),
-                        radius: 4
+                        radius: 40
                     })
                 });
 
             var exutoireSource = new ol.source.Vector({
-                url: "http://geowww.agrocampus-ouest.fr/apps/simfen-dev/datas/exutoires_bretagne.json",
+                url: "/apps/simfen-test/data/Jbarrage.json",
                 format: new ol.format.GeoJSON()
             });
 

@@ -11,7 +11,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _xhrGet;
     var _xmlRequest;
     var _rqtWPS;
-    var _urlWPS = "http://wps.geosas.fr/simfen-dev?";
+    var _urlWPS = "https://wps.geosas.fr/simfen-test?";
     var _service = "WPS";
     var _version = "1.0.0";
     var _request = "Execute";
@@ -33,15 +33,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _traces = [];
     var _layout;
     var _timeoutCount = 0;
-    var _colors = ["red", "SaddleBrown", "DarkOrange", "LightSeaGreen", "purple"];
+    var _colors = ["red", "#8b4513", "#FF8C00", "#20B2AA", "purple"];
     var _processing = false;
     var _stationsSelectedByUser;
     var _select;
     var _timerCountdown;
     var _display;
     var _configurationInfos = [];
-    var _initProject = "dreal_b";
-
+    var _initProject = "archives_dreal";
+    var selection1
+    var select
+    var note=0
+    var targetArea
+    var key_gap
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
         String.format = function (format) {
@@ -65,10 +69,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
             xhr = new XMLHttpRequest();
         } else {
             // translate
-            if ($(".dropdown-toggle").text() == "English") {
-                alert("Error initialisation XMLHttpRequests");
+            if (mviewer.lang.lang == "en") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "Error initialisation XMLHttpRequests",
+
+                });
             } else {
-                alert("Erreur initialisation XMLHttpRequests");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erreur',
+                    text: "Erreur initialisation XMLHttpRequests",
+                });
             }
         }
         return xhr;
@@ -80,10 +93,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
         if (url.indexOf('http') !== 0) {
             return url;
         }
-        // same domain
-        else if (url.indexOf(location.protocol + '//' + location.host) === 0) {
-            return url;
-        } else {
+        // same domain option déactivée à cause du http et https qui entrainne une blocage
+        //else if (url.indexOf(location.protocol + '//' + location.host) === 0) {
+          //  return url;}
+        else {
             return '/proxy/?url=' + encodeURIComponent(url);
         }
     }
@@ -134,7 +147,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         if (percent === 100) {
             // si le traitement est termine, supprime l'animation (via la valeur 0), et met le fond en bleu
             percent = 0;
-            $("#processingBar").css("backgroundColor", "#007ACC");
+            $("#processingBar").css("backgroundColor", "#2e5367");
         } else {
             $("#processingBar").css("backgroundColor", "#808080");
         }
@@ -148,7 +161,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // et arrete l'actualisation du process s'il est termine ou failed
         if (response.Status.ProcessAccepted) {
             // translate
-            if ($(".dropdown-toggle").text() == "English") {
+            if (mviewer.lang.lang == "en") {
                 processingBarUpdate(5, "Waiting queue : please wait");
             } else {
                 processingBarUpdate(5, "File d'attente : veuillez patienter");
@@ -161,12 +174,21 @@ mviewer.customControls.waterFlowSimulation = (function () {
             //console.log(response.Status.ProcessStarted);
             if (response.Status.ProcessStarted == "No station available on the period"){
                 // translate
-                if ($(".dropdown-toggle").text() == "English") {
+                if (mviewer.lang.lang == "en") {
                     processingBarUpdate(100, "Change the simulation period");
-                    alert("No stations with data at the start and end date are available, please change them and try again");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: "No stations with data at the start and end date are available, please change them and try again",
+                    });
+
                 } else {
                     processingBarUpdate(100, "Modifiez la période de simulation");
-                    alert("Aucune station ayant des données à la date de début et de fin n'est disponible, veuillez changer les dates et réessayer");
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: "Aucune station ayant des données à la date de début et de fin n'est disponible, veuillez changer les dates et réessayer",
+                    });
                 }
                 clearInterval(_updating);
                 clearInterval(_countdown);
@@ -180,7 +202,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         } else if (response.Status.ProcessSucceeded) {
             // translate
-            if ($(".dropdown-toggle").text() == "English") {
+            if (mviewer.lang.lang == "en") {
                 processingBarUpdate(100, "Finished");
             } else {
                 processingBarUpdate(100, "Terminé");
@@ -189,22 +211,24 @@ mviewer.customControls.waterFlowSimulation = (function () {
             $("#countdown")[0].textContent = "00:00";
 
         } else if (response.Status.ProcessFailed) {
-            // Arrête la requete
-            processingBarUpdate(0, response.Status.ProcessFailed);
+            _processing = false
+            // Arrête la requete response.Status.ProcessFailed
+            processingBarUpdate(0,response.Status.ProcessFailed.ExceptionReport.Exception.ExceptionText );
             clearInterval(_updating);
             clearInterval(_countdown);
             $("#countdown")[0].textContent = "00:00";
-
-        } else {
-            // translate
-            if ($(".dropdown-toggle").text() == "English") {
-                processingBarUpdate(0, "Error, refresh the page");
+            if (mviewer.lang.lang == "en") {
+                txt_error="An error has occurred, if it persists please contact with the information below. If the process is blocked, refresh the page";
             } else {
-                processingBarUpdate(0, "Erreur, actualisez la page");
+                txt_error="Une erreur c'est produite, si elle persiste veuillez nous contacter et nous communiquer les informations ci-dessous. Si le processus est bloqué actualiser la page";
             }
-            clearInterval(_updating);
-            clearInterval(_countdown);
-            $("#countdown")[0].textContent = "00:00";
+            Swal.fire({
+              icon: 'error',
+              title: 'Erreur',
+              text: txt_error,
+              footer:_uuid+'Station : '+_stationsSelectedByUser+'  Date : '+new Date().toLocaleString(),
+            });
+
         }
     }
 
@@ -228,7 +252,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     clearInterval(_countdown);
                     $("#countdown")[0].textContent = "00:00";
                     // translate
-                    if ($(".dropdown-toggle").text() == "English") {
+                    if (mviewer.lang.lang == "en") {
                         processingBarUpdate(0, "The server is not responding, restart the treatment");
                     } else {
                         processingBarUpdate(0, "Le serveur ne répond pas, relancez le traitement");
@@ -277,10 +301,20 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     _xy = outputTag.Data.LiteralData.split(" ");
                                     if (Number(_xy[0]) == 0 && Number(_xy[1]) == 0) {
                                         // translate
-                                        if ($(".dropdown-toggle").text() == "English") {
-                                            alert("The indicated coordinate has an altitude of 0, no simulation possible. Please indicate a point further upstream");
+                                        if (mviewer.lang.lang == "en") {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: "The indicated coordinate has an altitude of 0, no simulation possible. Please indicate a point further upstream",
+
+                                            });
+
                                         } else {
-                                            alert("La coordonnée indiquée possède une altitude de 0, aucune simulation possible. Veuillez indiquer un point plus en amont");
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Erreur',
+                                                text: "La coordonnée indiquée possède une altitude de 0, aucune simulation possible. Veuillez indiquer un point plus en amont",
+                                            });
                                         }
                                     } else {
                                         mviewer.showLocation('EPSG:2154', Number(_xy[0]), Number(_xy[1]));
@@ -292,20 +326,23 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "SimulatedFlow") {
-                                    plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
+                                    //plotDatas(outputTag.Data.ComplexData.Collection.observationMember.OM_Observation.result.MeasurementTimeseries.point);
+                                    plotDatas(outputTag.Data.ComplexData);
                                     // translate
                                     var text;
-                                    if ($(".dropdown-toggle").text() == "English") {
+                                    if (mviewer.lang.lang == "en") {
                                         text = "View measured flows used";
                                     } else {
                                         text = "Afficher les débits mesurés employés";
                                     }
                                     // ajoute le bouton pour afficher les debits mesures employes
+
                                     $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append(["<div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>",
                                         "<button class='btn btn-default' type='button'",
                                         "onclick='mviewer.customControls.waterFlowSimulation.getMeasuredFlow();'>",
                                         String.format("{0}</button></div>",text)
                                     ].join(""));
+
                                     _processing = false;
 
                                 } else if (outputTag.Identifier === "StationsSelected") {
@@ -324,6 +361,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     plotMeasuredFlow(outputTag.Data.ComplexData);
                                     // supprime le bouton
                                     $("#divPopup2").children().first().remove();
+                                    _processing = false;
+                                } else if (outputTag.Identifier === "Obstacle") {
+                                    plotObstacle(outputTag.Data.ComplexData);
                                     _processing = false;
                                 } else if (outputTag.Identifier === "dismiss") {
                                     // Hide kill process button
@@ -344,7 +384,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             clearInterval(_updating);
             clearInterval(_countdown);
             // translate
-            if ($(".dropdown-toggle").text() == "English") {
+            if (mviewer.lang.lang == "en") {
                 console.log("End of treatment");
             } else {
                 console.log("Fin du traitement");
@@ -371,7 +411,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // pour modifier les textes des options de donnees
             if (infos[i*3] == "dreal_b") {
                 textOption = "GéoBretagne";
-            } else {
+            }
+            else if (infos[i*3] == "banque_hydro_24h"){
+                textOption = "Banque hydro bretagne2";
+            }
+             else {
                 textOption = infos[i*3].replace(/_/g,' ');
             }
             $(project).html(textOption);
@@ -390,7 +434,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // Defini les dates de simulation possibles
         $("#dateStartWaterFlowSimulation").attr("min", dateMinSim);
         $("#dateStartWaterFlowSimulation").attr("max", dateMaxSim);
-        $("#dateStartWaterFlowSimulation").val(dateMinSim);
+
+        // Defini une valeur par defaut où 50% des stations existent
+        if (_initProject == "archives_dreal"){$("#dateStartWaterFlowSimulation").val("1984-01-01");
+
+        } else {$("#dateStartWaterFlowSimulation").val(dateMinSim);}
 
         $("#dateEndWaterFlowSimulation").attr("min", dateMinSim);
         $("#dateEndWaterFlowSimulation").attr("max", dateMaxSim);
@@ -410,7 +458,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 // Get UUID of process
                 _uuid = statusLocationURL.split("/")[statusLocationURL.split("/").length-1].split(".")[0];
                 // Maj de la barre de progression
-                processingBarUpdate(0, "Initialisation");
+                if (mviewer.lang.lang == "en") {processingBarUpdate(0, "Launching the query");}
+                else{processingBarUpdate(0, "Lancement de la requête");}
+
 
                 var promise = Promise.resolve(true);
                 // Debut d'ecoute du resultat
@@ -479,7 +529,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     //     }
     //     // translate
     //     var text;
-    //     if ($(".dropdown-toggle").text() == "English") {
+    //     if (mviewer.lang.lang == "en") {
     //         text = "Water flow simulated ";
     //     } else {
     //         text = "Débits simulés ";
@@ -506,7 +556,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     //         licenceFile.setAttribute("download", "licence_simulation.txt");
     //     }
     //     // translate
-    //     if ($(".dropdown-toggle").text() == "English") {
+    //     if (mviewer.lang.lang == "en") {
     //         text = "Disclaimer ";
     //     } else {
     //         text = "Licence d'utilisation ";
@@ -525,7 +575,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     //     listStations = listStations.substring(0, listStations.length - 1);
 
     //     // translate
-    //     if ($(".dropdown-toggle").text() == "English") {
+    //     if (mviewer.lang.lang == "en") {
     //         var str = "x;y;start;end;stations;timestep;hydrographic network" + "\r\n";
     //     } else {
     //         var str = "x;y;debut;fin;stations;pas de temps;réseau hydrographique" + "\r\n";
@@ -533,14 +583,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
     //     var period;
     //     if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 1440) {
     //         // translate
-    //         if ($(".dropdown-toggle").text() == "English") {
+    //         if (mviewer.lang.lang == "en") {
     //             period = "daily";
     //         } else {
     //             period = "journalier";
     //         }
     //     } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 60) {
     //         // translate
-    //         if ($(".dropdown-toggle").text() == "English") {
+    //         if (mviewer.lang.lang == "en") {
     //             period = "hourly";
     //         } else {
     //             period = "horaire";
@@ -548,7 +598,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     //     }
     //     // translate
     //     var hydroNetwork;
-    //     if ($(".dropdown-toggle").text() == "English") {
+    //     if (mviewer.lang.lang == "en") {
     //         hydroNetwork = "modeled hydrographic network thresholded at 25 ha (DEM 50m)";
     //     } else {
     //         hydroNetwork = "réseau hydrographique modélisé seuillé à 25ha (MNT 50m)";
@@ -583,7 +633,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     //     }
     //     // translate
     //     var text;
-    //     if ($(".dropdown-toggle").text() == "English") {
+    //     if (mviewer.lang.lang == "en") {
     //         text = "Metadata of simulation ";
     //     } else {
     //         text = "Métadonnée de simulation ";
@@ -598,7 +648,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // la licence, les metadonnees de calcul et la simulation
 
         // Header of csvfile = Licence in panelDisclaimer
-        var outFile = $("[key-lang='panelDisclaimer']").text() + "\r\n";
+        var outFile = $("[i18n='panelDisclaimer']").text() + "\r\n";
 
         // Append calculation metadata
         listStations = "";
@@ -609,22 +659,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         var metadonneesCalcul;
         // translate
-        if ($(".dropdown-toggle").text() == "English") {
-            metadonneesCalcul = "x;y;start;end;stations;timestep;hydrographic-network" + "\r\n";
+        if (mviewer.lang.lang == "en") {
+            metadonneesCalcul = "x;y;start;end;stations;timestep;hydrographic-network;target-catchment-area-km2" + "\r\n";
         } else {
-            metadonneesCalcul = "x;y;debut;fin;stations;pas-de-temps;réseau-hydrographique" + "\r\n";
+            metadonneesCalcul = "x;y;debut;fin;stations;pas-de-temps;réseau-hydrographique;aire-bassin-versant-cible-km2" + "\r\n";
         }
         var period;
         if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 1440) {
             // translate
-            if ($(".dropdown-toggle").text() == "English") {
+            if (mviewer.lang.lang == "en") {
                 period = "daily";
             } else {
                 period = "journalier";
             }
         } else if ($("input[name='deltaTWaterFlowSimulation']:checked").val() == 60) {
             // translate
-            if ($(".dropdown-toggle").text() == "English") {
+            if (mviewer.lang.lang == "en") {
                 period = "hourly";
             } else {
                 period = "horaire";
@@ -632,19 +682,21 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
         // translate
         var hydroNetwork;
-        if ($(".dropdown-toggle").text() == "English") {
+        if (mviewer.lang.lang == "en") {
             hydroNetwork = "Réseau hydrographique étendu";//"modeled hydrographic network thresholded at 25 ha (DEM 50m)";
         } else {
             hydroNetwork = "Réseau hydrographique étendu";//"réseau hydrographique modélisé seuillé à 25ha (MNT 50m)";
         }
-        metadonneesCalcul += String.format("{0};{1};{2};{3};{4};{5};{6}" ,
+        metadonneesCalcul += String.format("{0};{1};{2};{3};{4};{5};{6};{7}" ,
             _xy[0],
             _xy[1],
             $("#dateStartWaterFlowSimulation").val(),
             $("#dateEndWaterFlowSimulation").val(),
             listStations,
             period,
-            hydroNetwork) + "\r\n";
+            hydroNetwork,
+            Math.round(targetArea*100)/100) + "\r\n";
+
 
         // Ajoute les metadonnées au fichier de sortie
         outFile += metadonneesCalcul;
@@ -686,7 +738,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         }
         // translate
         var text;
-        if ($(".dropdown-toggle").text() == "English") {
+        if (mviewer.lang.lang == "en") {
             text = "Water flow simulated ";
         } else {
             text = "Débits simulés ";
@@ -697,11 +749,36 @@ mviewer.customControls.waterFlowSimulation = (function () {
     }
 
     function plotDatas(points) {
+        //rajout pour json
+        // notation des stations et des obstacles
+        if (targetArea<10){
+            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p style='color:red'>La surface du bassin versant est trop petite pour réaliser une simulation correcte. Utiliser les résultats avec prudence</font></p></div>";
+        } else if (Math.round(note)===1){
+            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Régime hydrologique des stations sources <span style='color:green'>Faiblement influencé</span></p></div>";
+        } else if (Math.round(note)===2){
+            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Régime hydrologique des stations sources <span style='color:orange'>Moyennement influencé</span></p></div>";
+        } else if (Math.round(note)===3){
+            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Régime hydrologique des stations sources <span style='color:red'>Fortement influencé</span></p></div>";
+        } else {
+            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Erreur dans la notation des stations sources </p></div>";
+        }
+
+        $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append([codeRegime]);
+
+
+        var datasJson = JSON.parse(points);
         var xDatas = [];
         var yDatas = [];
-        for (var i = 0; i < points.length; i++) {
-            xDatas = xDatas.concat(points[i].MeasurementTVP.time);
-            yDatas = yDatas.concat(points[i].MeasurementTVP.value);
+        for (var i = 0; i < datasJson.length; i++) {
+            xDatas.push(datasJson[i][0]);
+            yDatas.push(datasJson[i][1]);
+
+            //si fichier en waterml code si dessous, mais le json est beaucoup plus leger (le navigateur ne plante pas)
+            //push plus rapide que concat (le navigateur ne plante pas)
+            //xDatas.push(datasJson[i].date);
+            //yDatas.push(datasJson[i].debit);
+            //xDatas.push(points[i].MeasurementTVP.time);
+            //yDatas.push(points[i].MeasurementTVP.value);
         }
 
         // cree un fichier contenant les donnees au format csv
@@ -713,20 +790,22 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         // translate
         var text;
-        if ($(".dropdown-toggle").text() == "English") {
+        if (mviewer.lang.lang == "en") {
             text = "Water flow simulated ";
         } else {
             text = "Débits simulés ";
         }
-
+        //scattergl Implement WebGL for increased speed
         _traces = [{
             name: text,
             x: xDatas,
             y: yDatas,
-            type: 'line',
+            mode:"lines",
+            type: 'scattergl',
             line: {
                 color: 'black'
-            }
+            },
+            connectgaps: 'false'
         }];
 
         _layout = {
@@ -755,50 +834,70 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // plotly.relayout pose soucis, impossible de depasser 450px de height et impossible
         // de revenir a l'etat d'avant
         Plotly.newPlot($("#graphFlowSimulatedExtend")[0], _traces, _layout, {
-            responsive: false,
-            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
-            scrollZoom: true
+          responsive: false,
+          modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
+          scrollZoom: true
         });
     }
 
     function plotMeasuredFlow(datas) {
-        // ameliorer pour ne faire qu'un passage dans le fichier de resultat
-        var datasJson = JSON.parse(datas);
-        var names = [];
-        var trace;
-        for (var i = 0; i < datasJson.length; i++) {
-            names = names.concat(datasJson[i].station);
-        }
-        // obtient les identifants uniques
-        names = Array.from(new Set(names));
 
-        for (i = 0; i < names.length; i++) {
+        var datasJson = JSON.parse(datas);
+        var trace;
+        for (i = 0; i < _nameColor.length; i++) {
             var xDatas = [];
             var yDatas = [];
             for (var j = 0; j < datasJson.length; j++) {
-                if (names[i] === datasJson[j].station) {
-                    xDatas = xDatas.concat(datasJson[j].date);
-                    yDatas = yDatas.concat(datasJson[j].measuredFlow);
+                if (_nameColor[i].key === datasJson[j].station) {
+                    //xDatas = xDatas.concat(datasJson[j].date);
+                    //yDatas = yDatas.concat(datasJson[j].measuredFlow);
+                    xDatas.push(datasJson[j].date);
+                    yDatas.push(datasJson[j].measuredFlow);
+                    //si highcharts conversion en ms de la date
+                    //data_flow.push([new Date((datasJson[j].date)).getTime(),parseFloat(datasJson[j].measuredFlow)])
                 }
             }
-            for (j = 0; j < _nameColor.length; j++) {
-                if (names[i] === _nameColor[j].key) {
-                    trace = {
-                        name: names[i],
-                        x: xDatas,
-                        y: yDatas,
-                        type: "line",
-                        line: {
-                            color: _nameColor[j].value
-                        }
-                    };
-                    _traces.push(trace);
-                }
-            }
+            //scattergl Implement WebGL for increased speed
+            trace = {
+                name: _nameColor[i].key,
+                x: xDatas,
+                y: yDatas,
+                mode:"lines",
+                type: "scattergl",
+                line: {
+                    color: _nameColor[i].value
+                },
+                connectgaps: 'false'
+                };
+        _traces.push(trace);
+        }
+
+
+        // alerte l'utilisateur si le serveur wfs repond mais ne renvoie pas de données pour toutes les stations
+        if (_traces.length < _nameColor.length){
+            if (mviewer.lang.lang == "en") {
+
+            Swal.fire({
+                icon: 'warning',  title: "Show flow rate :",
+                text: "The external data source has a problem, switch to advanced mode and use the bank hydro flow source.",
+                confirmButtonColor: '#2e5367',
+                confirmButtonText: "Ok",
+            });
+          } else {
+
+            Swal.fire({
+                icon: 'warning',  title: "Affichage des débits :",
+                text: "La source externe des données à rencontrée un problème , passez en mode avancé et utilisez la source de débit banque hydro.",
+                confirmButtonColor: '#2e5367',
+                confirmButtonText: "Ok",
+            });
+          }
+
         }
         // utilisation de newplot car plot et addtraces dupliquent la legende
         // sur le second graphique
-        Plotly.newPlot($("#graphFlowSimulated")[0], _traces, _layout, {
+        // plotly react est ne pose pas ce probleme et est plus efficient
+        Plotly.react($("#graphFlowSimulated")[0], _traces, _layout, {
             responsive: false,
             modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
             scrollZoom: true
@@ -807,10 +906,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // duplication des graphiques et utilisation de la classe hidden (visibility) car
         // plotly.relayout pose soucis, impossible de depasser 450px de height et impossible
         // de revenir a l'etat d'avant
-        Plotly.newPlot($("#graphFlowSimulatedExtend")[0], _traces, _layout, {
-            responsive: false,
-            modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
-            scrollZoom: true
+        Plotly.react($("#graphFlowSimulatedExtend")[0], _traces, _layout, {
+          responsive: false,
+          modeBarButtonsToRemove: ["toggleSpikelines", "zoomIn2d", "zoomOut2d"],
+          scrollZoom: true
         });
     }
 
@@ -820,10 +919,24 @@ mviewer.customControls.waterFlowSimulation = (function () {
         produite, la supprime avant*/
 
         function pointStyleFunctionSelected(feature) {
-            return new ol.style.Style({
-                image: new ol.style.RegularShape({
+
+            var couleur_qualite;
+
+            if(feature.get('qualite') === '1') {
+                couleur_qualite="#27df32";
+            } else if(feature.get('qualite') === '2') {
+                couleur_qualite="orange";
+            } else if(feature.get('qualite') === '3') {
+                couleur_qualite="red";
+            } else if(feature.get('qualite') === '0') {
+                couleur_qualite="#2e5367";
+            }
+
+            if(parseInt(feature.get('duree')) > '365') {
+                stl = [new ol.style.Style({
+                    image:  new ol.style.RegularShape({
                     fill: new ol.style.Fill({
-                        color: "OliveDrab"
+                        color: couleur_qualite,
                     }),
                     stroke: new ol.style.Stroke({
                         color: 'black',
@@ -831,17 +944,53 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     }),
                     points: 3,
                     radius: 15,
-                    angle: 0
-                  }),
-                text: createTextStyle(feature)
-            });
-        }
+                    angle: 0,
+
+                    }),
+                    text: createTextStyle(feature)
+                }),
+                new ol.style.Style({
+                    image: new ol.style.RegularShape({
+                        fill: new ol.style.Fill({color: 'black'}),
+                        stroke: new ol.style.Stroke({color: 'black', width: 3}),
+                        points: 4,
+                        radius: 6,
+                        radius2: 0,
+                        angle: Math.PI / 4
+                    })
+                })
+                ];
+
+                return stl;
+
+            } else {
+
+                stl = new ol.style.Style({
+                    image: new ol.style.RegularShape({
+                        fill: new ol.style.Fill({color: couleur_qualite}),
+                        stroke: new ol.style.Stroke({
+                            color: 'black',
+                            width: 3
+                        }),
+                        points: 3,
+                        radius: 15,
+                        angle: 0,
+                    }),
+                    text: createTextStyle(feature)
+                });
+
+                return stl;}
+            }
+
+
+
+
 
         var createTextStyle = function (feature) {
             return new ol.style.Text({
-                font: '14px Calibri,sans-serif',
-                text: feature.get('name'),
-                offsetY: 20,
+                font: '12px Calibri,sans-serif',
+                text: feature.get('date_min').substr(0, 10)+"\n"+feature.get('date_max').substr(0, 10)+"\n"+feature.get('name'),
+                offsetY: 40,
                 fill: new ol.style.Fill({
                     color: '#000'
                 }),
@@ -860,15 +1009,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var _stationLayer = new ol.layer.Vector({
             name: "StationsAvailable",
             source: stationSource,
-            style: pointStyleFunctionSelected
+            style: pointStyleFunctionSelected,
         });
+        //si une station (cas de agrhys par exemple)
+        if (features.length == null) {
 
-        // pour chaque entite
-        for (var j = 0; j < features.length; j++) {
-            // recupere sa coordonnees et son nom
-            // passer par une base de donnees permet de normaliser le nom de la couche, qu'importe les services
-            coord = features[j].sql_statement.geometryProperty.Point.coordinates.split(",");
-            nameStation = features[j].sql_statement.station;
+            coord =features.sql_statement.geom.Point.coordinates.split(",");
+            nameStation = features.sql_statement.station;
+            qualitat=features.sql_statement.qualite;
+            date_minimum=features.sql_statement.min;
+            date_maximum=features.sql_statement.max;
+            trou_sql=features.sql_statement.gap;
+            duree_trou=features.sql_statement.somme_gap;
             arrStations.push(nameStation);
 
             // cree le point en veillant a changer la projection
@@ -876,17 +1028,87 @@ mviewer.customControls.waterFlowSimulation = (function () {
             // cree la feature
             var featureThing = new ol.Feature({
                 name: nameStation,
-                geometry: featureGeom
+                geometry: featureGeom,
+                qualite: qualitat,
+                date_min: date_minimum,
+                date_max: date_maximum,
+                trou: trou_sql,
+                duree: duree_trou,
             });
             // ajoute la feature a la source
             stationSource.addFeature(featureThing);
+
+
+        } else {
+            // pour chaque entite
+            for (var j = 0; j < features.length; j++) {
+                // recupere sa coordonnees et son nom
+                // passer par une base de donnees permet de normaliser le nom de la couche, qu'importe les services
+                coord = features[j].sql_statement.geom.Point.coordinates.split(",");
+                nameStation = features[j].sql_statement.station;
+                qualitat=features[j].sql_statement.qualite;
+                date_minimum=features[j].sql_statement.min;
+                date_maximum=features[j].sql_statement.max;
+                trou_sql=features[j].sql_statement.gap;
+                duree_trou=features[j].sql_statement.somme_gap;
+                arrStations.push(nameStation);
+
+                // cree le point en veillant a changer la projection
+                var featureGeom = new ol.geom.Point(ol.proj.transform([coord[0], coord[1]], 'EPSG:2154', 'EPSG:3857'));
+                // cree la feature
+                var featureThing = new ol.Feature({
+                    name: nameStation,
+                    geometry: featureGeom,
+                    qualite: qualitat,
+                    date_min: date_minimum,
+                    date_max: date_maximum,
+                    trou: trou_sql,
+                    duree: duree_trou,
+                });
+                // ajoute la feature a la source
+                stationSource.addFeature(featureThing);
+            }
         }
 
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_stationLayer);
+
+        var info = document.getElementById('divPopup1');
+        info.innerHTML = "<img src='/apps/simfen-test/data/lgd_regime.png' alt='Légende régimes des stations'>";
+
+        // permet de déclencher l'alerte contenant les infos complémentaires en cliquant sur la station
+        var displayFeatureInfo = function(pixel) {
+
+            var feature = _map.forEachFeatureAtPixel(pixel, function(feature) {
+                return feature;
+            });
+
+            if (feature) {
+                Swal.fire({
+                    title: feature.get('name')+" données manquantes :",
+                    html: feature.get('trou'),
+                    confirmButtonColor: '#2e5367',
+                    confirmButtonText: "Ok",
+                });
+            };
+        };
+
+        function show_info(){
+            var evtKey=_map.on('click', function(evt) {
+                if (evt.dragging) {
+                    return;
+                };
+            var pixel = _map.getEventPixel(evt.originalEvent);
+            displayFeatureInfo(pixel);
+            });
+            return evtKey;
+        };
+
+        key_gap =show_info();
     }
 
     function plotTargetWatershed(features) {
+
 
         function styleFunction(feature) {
             return new ol.style.Style({
@@ -896,16 +1118,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 }),
                 text: styleWatershed(feature)
             });
-        }
+        };
 
         var styleWatershed = function (feature) {
             // translate
             var text;
-            if ($(".dropdown-toggle").text() == "English") {
-                label = "Target basin";
+
+            if (mviewer.lang.lang == "en") {
+                label = "Target basin\n"+Math.round(targetArea*100)/100+" km2";
             } else {
-                label = "Bassin cible";
-            }
+                label = "Bassin cible\n"+Math.round(targetArea*100)/100+" km2";
+            };
+
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
@@ -926,16 +1150,60 @@ mviewer.customControls.waterFlowSimulation = (function () {
             for (var i in coords) {
                 var c = coords[i].split(',');
                 polyCoords.push(ol.proj.transform([parseFloat(c[0]), parseFloat(c[1])], 'EPSG:2154', 'EPSG:3857'));
-            }
+            };
             // cree la feature
+
             var feature = new ol.Feature({
                 name: nameWatershed,
                 geometry: new ol.geom.Polygon([polyCoords]),
-                label: area
+                label: area,
+
             });
+
+            //alerte pour la taille des bassins versants
+            targetArea=ol.sphere.getArea(feature.getGeometry())/1000000;
+
+            if (targetArea<10){
+                if (mviewer.lang.lang == "en") {
+
+                    Swal.fire({
+                        icon: 'warning',  title: "Area = "+Math.round(targetArea*100)/100+" km2",
+                        text: "The watershed area is less than 10km2, the results will not reflect the reality",
+                        showCancelButton: true,
+                        confirmButtonColor: '#2e5367',
+                        cancelButtonColor: '#d58c0c',
+                        confirmButtonText: "Change outlet",
+                        cancelButtonText: 'Continue',
+                    }).then((result) => {
+                        if (result.value) {
+                            _processing = false;
+                            _draw = "";
+                            mviewer.customControls.waterFlowSimulation.getXY();
+                        }
+                    })
+                } else {
+
+                    Swal.fire({
+                        icon: 'warning',  title: "Surface = "+Math.round(targetArea*100)/100+" km2",
+                        text: "La surface du bassin versant est inférieure à 10km2, les résultats ne seront pas optimaux",
+                        showCancelButton: true,
+                        confirmButtonColor: '#2e5367',
+                        cancelButtonColor: '#d58c0c',
+                        confirmButtonText: "Changer l'exutoire",
+                        cancelButtonText: 'Continuer',
+                    }).then((result) => {
+                        if (result.value) {
+                            _processing = false;
+                            _draw = "";
+                            mviewer.customControls.waterFlowSimulation.getXY();
+                        }
+                    })
+                }
+            };
+
             // ajoute la feature a la source
             watershedsSource.addFeature(feature);
-        }
+        };
 
         // initialise la source de donnees qui va contenir les entites
         var watershedsSource = new ol.source.Vector({});
@@ -946,13 +1214,30 @@ mviewer.customControls.waterFlowSimulation = (function () {
             source: watershedsSource,
             style: styleFunction
         });
+        //fonction pour télécharger le bassin versant cible
+        _watershedsLayer.getSource().on('change', function(evt){
+            if (mviewer.lang.lang == "en") {
+                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<a  style='background-color:#2e5367' class='btn btn-primary' id='download'>Download the target watershed</a>"])
+            } else {
+                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<a  style='background-color:#2e5367' class='btn btn-primary' id='download'>Télécharger le bassin versant cible</a>"])
+            };
+
+        let format = new ol.format.GeoJSON({featureProjection: 'EPSG:3857'});
+        let download = document.getElementById('download');
+        let features = _watershedsLayer.getSource().getFeatures();
+        let json = format.writeFeatures(features);
+        download.href = 'data:text/json;charset=utf-8,' + json;
+        download.download='Bassin versant cible.json'
+
+        });
+
 
         // s'il n'y a qu'une feature/station
         if (features.length == null) {
             try {
                 coord = features.bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                 nameWatershed = features.bv.station;
-                area = 0;
+                area=0;
                 addWatershed(coord, nameWatershed, watershedsSource, area);
             } catch (error) {
                 multiPolygons = features.bv.geometryProperty.MultiPolygon.polygonMember;
@@ -962,7 +1247,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     area = 0;
                     addWatershed(coord, nameWatershed, watershedsSource, area);
                 }
-            }
+            };
         } else {
             // s'il y en a plusieurs
             for (var j = 0; j < features.length; j++) {
@@ -980,7 +1265,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         addWatershed(coord, nameWatershed, watershedsSource, area);
                     }
                 }
-            }
+            };
         }
         // ajoute la couche de point des stations a la carte
         _map.addLayer(_watershedsLayer);
@@ -998,7 +1283,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     colorWatershed = _nameColor[i].value;
                 }
             }
-
             return new ol.style.Style({
                 stroke: new ol.style.Stroke({
                     width: 3,
@@ -1006,19 +1290,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 }),
                 text: createTextStyleWatershed(feature, colorWatershed)
             });
-        }
+        };
 
         var createTextStyleWatershed = function (feature, colorWatershed) {
             if (feature.get('weight') != 0) {
                 // translate
-                if ($(".dropdown-toggle").text() == "English") {
+                if (mviewer.lang.lang == "en") {
                     label = feature.get('label') + "km2\nweight:" + feature.get('weight');
                 } else {
                     label = feature.get('label') + "km2\npoids:" + feature.get('weight');
                 }
             } else {
-                label = feature.get('label') + "km2";
-            }
+                label = ""//"\n\n"+feature.get('label') + "km2";
+            };
             return new ol.style.Text({
                 font: '12px Calibri,sans-serif',
                 text: label,
@@ -1078,6 +1362,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 nameWatershed = features.bv.station;
                 area = features.bv.area;
                 wghosh = features.bv.weights;
+
+                if (parseFloat(features[j].bv.weights)==0){
+                    note_barrage=parseInt(features[j].bv.qualite)
+                }
+
+                note=(parseInt(features[j].bv.qualite)*parseFloat(features[j].bv.weights));
                 _nameColor.push({
                     key: nameWatershed,
                     value: _colors[0]
@@ -1090,6 +1380,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     nameWatershed = features.bv.station;
                     area = features.bv.area;
                     wghosh = features.bv.weights;
+
+                    if (parseFloat(features[j].bv.weights)==0){
+                        note_barrage=parseInt(features[j].bv.qualite)
+                    }
+
+                    note=(parseInt(features[j].bv.qualite)*parseFloat(features[j].bv.weights));
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[0]
@@ -1099,16 +1395,26 @@ mviewer.customControls.waterFlowSimulation = (function () {
             }
         } else {
             // s'il y en a plusieurs
+            z=0
             for (var j = 0; j < features.length; j++) {
                 try {
                     coord = features[j].bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features[j].bv.station;
                     area = features[j].bv.area;
                     wghosh = features[j].bv.weights;
-                    _nameColor.push({
-                        key: nameWatershed,
-                        value: _colors[j]
-                    });
+
+                    if (parseFloat(features[j].bv.weights)==0){
+                        note_barrage=parseInt(features[j].bv.qualite)
+                    }
+
+                    note+=(parseInt(features[j].bv.qualite)*parseFloat(features[j].bv.weights));
+                    if (parseFloat(features[j].bv.weights)!=0){
+                        _nameColor.push({
+                            key: nameWatershed,
+                            value: _colors[z]
+                        });
+                        z++;
+                    }
                     addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
                 } catch (error) {
                     polygonsWatershed = features[j].bv.geometryProperty.MultiPolygon.polygonMember;
@@ -1117,6 +1423,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         nameWatershed = features[j].bv.station;
                         area = features[j].bv.area;
                         wghosh = features[j].bv.weights;
+
+                        if (parseFloat(features[j].bv.weights)==0){
+                            note_barrage=parseInt(features[j].bv.qualite)
+                        }
+
+                        note+=(parseInt(features[j].bv.qualite)*parseFloat(features[j].bv.weights));
                         _nameColor.push({
                             key: nameWatershed,
                             value: _colors[j]
@@ -1259,10 +1571,10 @@ mviewer.customControls.waterFlowSimulation = (function () {
         // si l'interval de temps = horaire et plus d'un an
         if (deltaT == 60 && period > 3650) {
             // translate
-            if ($(".dropdown-toggle").text() == "English") {
-                launchProcess = confirm("The treatment will slow down your browser and take a long time (40min), please do not stop the script if it offers or run model over a smaller period would you like to continue ?");
+            if (mviewer.lang.lang == "en") {
+                launchProcess = confirm("The treatment will take a long time (1min30s), please do not stop the script if it offers, would you like to continue ?");
             } else {
-                launchProcess = confirm("Le traitement va ralentir votre navigateur et prendre du temps (40min), veuillez ne pas arrêter le script s'il le propose ou effectuez un traitement sur une période plus courte, souhaitez-vous continuer ?");
+                launchProcess = confirm("Le traitement va prendre du temps (1min30s), veuillez ne pas arrêter le script s'il le propose, souhaitez-vous continuer ?");
             }
             if (launchProcess) {
                 return true;
@@ -1272,6 +1584,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         } else {
             return true;
         }
+        // plus nécessaire avec les inversions stockées
         // si l'intervalle de temps est journalier
         // } else if (deltaT == 1440) {
         //     // estime le temps de traitement en prenant en reference 20s pour 1 an
@@ -1308,7 +1621,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
             if (--timer < 0) {
                 // translate
-                if ($(".dropdown-toggle").text() == "English") {
+                if (mviewer.lang.lang == "en") {
                     $("#countdown").text("Please wait...");
                 } else {
                     $("#countdown").text("Veuillez patienter...");
@@ -1316,6 +1629,24 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 clearInterval(_countdown);
             }
         }, 1000);
+    }
+
+    function plotObstacle(datas) {
+
+        if (targetArea>10){
+
+            data_obs=JSON.parse(datas)
+            nb_obs=data_obs.length
+            aire_b=0
+            data_obs.forEach(element => aire_b+=element.aire_km2);
+            pourcentage=Math.round(aire_b/targetArea*100)
+            if (nb_obs > 0){
+                codeBarrage="<div id='notation2' style='font-size:20px'><p>Obstacle à l'écoulement (5m et +) dans BV cible : "+nb_obs+" ("+pourcentage+"% du BV cible)</p></div>";
+                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append([codeBarrage]);
+            }
+
+        }
+
     }
 
     return {
@@ -1397,9 +1728,26 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         getXY: function () {
             if (_processing === false) {
+                if (key_gap != 0){
+                    // désactive les fonctions liées à showAvailableStations
+                    ol.Observable.unByKey(key_gap);
+                    key_gap=0;
+                }
                 if (!_draw) {
+                    var curseur = new ol.style.Style({
+                        image: new ol.style.RegularShape({
+                            stroke: new ol.style.Stroke({
+                            color: 'red',
+                            width: 1
+                        }),
+                        points: 4,
+                        radius1: 15,
+                        radius2: 1
+                        }),
+                    });
                     _draw = new ol.interaction.Draw({
-                        type: 'Point'
+                        type: 'Point',
+                        style:curseur
                     });
                     _draw.on('drawend', function (event) {
                         _xy = ol.proj.transform(event.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:2154');
@@ -1427,15 +1775,20 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             _display = document.querySelector('#countdown');
                             // supprimer les couches
                             deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected", "TargetWatershed"]);
+                            processingBarUpdate(0, "Initialisation");
                             processExecution();
                             _processing = true;
 
                             // supprime les resultats du precedent process
                             if ($("#graphFlowSimulated").children().first()) {
+                              $("#divPopup1").children().remove();
+                            }
+
+                            if ($("#graphFlowSimulated").children().first()) {
                                 $("#graphFlowSimulated").children().first().remove();
                                 $("#graphFlowSimulatedExtend").children().first().remove();
-                                $("#divPopup1").children().remove();
                                 $("#divPopup2").children().first().remove();
+                                $("#divPopup4").children().remove();
                             }
 
                             // affiche le panneau de resultat
@@ -1446,10 +1799,19 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             $(".btn").blur();
                         } else {
                             // translate
-                            if ($(".dropdown-toggle").text() == "English") {
-                                alert("Please click in the SIMFEN project area");
+                            if (mviewer.lang.lang == "en") {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning',
+                                    text: "Please click in the SIMFEN project area",
+                                });
+
                             } else {
-                                alert("Veuillez cliquer dans la zone du projet SIMFEN");
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Attention',
+                                    text: "Veuillez cliquer dans la zone du projet SIMFEN",
+                                });
                             }
                             mviewer.getMap().addInteraction(_draw);
                         }
@@ -1457,24 +1819,45 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     mviewer.getMap().addInteraction(_draw);
                 } else {
                     // translate
-                    if ($(".dropdown-toggle").text() == "English") {
-                        alert("You have already activated the tool, please click on the map");
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "You have already activated the tool, please click on the map",
+                        });
                     } else {
-                        alert("Vous avez déjà activé l'outil, veuillez cliquer sur la carte");
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text: "Vous avez déjà activé l'outil, veuillez cliquer sur la carte",
+                        });
                     }
                 }
             } else {
                 // translate
-                if ($(".dropdown-toggle").text() == "English") {
-                    alert("Please wait until the end of the process before running a new one");
+                if (mviewer.lang.lang == "en") {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Please wait until the end of the process before running a new one, if the process is locked refresh the page",
+                    });
+
                 } else {
-                    alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau");
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Veuillez attendre la fin du process avant d'en exécuter un nouveau, si vous êtes bloqué actualiser la page",
+                    });
                 }
             }
         },
 
         getXYFromCoordinate: function () {
             if (_processing === false) {
+                if (key_gap != 0){
+                    ol.Observable.unByKey(key_gap);
+                    key_gap=0;
+                }
                 //si on souhaite renseigner manuellement la coordonnees xy
                 if ($("#XYWaterFlowSimulation").val() && !$("#XYWaterFlowSimulation").val().match(/[a-z]/i)) {
                     //supprime les espaces, remplace les virgules et les points
@@ -1502,6 +1885,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         _display = document.querySelector('#countdown');
                         // supprimer les couches
                         deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected", "TargetWatershed"]);
+                        processingBarUpdate(0, "Initialisation");
                         processExecution();
                         _processing = true;
                         //clear le champ
@@ -1509,10 +1893,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                         // supprime les resultats du precedent process
                         if ($("#graphFlowSimulated").children().first()) {
+                          $("#divPopup1").children().remove();
+                        }
+                        if ($("#graphFlowSimulated").children().first()) {
                             $("#graphFlowSimulated").children().first().remove();
                             $("#graphFlowSimulatedExtend").children().first().remove();
-                            $("#divPopup1").children().remove();
                             $("#divPopup2").children().first().remove();
+                            $("#divPopup4").children().remove();
                         }
                         // affiche le panneau de resultat
                         if ($("#bottom-panel").hasClass("")) {
@@ -1520,18 +1907,60 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         }
                         $(".btn").blur();
                     } else {
-                        alert("Veuillez indiquer une coordonnée dans la zone du projet SIMFEN.");
+                        //translate
+                        if (mviewer.lang.lang == "en") {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning',
+                                text: "Please enter a coordinate in the SIMFEN project field.",
+                            });
+
+                            } else{
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Attention',
+                                    text: "Veuillez indiquer une coordonnée dans la zone du projet SIMFEN.",
+                                });
+                              }
                     }
                 } else {
-                    alert("Veuillez indiquer une coordonnée X,Y.");
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Please enter an X,Y coordinate.",
+                        });
+                    } else{
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text: "Veuillez indiquer une coordonnée X,Y.",
+                        });
+                    }
                 }
             } else {
-                alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau.");
+                if (mviewer.lang.lang == "en") {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Please wait until the end of the process before running a new one, if the process is locked refresh the page",
+                    });
+                }else{
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Veuillez attendre la fin du process avant d'en exécuter un nouveau, si vous êtes bloqué actualiser la page",
+                    });
+              }
             }
         },
 
         showAvailableStations: function () {
             if (_processing === false) {
+                if (key_gap != 0){
+                    ol.Observable.unByKey(key_gap);
+                    key_gap=0;
+                }
                 if (_xy) {
                     // dismiss button appear
                     $("#dismiss").toggleClass("hidden");
@@ -1540,7 +1969,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         X: String(_xy).split(',')[0],
                         Y: String(_xy).split(',')[1],
                         Start: $("#dateStartWaterFlowSimulation").val(),
-                        End: $("#dateEndWaterFlowSimulation").val()
+                        End: $("#dateEndWaterFlowSimulation").val(),
+                        Project: $("#selectProjectInversion").val()
                     };
                     // construit la requete xml POST
                     _rqtWPS = buildPostRequest(dictInputs, _getStations);
@@ -1550,117 +1980,172 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     _timeOut = 100000;
                     _timerCountdown = 2;
                     _display = document.querySelector('#countdown');
+                    deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected"]);
+                    processingBarUpdate(0, "Initialisation");
                     processExecution();
                     _processing = true;
-                    $(".btn").blur();
-                } else {
-                    // translate
-                    if ($(".dropdown-toggle").text() == "English") {
-                        alert("Please click on the flag to define the outlet to simulate");
-                    } else {
-                        alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
+                    // supprime les resultats du precedent process
+                    if ($("#graphFlowSimulated").children().first()) {
+                      $("#divPopup1").children().remove();
                     }
-                }
-            } else {
+                    if ($("#graphFlowSimulated").children().first()) {
+                        $("#graphFlowSimulated").children().first().remove();
+                        $("#graphFlowSimulatedExtend").children().first().remove();
+                        $("#divPopup2").children().first().remove();
+                        $("#divPopup4").children().remove();
+                    }
+                    // affiche le panneau de resultat
+                    if ($("#bottom-panel").hasClass("")) {
+                        $("#bottom-panel").toggleClass("active");
+                    }
+                    $(".btn").blur();
+                    } else {
+                    // translate
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Please click on the flag to define the outlet to simulate",
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text: "Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler",
+                        });
+                    }
+                    }
+                    } else {
                 // translate
-                if ($(".dropdown-toggle").text() == "English") {
-                    alert("Please wait until the end of the process before running a new one");
-                } else {
-                    alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau");
-                }
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Please wait until the end of the process before running a new one, if the process is locked refresh the page",
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Veuillez attendre la fin du process avant d'en exécuter un nouveau, si vous êtes bloqué actualiser la page",
+                        });
+                    }
             }
         },
 
         selectAvailableStations: function () {
-            if (!_drawPolygon) {
-                //cree la variable select
-                var select;
-                //defini un parser de geometry pour faire l'intersection via la bibliotheque jsts
-                var parser = new jsts.io.OL3Parser();
-                //defini le vecteur qui va correspondre au polygone dessiné pour seelctionner les exutoires
-                var polygonSelection = new ol.layer.Vector({
-                    id: 'polygonSelection',
-                    source: new ol.source.Vector()
-                });
-                //cree l'interaction de dessin du polygone
-                _drawPolygon = new ol.interaction.Draw({
-                    source: polygonSelection.getSource(),
-                    type: 'Polygon'
-                });
+            if (!select) {
+                if (key_gap != 0){
+                    ol.Observable.unByKey(key_gap);
+                    key_gap=0};
+              //cree collection pour la selection
+                selection1 = new ol.Collection();
 
-                //ajoute l'interaction
-                mviewer.getMap().addInteraction(_drawPolygon);
 
-                //recupere chaque elements de la couche stationsavailable qui sont dans le polygone
+              //recupere chaque elements de la couche stationsavailable qui sont dans le polygone
                 _map.getLayers().forEach(function (layer) {
                     if (layer.get('name') != undefined && (layer.get('name') === 'StationsAvailable')) {
                         _stationLayer = layer;
                     }
-                });
-
-                //a la fin du pol
-                _drawPolygon.on('drawend', function (event) {
-                    //recupere la geometrie de la feature creee
-                    var featureDraw = event.feature.getGeometry();
-                    var jsts_geom_select = parser.read(featureDraw);
-
-                    var layer_select_geometries = _stationLayer.getSource().getFeatures().filter(function (el) {
-                        if (jsts_geom_select.contains(parser.read(el.getGeometry()))) {
-                            return true;
-                        }
-                    });
-
-                    //nettoye les selections
-                    polygonSelection.getSource().clear();
-                    select.getFeatures().clear();
-
-                    //selectionne visuellement les exutoires
-                    select.getFeatures().extend(layer_select_geometries);
-
-                    //recupere l'id des entites intersectees et le stocke pour effectuer le traitement
-                    _stationsSelectedByUser = layer_select_geometries.map(function (feature) {
-                        return feature.values_.name;
-                    });
-
-                    //enleve l'interaction permettant de créer le polygone
-                    mviewer.getMap().removeInteraction(_drawPolygon);
-                    _drawPolygon= "";
-                    _select = select;
-                });
+                 });
 
                 var highlightStyle = new ol.style.Style({
                     image: new ol.style.RegularShape({
                         fill: new ol.style.Fill({
-                            color: "crimson"
+                            color: "pink"
                         }),
-                        stroke: new ol.style.Stroke({
-                            color: 'black',
-                            width: 3
-                        }),
-                        points: 3,
-                        radius: 15,
-                        angle: 0,
-                      }),
+                    stroke: new ol.style.Stroke({
+                        color: 'black',
+                        width: 3
+                    }),
+                    points: 3,
+                    radius: 15,
+                    angle: 0,
+                    }),
+                });
+                //cree la variable select
+                select= new ol.interaction.Select({
+                    layers:[_stationLayer],
+                    features:selection1,
+                    style: highlightStyle,
+                    toggleCondition:ol.events.condition.singleClick
                 });
 
-                // Crée l'interaction de selection des exutoires
-                select = new ol.interaction.Select({
-                    layers: [_stationLayer],
-                    style: highlightStyle
-                });
                 _map.addInteraction(select);
                 $(".btn").blur();
+
             } else {
                 // translate
-                if ($(".dropdown-toggle").text() == "English") {
-                    alert("You have already activated the tool, please draw a polygon around the stations you want to select");
+                if (mviewer.lang.lang == "en") {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "You have already activated the tool, please click on the stations you want to select",
+                    });
                 } else {
-                    alert("Vous avez déjà activé l'outil, veuillez dessiner un polygone autour des stations que vous voulez sélectionner");
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Attention',
+                        text: "Vous avez déjà activé l'outil, veuillez cliquer sur les stations que vous voulez sélectionner",
+                    });
                 }
             }
         },
 
+        _validationSelect:function () {
+
+            _stationsSelectedByUser= (selection1.getArray().map(function(feature) {
+
+                return feature.values_.name;
+
+            }));
+            if (_stationsSelectedByUser.length > 5) {
+                // translate
+                if (mviewer.lang.lang == "en") {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Please select 5 stations at most",
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Veuillez sélectionner 5 stations au plus",
+                    });
+                }
+                if (_select){
+                    _select.getFeatures().clear();
+                }
+            } else {
+                if (mviewer.lang.lang == "en") {
+
+                    Swal.fire({icon: 'success',  title: "Selected stations :",
+                        text: _stationsSelectedByUser,
+                        confirmButtonColor: '#2e5367',
+                        confirmButtonText: "Ok",
+                    });
+                } else {
+
+                    Swal.fire({icon: 'success',  title: "Stations sélectionnées :",
+                        text: _stationsSelectedByUser,
+                        confirmButtonColor: '#2e5367',
+                        confirmButtonText: "Ok",
+                    });
+                }
+            }
+            //vide les selections
+
+            selection1.clear();
+
+            //enleve l'interaction permettant de selectionner les stations
+            mviewer.getMap().removeInteraction(select);
+            select= "";
+
+        },
+
         getMeasuredFlow: function () {
+
             if (_processing === false) {
                 // Verifier que le graphique existe pour pouvoir ajouter des
                 // courbes dedans
@@ -1690,51 +2175,104 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                     _timerCountdown = 8;
                     _display = document.querySelector('#countdown');
-
+                    processingBarUpdate(0, "Initialisation");
                     processExecution();
                     _processing = true;
                     $(".btn").blur();
                 } else {
-                    // translate
-                    if ($(".dropdown-toggle").text() == "English") {
-                        alert("Please simulate the flow before pressing this button");
+                    // translate; normalement le bouton apparait après la simulation donc pas besoin de l'alerte
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Please simulate the flow before pressing this button",
+                        });
                     } else {
-                        alert("Veuillez simuler le débit avant d'appuyer sur ce bouton");
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text: "Veuillez simuler le débit avant d'appuyer sur ce bouton",
+                        });
                     }
                 }
             } else {
                 // translate
-                if ($(".dropdown-toggle").text() == "English") {
-                    alert("Please wait until the end of the process before running a new one");
+                if (mviewer.lang.lang == "en") {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Please wait until the end of the process before running a new one, if the process is locked refresh the page",
+                    })
                 } else {
-                    alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau");
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Veuillez attendre la fin du process avant d'en exécuter un nouveau, si vous êtes bloqué actualiser la page",
+                    });
                 }
             }
         },
 
         waterFlowSimulation: function () {
+
             if (_processing === false) {
+                note=0
+                if (key_gap != 0){
+                    ol.Observable.unByKey(key_gap);
+                    key_gap=0;
+                }
+                if(select){ //pour eviter le cas ou l'utilisateur oublie de valider sa sélection, s'en rend compte et recommence une selection
+                            //si ne rajoute pas ces lignes la sélection sera impossible
+                    selection1.clear();
+                    //enleve l'interaction permettant de selectionner les stations
+                    mviewer.getMap().removeInteraction(select);
+                    select= "";
+                }
                 // controle les dates
                 if ($("#dateStartWaterFlowSimulation").val() < $("#dateStartWaterFlowSimulation").attr("min")) {
                     // translate
-                    if ($(".dropdown-toggle").text() == "English") {
-                        alert("Please, enter a date greater than " + $("#dateStartWaterFlowSimulation").attr("min"));
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Please, enter a date greater than " + $("#dateStartWaterFlowSimulation").attr("min"),
+                        });
                     } else {
-                        alert("Veuillez indiquer une date supérieure au " + $("#dateStartWaterFlowSimulation").attr("min"));
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text: "Veuillez indiquer une date supérieure au " + $("#dateStartWaterFlowSimulation").attr("min"),
+                        });
                     }
                 } else if ($("#dateEndWaterFlowSimulation").val() > $("#dateEndWaterFlowSimulation").attr("max")) {
                     // translate
-                    if ($(".dropdown-toggle").text() == "English") {
-                        alert("Please, enter a date lower than " + $("#dateStartWaterFlowSimulation").attr("max"));
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Please, enter a date lower than " + $("#dateStartWaterFlowSimulation").attr("max"),
+                        });
                     } else {
-                        alert("Veuillez indiquer une date inférieure au " + $("#dateStartWaterFlowSimulation").attr("max"));
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text:"Veuillez indiquer une date inférieure au " + $("#dateStartWaterFlowSimulation").attr("max"),
+                        });
                     }
                 } else if ($("#dateStartWaterFlowSimulation").val() == $("#dateEndWaterFlowSimulation").val()) {
                     // translate
-                    if ($(".dropdown-toggle").text() == "English") {
-                        alert("Please, indicate different dates");
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Please, indicate different dates",
+                        });
                     } else {
-                        alert("Veuillez indiquer des dates différentes");
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text: "Veuillez indiquer des dates différentes",
+                        });
                     }
                 } else {
                     if (_xy) {
@@ -1743,10 +2281,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         }
                         if (_stationsSelectedByUser.length > 5) {
                             // translate
-                            if ($(".dropdown-toggle").text() == "English") {
-                                alert("Please select 5 stations at most");
+                            if (mviewer.lang.lang == "en") {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning',
+                                    text: "Please select 5 stations at most",
+                                });
                             } else {
-                                alert("Veuillez sélectionner 5 stations au plus");
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Warning',
+                                    text: "Veuillez sélectionner 5 stations au plus",
+                                });
                             }
                             if (_select){
                                 _select.getFeatures().clear();
@@ -1761,7 +2307,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 Y: String(_xy).split(',')[1],
                                 Start: $("#dateStartWaterFlowSimulation").val(),
                                 End: $("#dateEndWaterFlowSimulation").val(),
-                                DeltaT: $("input[name='deltaTWaterFlowSimulation']:checked").val(),
                                 InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
                                 ListStations: _stationsSelectedByUser.toString(),
                                 Project: $("#selectProjectInversion").val()
@@ -1778,25 +2323,26 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 console.log(_rqtWPS);
                                 // supprime les resultats du precedent process
                                 if ($("#graphFlowSimulated").children().first()) {
+                                  $("#divPopup1").children().remove();
+                                }
+                                if ($("#graphFlowSimulated").children().first()) {
                                     $("#graphFlowSimulated").children().first().remove();
                                     $("#graphFlowSimulatedExtend").children().first().remove();
-                                    $("#divPopup1").children().remove();
                                     $("#divPopup2").children().first().remove();
+                                    $("#divPopup4").children().remove();
                                 }
                                 // defini des valeurs globales dans le cas d'une reexecution
                                 // si le process posse en file d'attente et execute le process
                                 _refreshTime = 3000;
                                 _timeOut = 100000;
 
-                                periodAvailable = (new Date($("#dateEndWaterFlowSimulation").attr("max")) - new Date($("#dateStartWaterFlowSimulation").attr("min"))) / 86400000;
-                                if (periodAvailable > 3650 && dictInputs.DeltaT == "1440") {
-                                    _timerCountdown = 80;
-                                } else {
-                                    _timerCountdown = 20;
-                                }
+                                //periodAvailable = (new Date($("#dateEndWaterFlowSimulation").attr("max")) - new Date($("#dateStartWaterFlowSimulation").attr("min"))) / 86400000;
+                                _timerCountdown = 16;
+
                                 _display = document.querySelector('#countdown');
                                 // supprimer les couches
                                 deleteLayers(["Watersheds", "StationsAvailable", "StationsSelected"]);
+                                processingBarUpdate(0, "Initialisation");
                                 processExecution();
                                 _processing = true;
 
@@ -1813,21 +2359,197 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                     } else {
                         // translate
-                        if ($(".dropdown-toggle").text() == "English") {
-                            alert("Please click on the flag to define the outlet to simulate");
+                        if (mviewer.lang.lang == "en") {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Warning',
+                                text: "Please click on the flag to define the outlet to simulate",
+                            });
                         } else {
-                            alert("Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler");
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Attention',
+                                text: "Veuillez cliquer sur le drapeau afin de définir l'exutoire à simuler",
+                            });
                         }
                     }
                 }
             } else {
                 // translate
-                if ($(".dropdown-toggle").text() == "English") {
-                    alert("Please wait until the end of the process before running a new one");
+                if (mviewer.lang.lang == "en") {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Please wait until the end of the process before running a new one, if the process is locked refresh the page",
+                    });
                 } else {
-                    alert("Veuillez attendre la fin du process avant d'en exécuter un nouveau");
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: "Veuillez attendre la fin du process avant d'en exécuter un nouveau, si vous êtes bloqué actualiser la page",
+                    });
                 }
             }
+        },
+
+        startIntro: function () {
+
+            if (mviewer.lang.lang == "en") {
+                var intro = introJs();
+                intro.setOption('showProgress', true).setOption('doneLabel', 'Terminé').setOption('exitOnOverlayClick', false).setOptions({
+                    steps: [
+                        {
+                            intro: "Hello to the SIMFEN tutorial."
+                        },
+                        {
+                            element: '#datesimulation',
+                            intro: "Clickg on this button opens the menu to select the start and end dates of the simulation."
+                        },
+                        {
+                            element: "#exutoire",
+                            intro:"Click on this button, then move over a watercourse to place &#171;the target outlet&#187; using the red cross where you wish to have the flow simulation."
+                        },
+                        {
+                            element: '#calcul',
+                            intro:"Click on this Button starts the treatment."
+                        },
+                        {
+                            element: '#optionA',
+                            intro: "This Button activates or deactivates the advanced mode allowing to refine the choices."
+                        },
+                        {
+                            element: '#resultat',
+                            intro: "This Button is used to show/hide the results (graph of flow data)"
+                        },
+                        {
+                            element: '#stationDispo',
+                            intro:"Advanced Mode: this button displays the stations within a 50km radius around &#171; the target outlet &#187; chosen. Additional information: influence regime (color coded), date of first available flow recording, click on the stations for more information."
+
+                        },
+                        {
+                            element:'#selectStation',
+                            intro:"Advanced Mode: after displaying the stations, this button allows you to manually select the source stations that will be used for the calculation. To select several stations (max : 5) click on the stations"
+
+                        },
+                        {
+                            element:'#validationSelection',
+                            intro:"Advanced Mode: this button is used to validate the selection of &#171; source stations &#187; selected &#171; source stations."
+                        },
+                        {
+                            element:'#identifiantSimulation',
+                            intro:"Advanced Mode: Name of the simulation, if saved"
+                        },
+                        {
+                            element:'#XYWaterFlowSimulation',
+                            intro:"Advanced Mode: it is possible to manually enter the X,Y coordinates (in Lambert 93) of &#171; the target outlet &#187; where one wishes to obtain the simulated flow rates."
+                        },
+                        {
+                            element:'#validationCoord',
+                            intro:"Advanced mode: click on the arrow to validate the coordinates"
+                        },
+                        {
+                            element:'#selectProjectInversion',
+                            intro:"Advanced mode: this menu allows you to choose the origin of the source data."
+                        },
+
+                    ]
+                });
+
+                intro.start().oncomplete(function() {
+                    $('#stationDispo,#selectStation,#validationSelection').toggle();
+                    $('#dateOptions,#waterFlowSimulationOptions').collapse('hide');
+                    Swal.fire({
+                        imageUrl: '/apps/simfen-test/data/image_test.png',
+                        titleText :'Panneaux résultat',
+                        width:'100%',
+                        imageWidth:'100%'
+                    });
+                })
+            } else {
+                var intro = introJs();
+                intro.setOption('showProgress', true).setOption('doneLabel', 'Terminé').setOption('exitOnOverlayClick', false).setOptions({
+                    steps: [
+                        {
+                            intro: "Bienvenue dans le tutoriel de SIMFEN."
+                        },
+                        {
+                            element: '#datesimulation',
+                            intro: "Ce bouton permet d'ouvrir le menu pour sélectionner les dates de début et de fin de simulation"
+                        },
+                        {
+                            element: "#exutoire",
+                            intro:"Cliquer sur ce bouton, puis sur un cours d'eau pour placer &#171;l'exutoire cible&#187; à l'aide de la croix rouge. Si vous cliquez en dehors du réseau hydraulique, le processus va automatiquement placer &#171;l'exutoire cible&#187; cible sur le réseau le plus proche"
+                        },
+                        {
+                            element: '#calcul',
+                            intro:"Cliquer sur ce Bouton permet de lancer le traitement qui va calculer le débit à l'emplacement de &#171;l'exutoire cible&#187;"
+                        },
+                        {
+                            element: '#optionA',
+                            intro: "Ce Bouton active ou désactive le mode avancé permettant d'affiner les choix"
+                        },
+                        {
+                            element: '#resultat',
+                            intro: "Ce Bouton permet d'afficher/cacher les résultats (graphique des données de débits)"
+                        },
+                        {
+                            element: '#stationDispo',
+                            intro:"Mode Avancé : ce bouton permet d'afficher les stations dans un rayon de 50km autour de &#171; l'extutoire cible &#187; choisi. Informations complémentaires : régime d'influence (code couleur), la date de premier et dernier enregistrement de débit disponible, si vous cliquer sur une stations vous obtiendrez les périodes manquantes."
+                        },
+                        {
+                            element:'#selectStation',
+                            intro:"Mode Avancé : après avoir affiché les stations, ce bouton permet de sélectionner manuellement les &#171; stations sources &#187; qui seront utilisées pour le calcul. Pour sélectionner plusieurs stations (max : 5) cliquer sur les stations, pour annuler une sélection re-cliquer une station"
+                        },
+                        {
+                            element:'#validationSelection',
+                            intro:"Mode Avancé : ce bouton permet de valider la sélection des &#171; stations sources &#187; choisies"
+                        },
+                        {
+                            element:'#identifiantSimulation',
+                            intro:"Mode Avancé : Nom de la simulation, si elle est sauvegardée"
+                        },
+                        {
+                            element:'#XYWaterFlowSimulation',
+                            intro:"Mode Avancé : il est possible de rentrer manuellement les coordonnées X,Y (en Lambert 93) de &#171; l'exutoire cible &#187; où l'on souhaite obtenir les débits simulés"
+                        },
+                        {
+                            element:'#validationCoord',
+                            intro:"Mode avancé : cliquer sur la flèche pour valider les coordonnées"
+                        },
+                        {
+                            element:'#selectProjectInversion',
+                            intro:"Mode avancé : ce menu permet de chosir l'origine des données sources"
+                        },
+
+                    ]
+                });
+
+                intro.start().oncomplete(function() {
+                    var idTab5 = document.getElementById("calcul");
+                    idTab5.setAttribute("style", "color:white ;background-color: #2e5367;font-size:20px;width: 120px;height:109px;");
+                    var idTab6 = document.getElementById("calcul_tag");
+                    idTab6.setAttribute("style", "font-size:18px;");
+                    var idTab7 = document.getElementById("calcul_icon");
+                    idTab7.setAttribute("style", "font-size:64px;");
+
+                    var idTab5 = document.getElementById("exutoire");
+                    idTab5.setAttribute("style", "color:white ;background-color: #2e5367;font-size:20px;width: 120px;height:109px;");
+                    var idTab6 = document.getElementById("exutoire_tag");
+                    idTab6.setAttribute("style", "font-size:18px;");
+                    var idTab7 = document.getElementById("exutoire_icon");
+                    idTab7.setAttribute("style", "font-size:61px;");
+                    $('#stationDispo,#selectStation,#validationSelection').toggle();
+                    $('#dateOptions,#waterFlowSimulationOptions').collapse('hide');
+                    expand=true;
+                    Swal.fire({
+                        imageUrl: '/apps/simfen-test/data/image_test.png',
+                        titleText :'Panneaux résultat',
+                        width:'100%',
+                        imageWidth:'100%'
+                    });
+                })
+            }
         }
+
     };
 }());

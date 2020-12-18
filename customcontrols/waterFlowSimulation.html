@@ -1,56 +1,131 @@
+<script src="/apps/simfen-test/tuto/intro.js"></script>
+<link href="/apps/simfen-test/tuto/introjs.css" rel="stylesheet">
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="https://unpkg.com/jsts@2.0.1/dist/jsts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2"></script>
+
+<!-- pour gérer les conflits avec le tuto, probleme d'ouverture fermeture de menu -->
+<style type="text/css">
+#stationDispo, #selectStation,#validationSelection {display: none}
+</style>
+
 <div class="row">
     <div class="col-md-12">
-        <table style="border-collapse:separate; border-spacing:3px;">
-            <tr>
-                <td>
-                    <label class="lang" key-lang="dateDebut">Début&nbsp;&nbsp;</label>
-                    <input type="date" id="dateStartWaterFlowSimulation" name="dateStartWaterFlowSimulation" min=""
-                        max="" value="">
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <label class="lang" key-lang="dateFin">Fin&nbsp;&nbsp;&nbsp;</label>
-                    <input type="date" id="dateEndWaterFlowSimulation" name="dateEndWaterFlowSimulation" min=""
-                        max="" value="">
-                </td>
-            </tr>
-            <tr>
+        <button i18n="datesimulation" title="Choix date" style="color:white ;background-color: #2e5367;font-size:20px;width: 243px " class="btn btn-default"
+            data-toggle="collapse" data-target="#dateOptions" id="datesimulation">
+            <span i18n="periodeSimulation">1.Période de simulation</span>
+        </button>
+
+        <div class="collapse" id="dateOptions" >
+            <table style="border-collapse:separate; border-spacing:3px;">
+                <tr>
+                    <!-- input de la date-->
                     <td>
-                        <label class="lang" key-lang="waterFlowSimulationDeltaT">Pas de temps des débits simulés :</label>
+                        <label>
+                            <span i18n="dateDebut">Début&nbsp;&nbsp;</span>
+                        </label>
+                        <input type="date" id="dateStartWaterFlowSimulation" name="dateStartWaterFlowSimulation" min="1984-01-01"
+                            max="" value="1984-01-01" >
+                    </td>
+                </tr>
+                <tr> <!-- input de la date-->
+                    <td>
+                        <label>
+                            <span i18n="dateFin">Fin&nbsp;&nbsp;&nbsp;</span>
+                        </label>
+                        <input type="date" id="dateEndWaterFlowSimulation" name="dateEndWaterFlowSimulation" min=""
+                            max="" value="">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>
+                            <span i18n="waterFlowSimulationDeltaT">Pas de temps des débits simulés :</span>
+                        </label>
                     </td>
                 </tr>
                 <tr>
                     <td>
                         <input type="radio" id="journalierWaterFlowSimulation" name="deltaTWaterFlowSimulation"
-                            value=1440 checked="checked"><span class="lang" key-lang="waterFlowSimulationDeltaT1">
-                            Journalier</span>
-                        <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation" value=60><span
-                            class="lang" key-lang="waterFlowSimulationDeltaT2"> Horaire</span>
-                        <!--<input type="radio" id="minute" name="deltaT" value=1>-->
+                            value=1440 checked="checked">
+                            <span i18n="waterFlowSimulationDeltaT1">Journalier</span>
+                        <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation"  value=60>
+                            <span i18n="waterFlowSimulationDeltaT2"> Horaire</span>
+                            <!--<input type="radio" id="minute" name="deltaT" value=1>-->
                     </td>
                 </tr>
-        </table>
-
+            </table>
+        </div>
         <div id="mouse-position"></div>
+
+
+        <button id ="exutoire" i18n="exutoire" title="Placer l'exutoire" style="color:white ;background-color: #2e5367;font-size:20px;width: 120px "
+            class="btn btn-default " onclick="mviewer.customControls.waterFlowSimulation.getXY();">
+
+            <span id="exutoire_icon" class="glyphicon glyphicon-flag" aria-hidden="true" style="font-size:61px" ></span>
+
+                <figcaption>
+                    <span id="exutoire_tag" i18n="btn1" style="font-size:18px">2.Exutoire</span>
+                </figcaption>
+        </button>
+
+        <button id="calcul" i18n="calcul" title="Lancer le calcul" style="color:white ;background-color: #2e5367;font-size:20px;width: 120px"
+            class="btn btn-default " onclick="mviewer.customControls.waterFlowSimulation.waterFlowSimulation();">
+
+            <span id="calcul_icon" class="glyphicon glyphicon-play-circle " aria-hidden="true" style="font-size:64px"></span>
+
+                <figcaption id="calcul_tag" style="font-size:18px">3.Simulation</figcaption>
+        </button>
+
+		<br>
+		<br>
+
+         <button id="optionA" i18n="modeAvance" title="Options avancées" style="color:white ;background-color: #2e5367"
+            class="btn btn-default" type="button" data-toggle="collapse" data-target="#waterFlowSimulationOptions,#waterFlowSimulationOptions1"
+            aria-expanded="false">
+            <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+
+        </button>
+        <button id="resultat" i18n="panneauResultat" title="Afficher le panneau de résultat" style="color:white ;background-color: #2e5367"
+            class="btn btn-default " type="button" onclick="$('#bottom-panel').toggleClass('active')">
+            <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+
+        </button>
+        <button id="stationDispo" i18n="afficherStation" title="Afficher les stations disponibles" style="color:white ;background-color: #2e5367 "
+            class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.showAvailableStations();">
+            <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+        </button>
+        <button id="selectStation" i18n="selectionStation" title="Sélectionne les stations à employer" style="color:white ;background-color: #2e5367 "
+            class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.selectAvailableStations();">
+            <span class="glyphicon glyphicon-pushpin" aria-hidden="true"></span>
+        </button>
+        <button id="validationSelection" i18n="validSelection" title="Valide la sélection" style="color:white ;background-color: #2e5367 "
+            class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation._validationSelect()">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+        </button>
+
 
         <div class="collapse" id="waterFlowSimulationOptions">
             <div class="panel-body">
+
                 <table style="border-collapse:separate; border-spacing:3px;">
+
                     <tr>
                         <td>
-                            <label class="lang" key-lang="identifiantSimulation">Nom :</label>
+                            <label>
+                                <span i18n="identifiantSimulation">Nom :</span>
+                            </label>
                             <input type="text" id="identifiantSimulation" name="identifiantSimulation" placeholder="output_simulation">
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <label class="lang" key-lang="setCoordText">Coordonnées X,Y (Lambert 93) :</label>
+                            <label>
+                                <span i18n="setCoordText">Coordonnées X,Y (Lambert 93) :</span>
+                            </label>
                             <input type="text" id="XYWaterFlowSimulation" name="XYWaterFlowSimulation" placeholder="273618.23,6786198.45">
-                            <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.getXYFromCoordinate();">
-                                <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
+                            <button i18n="exutoire" title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.getXYFromCoordinate();">
+                                <span id="validationCoord" class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
                             </button>
                         </td>
                     </tr>
@@ -65,40 +140,60 @@
                             <input type="checkbox" id="inBasinWaterFlowSimulation"><span class="lang" key-lang="oui"> Oui</span>
                         </td>
                     </tr> -->
+
                     <tr>
                         <td>
-                            <label class="lang" key-lang="waterFlowSimulationStationsAvailable">Afficher les stations
-                                disponibles pour selectionner celles-ci manuellement :</label>
-                            <button title="Afficher les stations disponibles" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.showAvailableStations();">
-                                <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
-                            </button>
-                            <button title="Sélectionne les stations à employer" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.selectAvailableStations();">
-                                <span class="glyphicon glyphicon-unchecked" aria-hidden="true"></span>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <label class="lang" key-lang="selectProjectInversionText">Débits à employer :</label>
-                            <select title="Liste des données disponibles" id="selectProjectInversion" onchange="mviewer.customControls.waterFlowSimulation.setPeriodSimulation(this.value);">
+                            <label>
+                                <span i18n="selectProjectInversionText">Débits à employer :</span>
+                            </label>
+                            <select i18n="archives" title="Liste des données disponibles" id="selectProjectInversion"
+                            onchange="mviewer.customControls.waterFlowSimulation.setPeriodSimulation(this.value);">
                             </select>
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
-        <button title="Options avancées" class="btn btn-default" type="button" data-toggle="collapse" data-target="#waterFlowSimulationOptions"
-            aria-expanded="false" onclick="$(this).trigger('blur');">
-            <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
-        </button>
-        <button title="Placer l'exutoire" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.getXY();">
-            <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
-        </button>
-        <button title="Lancer le calcul" class="btn btn-default" onclick="mviewer.customControls.waterFlowSimulation.waterFlowSimulation();">
-            <span class="glyphicon glyphicon-play-circle" aria-hidden="true"></span>
-        </button>
-        <button title="Afficher le panneau de résultat" class="btn btn-default" type="button" onclick="$('#bottom-panel').toggleClass('active')">
-            <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
-        </button>
     </div>
 </div>
+
+<script>
+// permet de gérer l'ouverture des menus, l'option par button collapse n'était pas satisfaisante
+expand=true
+$(document).ready(function(){
+    $("#optionA,#startTuto").click(function(){
+        $("#stationDispo,#selectStation,#validationSelection").toggle();
+        if(expand==true){
+            var idTab5 = document.getElementById("calcul");
+            idTab5.setAttribute("style", "color:white ;background-color: #2e5367;width:40px;height:34px;");
+            var idTab6 = document.getElementById("calcul_tag");
+            idTab6.setAttribute("style", "font-size:0px;");
+            var idTab7 = document.getElementById("calcul_icon");
+            idTab7.setAttribute("style", "");
+
+            var idTab5 = document.getElementById("exutoire");
+            idTab5.setAttribute("style", "color:white ;background-color: #2e5367;width:40px;height:34px;");
+            var idTab6 = document.getElementById("exutoire_tag");
+            idTab6.setAttribute("style", "font-size:0px;");
+            var idTab7 = document.getElementById("exutoire_icon");
+            idTab7.setAttribute("style", "");
+            expand=false
+        } else {
+            var idTab5 = document.getElementById("calcul");
+            idTab5.setAttribute("style", "color:white ;background-color: #2e5367;font-size:20px;width: 120px;height:109px;");
+            var idTab6 = document.getElementById("calcul_tag");
+            idTab6.setAttribute("style", "font-size:18px;");
+            var idTab7 = document.getElementById("calcul_icon");
+            idTab7.setAttribute("style", "font-size:64px;");
+
+            var idTab5 = document.getElementById("exutoire");
+            idTab5.setAttribute("style", "color:white ;background-color: #2e5367;font-size:20px;width: 120px;height:109px;");
+            var idTab6 = document.getElementById("exutoire_tag");
+            idTab6.setAttribute("style", "font-size:18px;");
+            var idTab7 = document.getElementById("exutoire_icon");
+            idTab7.setAttribute("style", "font-size:61px;");
+            expand=true
+        }
+    });
+});
+</script>
