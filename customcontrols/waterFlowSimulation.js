@@ -751,20 +751,35 @@ mviewer.customControls.waterFlowSimulation = (function () {
     function plotDatas(points) {
         //rajout pour json
         // notation des stations et des obstacles
-        if (targetArea<10){
-            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p style='color:red'>La surface du bassin versant est trop petite pour réaliser une simulation correcte. Utiliser les résultats avec prudence</font></p></div>";
-        } else if (Math.round(note)===1){
-            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Régime hydrologique des stations sources <span style='color:green'>Faiblement influencé</span></p></div>";
-        } else if (Math.round(note)===2){
-            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Régime hydrologique des stations sources <span style='color:orange'>Moyennement influencé</span></p></div>";
-        } else if (Math.round(note)===3){
-            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Régime hydrologique des stations sources <span style='color:red'>Fortement influencé</span></p></div>";
+        if (mviewer.lang.lang == "en") {
+            if (targetArea<10){
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p style='color:red'>The surface of the watershed is too small to perform a correct simulation. Use the results with caution.</font></p></div>";
+            } else if (Math.round(note)===1){
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Local influence of the hydrometric station <span style='color:green'>None or low</span></p></div>";
+            } else if (Math.round(note)===2){
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Local influence of the hydrometric station <span style='color:orange'>Notable</span></p></div>";
+            } else if (Math.round(note)===3){
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Local influence of the hydrometric station <span style='color:red'>Strong</span></p></div>";
+            } else {
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Error in the scoring of source stations </p></div>";
+            }
+
+            $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append([codeRegime]);
         } else {
-            codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Erreur dans la notation des stations sources </p></div>";
+            if (targetArea<10){
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p style='color:red'>La surface du bassin versant est trop petite pour réaliser une simulation correcte. Utiliser les résultats avec prudence.</font></p></div>";
+            } else if (Math.round(note)===1){
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale de la station hydrométrique <span style='color:green'>Nulle ou faible</span></p></div>";
+            } else if (Math.round(note)===2){
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale de la station hydrométrique <span style='color:orange'>Notable</span></p></div>";
+            } else if (Math.round(note)===3){
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale de la station hydrométrique <span style='color:red'>Forte</span></p></div>";
+            } else {
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Erreur dans la notation des stations sources </p></div>";
+            }
+
+            $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append([codeRegime]);
         }
-
-        $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append([codeRegime]);
-
 
         var datasJson = JSON.parse(points);
         var xDatas = [];
