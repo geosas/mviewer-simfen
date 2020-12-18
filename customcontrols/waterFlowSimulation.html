@@ -49,7 +49,7 @@
                         <input type="radio" id="journalierWaterFlowSimulation" name="deltaTWaterFlowSimulation"
                             value=1440 checked="checked">
                             <span i18n="waterFlowSimulationDeltaT1">Journalier</span>
-                        <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation"  value=60>
+                        <input type="radio" id="horaireWaterFlowSimulation" name="deltaTWaterFlowSimulation"  value=60 disabled>
                             <span i18n="waterFlowSimulationDeltaT2"> Horaire</span>
                             <!--<input type="radio" id="minute" name="deltaT" value=1>-->
                     </td>
@@ -195,5 +195,23 @@ $(document).ready(function(){
             expand=true
         }
     });
+});
+
+var source = document.getElementById("selectProjectInversion");
+
+source.addEventListener('input', function (evt) {
+    journalier=document.getElementById("journalierWaterFlowSimulation");
+    horaire=document.getElementById("horaireWaterFlowSimulation");
+    if (source.value=="hub_eau"){
+        journalier.disabled = true
+        journalier.checked = false
+        horaire.disabled = false
+        horaire.checked = true
+    } else {
+        journalier.disabled = false
+        journalier.checked = true
+        horaire.disabled = true
+        horaire.checked = false
+    }
 });
 </script>
