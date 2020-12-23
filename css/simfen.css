@@ -719,3 +719,32 @@ button.btn.btn-default.navbar-btn.mv-navbar-btn:focus{
 .number-step {
     font-size: 40px !important;
 }
+/*******************************
+-------------obstacle table
+********************************/
+.obs-table {
+    border: solid 1px #DDEEEE;
+    border-spacing: 0;
+    font: normal 13px Arial, sans-serif;
+    margin-left: auto;
+    margin-right: auto;
+}
+.obs-table thead th {
+    background-color: #DDEFEF;
+    border: solid 1px #DDEEEE;
+    color: #336B6B;
+    padding: 10px;
+    text-align: left;
+
+}
+.obs-table td {
+    border: solid 1px #DDEEEE;
+    color: #333;
+    padding: 10px;
+
+}
+
+.obs-table td:empty {
+    background: #DDEFEF;
+}
+

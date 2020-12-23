@@ -46,6 +46,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var note=0
     var targetArea
     var key_gap
+    var obstacle
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
         String.format = function (format) {
@@ -1650,15 +1651,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
         if (targetArea>10){
 
-            data_obs=JSON.parse(datas)
-            nb_obs=data_obs.length
-            aire_b=0
-            data_obs.forEach(element => aire_b+=element.aire_km2);
-            pourcentage=Math.round(aire_b/targetArea*100)
-            if (nb_obs > 0){
-                codeBarrage="<div id='notation2' style='font-size:20px'><p>Obstacle à l'écoulement (5m et +) dans BV cible : "+nb_obs+" ("+pourcentage+"% du BV cible)</p></div>";
-                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append([codeBarrage]);
-            }
+            obstacle=JSON.parse(datas)
+            text="Obstacle"
+            $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<div id='btnObs' style='padding-top:10px;position:absolute;'>",
+                                        "<button class='btn btn-default' type='button'",
+                                        "onclick='mviewer.customControls.waterFlowSimulation.getObstacle();'>",
+                                        String.format("{0}</button></div>",text)
+                                    ].join(""));
 
         }
 
@@ -2289,6 +2288,21 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             text: "Veuillez indiquer des dates différentes",
                         });
                     }
+                }else if ($("#dateStartWaterFlowSimulation").val() > $("#dateEndWaterFlowSimulation").val()) {
+                    // translate
+                    if (mviewer.lang.lang == "en") {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Warning',
+                            text: "Start date > end date",
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Attention',
+                            text: "La date de début de simulation doit être inférieure à celle de fin",
+                        });
+                    }
                 } else {
                     if (_xy) {
                         if (typeof _stationsSelectedByUser === 'undefined' || _stationsSelectedByUser.length === 0) {
@@ -2324,7 +2338,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 End: $("#dateEndWaterFlowSimulation").val(),
                                 InBasin: $("#inBasinWaterFlowSimulation").is(":checked"),
                                 ListStations: _stationsSelectedByUser.toString(),
-                                Project: $("#selectProjectInversion").val()
+                                Project: $("#selectProjectInversion").val(),
+                                DeltaT: $("input[name='deltaTWaterFlowSimulation']:checked").val()
                             };
                             // popup pour alerter sur le temps de traitement à venir
                             launchProcess = timeProcessAlert(dictInputs.Start, dictInputs.End, dictInputs.DeltaT);
@@ -2405,6 +2420,58 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     });
                 }
             }
+        },
+
+        getObstacle : function () {
+
+            var _table_ = document.createElement("table"),
+            _thead_ =document.createElement('thead'),
+            _tr_ = document.createElement('tr'),
+            _th_ = document.createElement('th'),
+            _td_ = document.createElement('td');
+
+            _table_.className = "obs-table";
+
+            function buildHtmlTable(arr) {
+                var table = _table_.cloneNode(false),
+                columns = addAllColumnHeaders(arr, table);
+                for (var i = 0, maxi = arr.length; i < maxi; ++i) {
+                    var tr = _tr_.cloneNode(false);
+                        for (var j = 0, maxj = columns.length; j < maxj; ++j) {
+                            var td = _td_.cloneNode(false);
+                            cellValue = arr[i][columns[j]];
+                            td.appendChild(document.createTextNode(arr[i][columns[j]] || ''));
+                            tr.appendChild(td);
+                        }
+                    table.appendChild(tr);
+                }
+                return table;
+            }
+            function addAllColumnHeaders(arr, table) {
+                var columnSet = [],
+                tr = _tr_.cloneNode(false);
+                for (var i = 0, l = arr.length; i < l; i++) {
+                    for (var key in arr[i]) {
+                        if (arr[i].hasOwnProperty(key) && columnSet.indexOf(key) === -1) {
+                            columnSet.push(key);
+                            var th = _th_.cloneNode(false);
+                            th.appendChild(document.createTextNode(key));
+                            tr.appendChild(th);
+                        }
+                    }
+                }
+                var thead=_thead_.cloneNode(false);
+                thead.appendChild(tr);
+                table.appendChild(thead);
+                return columnSet;
+            }
+            Swal.fire({
+                title: "Obstacle à l'écoulement",
+                html:'<span id="obstacle_table"></span>',
+                width:'900px'
+              })
+              document.getElementById("obstacle_table").appendChild(buildHtmlTable(obstacle));
+
         },
 
         startIntro: function () {
