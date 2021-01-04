@@ -113,10 +113,10 @@
                             legendurl="&path;/data/lgd_barrage.png"
                             opacity="0.8">
                 </layer>
-		        <layer id="ObstEcoul_FXX" name="Obstacles à l'écoulement - Métropole" visible="false" tiled="true"
+		        <!--<layer id="ObstEcoul_FXX" name="Obstacles à l'écoulement - Métropole" visible="false" tiled="true"
                     queryable="false"  fields="" aliases="" stylesalias="barrage"  
                     opacity="1"  url="https://services.sandre.eaufrance.fr/geo/obs">
-                </layer>
+                </layer>-->
             </group>
             <group name="Couches : Surfaces" id="Surfaces">
                 <layer id="bzh_zhp" name="Zones Humides Potentielles" visible="false" tiled="true"

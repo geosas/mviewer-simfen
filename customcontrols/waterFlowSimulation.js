@@ -770,11 +770,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
             if (targetArea<10){
                 codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p style='color:red'>La surface du bassin versant est trop petite pour réaliser une simulation correcte. Utiliser les résultats avec prudence.</font></p></div>";
             } else if (Math.round(note)===1){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale de la station hydrométrique <span style='color:green'>Nulle ou faible</span></p></div>";
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale des stations hydrométriques sources <span style='color:green'>Nulle ou faible</span></p></div>";
             } else if (Math.round(note)===2){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale de la station hydrométrique <span style='color:orange'>Notable</span></p></div>";
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale des stations hydrométriques sources <span style='color:orange'>Notable</span></p></div>";
             } else if (Math.round(note)===3){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale de la station hydrométrique <span style='color:red'>Forte</span></p></div>";
+                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale des stations hydrométriques sources <span style='color:red'>Forte</span></p></div>";
             } else {
                 codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Erreur dans la notation des stations sources </p></div>";
             }
@@ -1090,7 +1090,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
         _map.addLayer(_stationLayer);
 
         var info = document.getElementById('divPopup1');
-        info.innerHTML = "<img src='/apps/simfen-test/data/lgd_regime.png' alt='Légende régimes des stations'>";
+        if (mviewer.lang.lang == "en") {
+            info.innerHTML = "<img src='/apps/simfen-test/data/lgd_regime_en.png' alt='Légende régimes des stations'>";
+        } else {
+            info.innerHTML = "<img src='/apps/simfen-test/data/lgd_regime_fr.png' alt='Légende régimes des stations'>";
+        }
 
         // permet de déclencher l'alerte contenant les infos complémentaires en cliquant sur la station
         var displayFeatureInfo = function(pixel) {
@@ -1652,7 +1656,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
         if (targetArea>10){
 
             obstacle=JSON.parse(datas)
-            text="Obstacle"
+            if (mviewer.lang.lang == "en") {
+                text="Flow obstacles"
+            } else {
+                text="Obstacles à l'écoulement"
+            }
             $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<div id='btnObs' style='padding-top:10px;position:absolute;'>",
                                         "<button class='btn btn-default' type='button'",
                                         "onclick='mviewer.customControls.waterFlowSimulation.getObstacle();'>",
@@ -2433,7 +2441,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             _table_.className = "obs-table";
 
             function buildHtmlTable(arr) {
-                var table = _table_.cloneNode(false),
+                var table = _table_.cloneNode(false);
                 columns = addAllColumnHeaders(arr, table);
                 for (var i = 0, maxi = arr.length; i < maxi; ++i) {
                     var tr = _tr_.cloneNode(false);
@@ -2448,7 +2456,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 return table;
             }
             function addAllColumnHeaders(arr, table) {
-                var columnSet = [],
+                var columnSet = [];
                 tr = _tr_.cloneNode(false);
                 for (var i = 0, l = arr.length; i < l; i++) {
                     for (var key in arr[i]) {
@@ -2481,7 +2489,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 intro.setOption('showProgress', true).setOption('doneLabel', 'Terminé').setOption('exitOnOverlayClick', false).setOptions({
                     steps: [
                         {
-                            intro: "Hello to the SIMFEN tutorial."
+                            intro: "Welcome to the SIMFEN tutorial."
                         },
                         {
                             element: '#datesimulation',
@@ -2536,17 +2544,31 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
                     ]
                 });
-
                 intro.start().oncomplete(function() {
+                    var idTab5 = document.getElementById("calcul");
+                    idTab5.setAttribute("style", "color:white ;background-color: #2e5367;font-size:20px;width: 120px;height:109px;");
+                    var idTab6 = document.getElementById("calcul_tag");
+                    idTab6.setAttribute("style", "font-size:18px;");
+                    var idTab7 = document.getElementById("calcul_icon");
+                    idTab7.setAttribute("style", "font-size:64px;");
+
+                    var idTab5 = document.getElementById("exutoire");
+                    idTab5.setAttribute("style", "color:white ;background-color: #2e5367;font-size:20px;width: 120px;height:109px;");
+                    var idTab6 = document.getElementById("exutoire_tag");
+                    idTab6.setAttribute("style", "font-size:18px;");
+                    var idTab7 = document.getElementById("exutoire_icon");
+                    idTab7.setAttribute("style", "font-size:61px;");
                     $('#stationDispo,#selectStation,#validationSelection').toggle();
                     $('#dateOptions,#waterFlowSimulationOptions').collapse('hide');
+                    expand=true;
                     Swal.fire({
-                        imageUrl: '/apps/simfen-test/data/image_test.png',
+                        imageUrl: '/apps/simfen-test/data/resultat_en.png',
                         titleText :'Panneaux résultat',
                         width:'100%',
                         imageWidth:'100%'
                     });
                 })
+
             } else {
                 var intro = introJs();
                 intro.setOption('showProgress', true).setOption('doneLabel', 'Terminé').setOption('exitOnOverlayClick', false).setOptions({
@@ -2624,7 +2646,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     $('#dateOptions,#waterFlowSimulationOptions').collapse('hide');
                     expand=true;
                     Swal.fire({
-                        imageUrl: '/apps/simfen-test/data/image_test.png',
+                        imageUrl: '/apps/simfen-test/data/resultat.png',
                         titleText :'Panneaux résultat',
                         width:'100%',
                         imageWidth:'100%'
