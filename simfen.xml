@@ -7,7 +7,7 @@
     <application
 	lang="fr,en"
 	langfile="&path;/translate/translate2.json"
-        title="Portail cartographique du projet SIMFEN"
+        title="Portail cartographique du projet SIMFEN 2.0"
         logo=""
         help="&path;/simfen_help.html"
         style="&path;/css/simfen.css"
@@ -107,7 +107,7 @@
                     opacity="0.8"
                     url="http://services.sandre.eaufrance.fr/geo/eth_FXX?">
                 </layer>
-                <layer id="obstacle" name="Barrage - Sandre" visible="false" tiled="true" queryable="true"
+                <layer id="obstacle" name="Obstacles à l'écoulement - Sandre" visible="false" tiled="true" queryable="true"
                                 type="customlayer"
                     url="&path;/customlayers/obstacle.js"
                             legendurl="&path;/data/lgd_barrage.png"

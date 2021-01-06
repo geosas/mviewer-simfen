@@ -47,6 +47,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var targetArea
     var key_gap
     var obstacle
+    var influence_arr = []
     // Permet d'utiliser l'equivalent de .format{0} dans js (source :stack overflow)
     if (!String.format) {
         String.format = function (format) {
@@ -338,8 +339,8 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     }
                                     // ajoute le bouton pour afficher les debits mesures employes
 
-                                    $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append(["<div id='btnMeasuredFlow' style='padding-top:10px;position:absolute;'>",
-                                        "<button class='btn btn-default' type='button'",
+                                    $("#bottom-panel .popup-content #toolsBoxPopup #divPopup2").append(["<br><div id='btnMeasuredFlow'>",
+                                        "<button style='background-color:#2e5367' class='btn btn-primary' type='button'",
                                         "onclick='mviewer.customControls.waterFlowSimulation.getMeasuredFlow();'>",
                                         String.format("{0}</button></div>",text)
                                     ].join(""));
@@ -361,7 +362,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 } else if (outputTag.Identifier === "MeasuredFlow") {
                                     plotMeasuredFlow(outputTag.Data.ComplexData);
                                     // supprime le bouton
-                                    $("#divPopup2").children().first().remove();
+                                    $("#divPopup2").children().remove();
                                     _processing = false;
                                 } else if (outputTag.Identifier === "Obstacle") {
                                     plotObstacle(outputTag.Data.ComplexData);
@@ -652,12 +653,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         var outFile = $("[i18n='panelDisclaimer']").text() + "\r\n";
 
         // Append calculation metadata
-        listStations = "";
-        for (var i = 0; i < _nameColor.length; i++) {
-            listStations += _nameColor[i].key + ",";
-        }
-        listStations = listStations.substring(0, listStations.length - 1);
-
+        listStations=JSON.stringify(influence_arr)
         var metadonneesCalcul;
         // translate
         if (mviewer.lang.lang == "en") {
@@ -752,35 +748,26 @@ mviewer.customControls.waterFlowSimulation = (function () {
     function plotDatas(points) {
         //rajout pour json
         // notation des stations et des obstacles
-        if (mviewer.lang.lang == "en") {
-            if (targetArea<10){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p style='color:red'>The surface of the watershed is too small to perform a correct simulation. Use the results with caution.</font></p></div>";
-            } else if (Math.round(note)===1){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Local influence of the hydrometric station <span style='color:green'>None or low</span></p></div>";
-            } else if (Math.round(note)===2){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Local influence of the hydrometric station <span style='color:orange'>Notable</span></p></div>";
-            } else if (Math.round(note)===3){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Local influence of the hydrometric station <span style='color:red'>Strong</span></p></div>";
-            } else {
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Error in the scoring of source stations </p></div>";
-            }
 
-            $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append([codeRegime]);
-        } else {
-            if (targetArea<10){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p style='color:red'>La surface du bassin versant est trop petite pour réaliser une simulation correcte. Utiliser les résultats avec prudence.</font></p></div>";
-            } else if (Math.round(note)===1){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale des stations hydrométriques sources <span style='color:green'>Nulle ou faible</span></p></div>";
-            } else if (Math.round(note)===2){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale des stations hydrométriques sources <span style='color:orange'>Notable</span></p></div>";
-            } else if (Math.round(note)===3){
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Influence locale des stations hydrométriques sources <span style='color:red'>Forte</span></p></div>";
+        if (targetArea<10){
+            if (mviewer.lang.lang == "en") {
+                codeRegime="<div id='notation' style='font-size:13px;color:red'>The surface of the watershed is too small to perform a correct simulation. Use the results with caution.</div>";
             } else {
-                codeRegime="<div id='notation' style='padding-top:60px;font-size:20px'><p>Erreur dans la notation des stations sources </p></div>";
+                codeRegime="<div id='notation' style='font-size:13px;color:red'>La surface du bassin versant est trop petite pour réaliser une simulation correcte. Utiliser les résultats avec prudence.</div>";
             }
-
-            $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append([codeRegime]);
+            $("#bottom-panel .popup-content #toolsBoxPopup #divPopup5").append([codeRegime]);
         }
+
+        if (mviewer.lang.lang == "en") {
+            text="Influence regime of hydrometric stations"
+        } else {
+            text="Régime d'influence des stations hydrométriques"
+        }
+        $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<br><div id='btnInfluence'>",
+                                    "<button style='background-color:#2e5367' class='btn btn-primary' type='button'",
+                                    "onclick='mviewer.customControls.waterFlowSimulation.getInfluence();'>",
+                                    String.format("{0}</button></div>",text)
+                                ].join(""));
 
         var datasJson = JSON.parse(points);
         var xDatas = [];
@@ -1237,9 +1224,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
         //fonction pour télécharger le bassin versant cible
         _watershedsLayer.getSource().on('change', function(evt){
             if (mviewer.lang.lang == "en") {
-                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<a  style='background-color:#2e5367' class='btn btn-primary' id='download'>Download the target watershed</a>"])
+                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<a  style='background-color:#2e5367' class='btn btn-primary' id='download'>Download the target watershed vector layer</a>"])
             } else {
-                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<a  style='background-color:#2e5367' class='btn btn-primary' id='download'>Télécharger le bassin versant cible</a>"])
+                $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<a  style='background-color:#2e5367' class='btn btn-primary' id='download'>Télécharger la couche vectorielle du bassin versant cible</a>"])
             };
 
         let format = new ol.format.GeoJSON({featureProjection: 'EPSG:3857'});
@@ -1247,7 +1234,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
         let features = _watershedsLayer.getSource().getFeatures();
         let json = format.writeFeatures(features);
         download.href = 'data:text/json;charset=utf-8,' + json;
-        download.download='Bassin versant cible.json'
+        download.download='Bassin versant cible.geojson'
 
         });
 
@@ -1337,7 +1324,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
             });
         };
 
-        function addWatershed(coords, nameWatershed, watershedsSource, area, wghosh) {
+        function addWatershed(coords, nameWatershed, watershedsSource, area, wghosh, note) {
             // cree le point en veillant a changer la projection
             polyCoords = [];
             for (var i in coords) {
@@ -1350,12 +1337,25 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 name: nameWatershed,
                 geometry: new ol.geom.Polygon([polyCoords]),
                 label: area,
-                weight: wghosh
+                weight: wghosh,
             });
             // ajoute la feature a la source
             watershedsSource.addFeature(feature);
         }
-
+        function code_influence(note){
+            if (mviewer.lang.lang == "en") {
+                if (note==1){text="None or low"}
+                else if (note==2){text="Notable"}
+                else if (note==3){text="Strong"}
+                else {text="No data"}
+            } else{
+                if (note==1){text="Nulle ou faible"}
+                else if (note==2){text="Notable"}
+                else if (note==3){text="Fort"}
+                else {text="Indéterminé"}
+            }
+            return text
+        }
         // initialise la source de donnees qui va contenir les entites
         var watershedsSource = new ol.source.Vector({});
 
@@ -1383,16 +1383,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 area = features.bv.area;
                 wghosh = features.bv.weights;
 
-                if (parseFloat(features[j].bv.weights)==0){
-                    note_barrage=parseInt(features[j].bv.qualite)
-                }
-
-                note=(parseInt(features[j].bv.qualite)*parseFloat(features[j].bv.weights));
+                note=parseInt(features[j].bv.qualite);
                 _nameColor.push({
                     key: nameWatershed,
                     value: _colors[0]
                 });
-                addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
+                addWatershed(coord, nameWatershed, watershedsSource, area, wghosh, note);
+                influence_arr.push({"Station": nameWatershed, "Régime d'influence": code_influence(note), "Poids": wghosh})
             } catch (error) {
                 multiPolygons = features.bv.geometryProperty.MultiPolygon.polygonMember;
                 for (i = 0; i < multiPolygons.length; i++) {
@@ -1401,16 +1398,13 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     area = features.bv.area;
                     wghosh = features.bv.weights;
 
-                    if (parseFloat(features[j].bv.weights)==0){
-                        note_barrage=parseInt(features[j].bv.qualite)
-                    }
-
-                    note=(parseInt(features[j].bv.qualite)*parseFloat(features[j].bv.weights));
+                    note=parseInt(features[j].bv.qualite);
                     _nameColor.push({
                         key: nameWatershed,
                         value: _colors[0]
                     });
-                    addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
+                    addWatershed(coord, nameWatershed, watershedsSource, area, wghosh, note);
+                    influence_arr.push({"Station": nameWatershed, "Influence": code_influence(note), "Poids": wghosh})
                 }
             }
         } else {
@@ -1423,19 +1417,16 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     area = features[j].bv.area;
                     wghosh = features[j].bv.weights;
 
-                    if (parseFloat(features[j].bv.weights)==0){
-                        note_barrage=parseInt(features[j].bv.qualite)
-                    }
-
-                    note+=(parseInt(features[j].bv.qualite)*parseFloat(features[j].bv.weights));
+                    note=parseInt(features[j].bv.qualite);
                     if (parseFloat(features[j].bv.weights)!=0){
                         _nameColor.push({
                             key: nameWatershed,
                             value: _colors[z]
                         });
                         z++;
+                        influence_arr.push({"Station": nameWatershed, "Influence": code_influence(note), "Poids": wghosh})
                     }
-                    addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
+                    addWatershed(coord, nameWatershed, watershedsSource, area, wghosh, note);
                 } catch (error) {
                     polygonsWatershed = features[j].bv.geometryProperty.MultiPolygon.polygonMember;
                     for (i = 0; i < polygonsWatershed.length; i++) {
@@ -1444,16 +1435,17 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         area = features[j].bv.area;
                         wghosh = features[j].bv.weights;
 
-                        if (parseFloat(features[j].bv.weights)==0){
-                            note_barrage=parseInt(features[j].bv.qualite)
-                        }
 
-                        note+=(parseInt(features[j].bv.qualite)*parseFloat(features[j].bv.weights));
-                        _nameColor.push({
-                            key: nameWatershed,
-                            value: _colors[j]
-                        });
-                        addWatershed(coord, nameWatershed, watershedsSource, area, wghosh);
+                        note=parseInt(features[j].bv.qualite);
+                        if (parseFloat(features[j].bv.weights)!=0){
+                            _nameColor.push({
+                                key: nameWatershed,
+                                value: _colors[z]
+                            });
+                            z++;
+                            influence_arr.push({"Station": nameWatershed, "Influence": code_influence(note), "Poids": wghosh})
+                        }
+                        addWatershed(coord, nameWatershed, watershedsSource, area, wghosh, note);
                     }
                 }
             }
@@ -1653,21 +1645,18 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
     function plotObstacle(datas) {
 
-        if (targetArea>10){
-
-            obstacle=JSON.parse(datas)
-            if (mviewer.lang.lang == "en") {
-                text="Flow obstacles"
-            } else {
-                text="Obstacles à l'écoulement"
-            }
-            $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<div id='btnObs' style='padding-top:10px;position:absolute;'>",
-                                        "<button class='btn btn-default' type='button'",
-                                        "onclick='mviewer.customControls.waterFlowSimulation.getObstacle();'>",
-                                        String.format("{0}</button></div>",text)
-                                    ].join(""));
-
+        obstacle=JSON.parse(datas)
+        if (mviewer.lang.lang == "en") {
+            text="Flow obstacles"
+        } else {
+            text="Obstacles à l'écoulement"
         }
+        $("#bottom-panel .popup-content #toolsBoxPopup #divPopup4").append(["<br><div id='btnObs'>",
+                                    "<button style='background-color:#2e5367' class='btn btn-primary' type='button'",
+                                    "onclick='mviewer.customControls.waterFlowSimulation.getObstacle();'>",
+                                    String.format("{0}</button></div>",text)
+                                ].join(""));
+
 
     }
 
@@ -1809,8 +1798,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             if ($("#graphFlowSimulated").children().first()) {
                                 $("#graphFlowSimulated").children().first().remove();
                                 $("#graphFlowSimulatedExtend").children().first().remove();
-                                $("#divPopup2").children().first().remove();
+                                $("#divPopup2").children().remove();
                                 $("#divPopup4").children().remove();
+                                $("#divPopup5").children().remove();
                             }
 
                             // affiche le panneau de resultat
@@ -1920,8 +1910,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         if ($("#graphFlowSimulated").children().first()) {
                             $("#graphFlowSimulated").children().first().remove();
                             $("#graphFlowSimulatedExtend").children().first().remove();
-                            $("#divPopup2").children().first().remove();
+                            $("#divPopup2").children().remove();
                             $("#divPopup4").children().remove();
+                            $("#divPopup5").children().remove();
                         }
                         // affiche le panneau de resultat
                         if ($("#bottom-panel").hasClass("")) {
@@ -2013,8 +2004,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     if ($("#graphFlowSimulated").children().first()) {
                         $("#graphFlowSimulated").children().first().remove();
                         $("#graphFlowSimulatedExtend").children().first().remove();
-                        $("#divPopup2").children().first().remove();
+                        $("#divPopup2").children().remove();
                         $("#divPopup4").children().remove();
+                        $("#divPopup5").children().remove();
                     }
                     // affiche le panneau de resultat
                     if ($("#bottom-panel").hasClass("")) {
@@ -2239,6 +2231,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
 
             if (_processing === false) {
                 note=0
+                influence_arr=[]
                 if (key_gap != 0){
                     ol.Observable.unByKey(key_gap);
                     key_gap=0;
@@ -2366,8 +2359,9 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 if ($("#graphFlowSimulated").children().first()) {
                                     $("#graphFlowSimulated").children().first().remove();
                                     $("#graphFlowSimulatedExtend").children().first().remove();
-                                    $("#divPopup2").children().first().remove();
+                                    $("#divPopup2").children().remove();
                                     $("#divPopup4").children().remove();
+                                    $("#divPopup5").children().remove();
                                 }
                                 // defini des valeurs globales dans le cas d'une reexecution
                                 // si le process posse en file d'attente et execute le process
@@ -2474,11 +2468,62 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 return columnSet;
             }
             Swal.fire({
-                title: "Obstacle à l'écoulement",
+                title: "Nombre d’obstacles à l’écoulement par bassin versant (source : Sandre)",
                 html:'<span id="obstacle_table"></span>',
                 width:'900px'
               })
               document.getElementById("obstacle_table").appendChild(buildHtmlTable(obstacle));
+
+        },
+        getInfluence : function () {// créer une fonction qui aggère obstacle et influence
+
+            var _table_ = document.createElement("table"),
+            _thead_ =document.createElement('thead'),
+            _tr_ = document.createElement('tr'),
+            _th_ = document.createElement('th'),
+            _td_ = document.createElement('td');
+
+            _table_.className = "obs-table";
+
+            function buildHtmlTable(arr) {
+                var table = _table_.cloneNode(false);
+                columns = addAllColumnHeaders(arr, table);
+                for (var i = 0, maxi = arr.length; i < maxi; ++i) {
+                    var tr = _tr_.cloneNode(false);
+                        for (var j = 0, maxj = columns.length; j < maxj; ++j) {
+                            var td = _td_.cloneNode(false);
+                            cellValue = arr[i][columns[j]];
+                            td.appendChild(document.createTextNode(arr[i][columns[j]] || ''));
+                            tr.appendChild(td);
+                        }
+                    table.appendChild(tr);
+                }
+                return table;
+            }
+            function addAllColumnHeaders(arr, table) {
+                var columnSet = [];
+                tr = _tr_.cloneNode(false);
+                for (var i = 0, l = arr.length; i < l; i++) {
+                    for (var key in arr[i]) {
+                        if (arr[i].hasOwnProperty(key) && columnSet.indexOf(key) === -1) {
+                            columnSet.push(key);
+                            var th = _th_.cloneNode(false);
+                            th.appendChild(document.createTextNode(key));
+                            tr.appendChild(th);
+                        }
+                    }
+                }
+                var thead=_thead_.cloneNode(false);
+                thead.appendChild(tr);
+                table.appendChild(thead);
+                return columnSet;
+            }
+            Swal.fire({
+                title: "Régime d'influence des stations hydrométriques (source : DREAL Bretagne)",
+                html:'<span id="influence_table"></span>',
+                width:'900px'
+              })
+              document.getElementById("influence_table").appendChild(buildHtmlTable(influence_arr));
 
         },
 

@@ -66,6 +66,7 @@ mviewer.customControls.initSimfen = (function () {
                 "<div id='divPopup1'></div>",
                 "<div id='divPopup2'></div>",
                 "<div id='divPopup4'></div>",
+                "<div id='divPopup5'></div>",
                 "</div>",
                 "<div id='graphFlowSimulated' class='profile-addon panel-graph'></div>",
                 "<div id='graphFlowSimulatedExtend' class='profile-addon panel-graph hidden'></div>",
