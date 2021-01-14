@@ -54,6 +54,11 @@
                     customcontrol="true" customcontrolpath="&path;/customcontrols/"
                     expanded="true">
                 </layer>
+		<layer id="baie" name="Calcul baie" visible="false" queryable="false" expanded="true"
+                    type="customlayer" opacity="0.8" legendurl="img/blank.gif"
+                    url="&path;/customlayers/baie.js"
+                    customcontrol="true" customcontrolpath="&path;/customcontrols/">
+                </layer>
                 <!-- <layer id="ghoshCalculation" name="Affichage des stations sélectionnées selon la distance de Ghosh" visible="false" queryable="false"
                     type="customlayer" opacity="0.8" legendurl="img/blank.gif"
                     url="&path;/customlayers/ghoshCalculation.js"

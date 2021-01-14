@@ -53,7 +53,7 @@
         <!-- button pour lancer le tutorial intro -->
         <button type="button" id="startTuto" class="btn btn-large btn-success lang" key-lang="tuto" onclick="mviewer.customControls.waterFlowSimulation.startIntro()"
           data-toggle="collapse" data-target="#dateOptions,#waterFlowSimulationOptions" data-dismiss="modal"><span i18n="exeTuto">Exécuter le tutoriel</span></button><br/>
-        <a class="lang"key-lang="docDl" href="/apps/simfen-test/data/simfen_doc.pdf" target="_blank">
+        <a class="lang" id="docDl" href="/apps/simfen-test/data/simfen_doc.pdf" target="_blank">
           <span i18n="dlDoc">Documentation à télécharger</span>
         </a>
 
@@ -139,11 +139,11 @@
         </p>
         <h4><span i18n="panelImage1">Utilisation simplifiée :</span></h4>
         <figure style="text-align:center;">
-          <img src="/apps/simfen-test/img/simple.png" alt="etape 1" height="100%" width="100%" style="text-align:center;">
+          <img id="mode_basique" src="/apps/simfen-test/img/simple.png" alt="etape 1" height="100%" width="100%" style="text-align:center;">
         </figure>
         <h4><span i18n="panelImage2">Mode expert :</span></h4>
         <figure style="text-align:center;">
-          <img src="/apps/simfen-test/img/expert.png" alt="etape 4" height="100%" width="100%" style="text-align:center;">
+          <img id="mode_expert" src="/apps/simfen-test/img/expert.png" alt="etape 4" height="100%" width="100%" style="text-align:center;">
         </figure>
     </div>
 
@@ -268,6 +268,24 @@ $(document).ready(function(){
       x.setAttribute("src","/apps/simfen-test/img/inv_conv_fr.png");
     } else if (mviewer.lang.lang=="en") {
       x.setAttribute("src","/apps/simfen-test/img/inv_conv.png");
+    }
+    var x = document.getElementById("mode_basique");
+    if (mviewer.lang.lang=="fr") {
+      x.setAttribute("src","/apps/simfen-test/img/simple.png");
+    } else if (mviewer.lang.lang=="en") {
+      x.setAttribute("src","/apps/simfen-test/img/simple_en.png");
+    }
+    var x = document.getElementById("mode_expert");
+    if (mviewer.lang.lang=="fr") {
+      x.setAttribute("src","/apps/simfen-test/img/simple.png");
+    } else if (mviewer.lang.lang=="en") {
+      x.setAttribute("src","/apps/simfen-test/img/expert_en.png");
+    }
+    var x = document.getElementById("docDl");
+    if (mviewer.lang.lang=="fr") {
+      x.setAttribute("href","/apps/simfen-test/data/simfen_doc.pdf");
+    } else if (mviewer.lang.lang=="en") {
+      x.setAttribute("href","/apps/simfen-test/data/simfen_doc_en.pdf");
     }
     });
 });

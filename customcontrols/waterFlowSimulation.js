@@ -36,13 +36,12 @@ mviewer.customControls.waterFlowSimulation = (function () {
     var _colors = ["red", "#8b4513", "#FF8C00", "#20B2AA", "purple"];
     var _processing = false;
     var _stationsSelectedByUser;
-    var _select;
     var _timerCountdown;
     var _display;
     var _configurationInfos = [];
     var _initProject = "archives_dreal";
     var selection1
-    var select
+    var select //variable de la fonction de sélection
     var note=0
     var targetArea
     var key_gap
@@ -411,11 +410,11 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 }
             });
             // pour modifier les textes des options de donnees
-            if (infos[i*3] == "dreal_b") {
-                textOption = "GéoBretagne";
+            if (infos[i*3] == "archives_dreal") {
+                textOption = "BD Hydro Dreal Bretagne";
             }
-            else if (infos[i*3] == "banque_hydro_24h"){
-                textOption = "Banque hydro bretagne2";
+            else if (infos[i*3] == "hub_eau"){
+                textOption = "Hub'Eau";
             }
              else {
                 textOption = infos[i*3].replace(/_/g,' ');
@@ -1349,7 +1348,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 else if (note==3){text="Strong"}
                 else {text="No data"}
             } else{
-                if (note==1){text="Nulle ou faible"}
+                if (note==1){text="Nul ou faible"}
                 else if (note==2){text="Notable"}
                 else if (note==3){text="Fort"}
                 else {text="Indéterminé"}
@@ -1381,7 +1380,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                 coord = features.bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                 nameWatershed = features.bv.station;
                 area = features.bv.area;
-                wghosh = features.bv.weights;
+                wghosh = Math.round(features.bv.weights * 100) / 100;
 
                 note=parseInt(features[j].bv.qualite);
                 _nameColor.push({
@@ -1389,14 +1388,14 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     value: _colors[0]
                 });
                 addWatershed(coord, nameWatershed, watershedsSource, area, wghosh, note);
-                influence_arr.push({"Station": nameWatershed, "Régime d'influence": code_influence(note), "Poids": wghosh})
+                influence_arr.push({"Stations sources": nameWatershed, "Régime influencé": code_influence(note), "Poids dans le débit simulé": wghosh})
             } catch (error) {
                 multiPolygons = features.bv.geometryProperty.MultiPolygon.polygonMember;
                 for (i = 0; i < multiPolygons.length; i++) {
                     coord = multiPolygons[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features.bv.station;
                     area = features.bv.area;
-                    wghosh = features.bv.weights;
+                    wghosh = Math.round(features.bv.weights * 100) / 100;
 
                     note=parseInt(features[j].bv.qualite);
                     _nameColor.push({
@@ -1404,7 +1403,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         value: _colors[0]
                     });
                     addWatershed(coord, nameWatershed, watershedsSource, area, wghosh, note);
-                    influence_arr.push({"Station": nameWatershed, "Influence": code_influence(note), "Poids": wghosh})
+                    influence_arr.push({"s sources": nameWatershed, "Régime influencé": code_influence(note), "Poids dans le débit simulé": wghosh})
                 }
             }
         } else {
@@ -1415,7 +1414,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                     coord = features[j].bv.geometryProperty.Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                     nameWatershed = features[j].bv.station;
                     area = features[j].bv.area;
-                    wghosh = features[j].bv.weights;
+                    wghosh = Math.round(features[j].bv.weights * 100) / 100;
 
                     note=parseInt(features[j].bv.qualite);
                     if (parseFloat(features[j].bv.weights)!=0){
@@ -1424,7 +1423,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                             value: _colors[z]
                         });
                         z++;
-                        influence_arr.push({"Station": nameWatershed, "Influence": code_influence(note), "Poids": wghosh})
+                        influence_arr.push({"Stations sources": nameWatershed, "Régime influencé": code_influence(note), "Poids dans le débit simulé": wghosh})
                     }
                     addWatershed(coord, nameWatershed, watershedsSource, area, wghosh, note);
                 } catch (error) {
@@ -1433,7 +1432,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         coord = polygonsWatershed[i].Polygon.outerBoundaryIs.LinearRing.coordinates.split(' ');
                         nameWatershed = features[j].bv.station;
                         area = features[j].bv.area;
-                        wghosh = features[j].bv.weights;
+                        wghosh = Math.round(features[j].bv.weights * 100) / 100;
 
 
                         note=parseInt(features[j].bv.qualite);
@@ -1443,7 +1442,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                 value: _colors[z]
                             });
                             z++;
-                            influence_arr.push({"Station": nameWatershed, "Influence": code_influence(note), "Poids": wghosh})
+                            influence_arr.push({"Stations sources": nameWatershed, "Régime influencé": code_influence(note), "Poids dans le débit simulé": wghosh})
                         }
                         addWatershed(coord, nameWatershed, watershedsSource, area, wghosh, note);
                     }
@@ -2128,9 +2127,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                         text: "Veuillez sélectionner 5 stations au plus",
                     });
                 }
-                if (_select){
-                    _select.getFeatures().clear();
-                }
+
             } else {
                 if (mviewer.lang.lang == "en") {
 
@@ -2324,13 +2321,7 @@ mviewer.customControls.waterFlowSimulation = (function () {
                                     text: "Veuillez sélectionner 5 stations au plus",
                                 });
                             }
-                            if (_select){
-                                _select.getFeatures().clear();
-                            }
                         } else {
-                            if (_select){
-                                _select.getFeatures().clear();
-                            }
 
                             var dictInputs = {
                                 X: String(_xy).split(',')[0],
@@ -2425,7 +2416,6 @@ mviewer.customControls.waterFlowSimulation = (function () {
         },
 
         getObstacle : function () {
-
             var _table_ = document.createElement("table"),
             _thead_ =document.createElement('thead'),
             _tr_ = document.createElement('tr'),

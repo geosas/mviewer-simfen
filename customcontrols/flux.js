@@ -14,7 +14,7 @@ mviewer.customControls.flux = (function () {
     var _xhrGet;
     var _xmlRequest;
     var _rqtWPS;
-    var _urlWPS = "https://geosas.agrocampus-ouest.fr/simfen-test-wps?";
+    var _urlWPS = "https://wps.geosas.fr/simfen-test?";
     var _service = "WPS";
     var _version = "1.0.0";
     var _request = "Execute";
@@ -84,13 +84,14 @@ mviewer.customControls.flux = (function () {
     // Permet de gerer les requetes cross-domain
     function ajaxURL(url) {
         // relative path
-        if (url.indexOf('https') !== 0) {
+        // relative path
+        if (url.indexOf('http') !== 0) {
             return url;
         }
-        // same domain
-        else if (url.indexOf(location.protocol + '//' + location.host) === 0) {
-            return url;
-        } else {
+        // same domain option déactivée à cause du http et https qui entrainne une blocage
+        //else if (url.indexOf(location.protocol + '//' + location.host) === 0) {
+          //  return url;}
+        else {
             return '/proxy/?url=' + encodeURIComponent(url);
         }
     }
@@ -654,6 +655,7 @@ mviewer.customControls.flux = (function () {
                 color: "green",
                 width: 1
                 }
+
         };
         datasJson.forEach(function(val) {
             trace1.x.push(val["date_prelevement"]);
